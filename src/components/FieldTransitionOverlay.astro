@@ -1,0 +1,37 @@
+---
+/**
+ * Copertura ink piena usata dalla transizione di apertura di Fields
+ * (vedi docs/brain/fields-spiral.md, sezione "Transizione di apertura").
+ *
+ * `transition:persist` la fa sopravvivere invariata allo swap di
+ * ClientRouter tra /fields e la pagina di dettaglio: lo script che la
+ * porta a opacità 1 gira PRIMA della navigazione, quello che la riporta
+ * a 0 gira DOPO (su `astro:page-load`), sulla stessa istanza di nodo —
+ * niente flash, niente stato da passare a mano tra le due pagine.
+ */
+---
+
+<div
+	id="field-transition-overlay"
+	class="pointer-events-none fixed inset-0 z-50 bg-ink opacity-0"
+	transition:persist
+	transition:name="field-transition-overlay"
+></div>
+
+<script>
+	import { gsap } from 'gsap';
+
+	// Se arriviamo con l'overlay già a piena opacità (siamo stati portati
+	// qui da un'apertura o da un ritorno in corso), la pagina sotto è
+	// pronta: la reveal è il fade-out finale.
+	function revealIfCovered() {
+		const overlay = document.getElementById('field-transition-overlay');
+		if (!overlay) return;
+		const opacity = Number(getComputedStyle(overlay).opacity);
+		if (opacity > 0.5) {
+			gsap.to(overlay, { opacity: 0, duration: 0.25, ease: 'power1.out' });
+		}
+	}
+	revealIfCovered();
+	document.addEventListener('astro:page-load', revealIfCovered);
+</script>

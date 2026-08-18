@@ -1,0 +1,68 @@
+---
+/**
+ * Pagina di prova per verificare la transizione di apertura di Fields
+ * (vedi docs/brain/fields-spiral.md) prima che esistano le route reali
+ * di dettaglio per le singole voci — usa data solo per questo, va
+ * rimossa o sostituita quando arrivano le pagine vere.
+ */
+import { ClientRouter } from 'astro:transitions';
+import '../../styles/global.css';
+import Nav from '../../components/Nav.astro';
+import Footer from '../../components/Footer.astro';
+import FieldTransitionOverlay from '../../components/FieldTransitionOverlay.astro';
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" href="/favicon.ico" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<title>Test transizione Fields — Graziano Enzo Marchesani</title>
+		<ClientRouter />
+	</head>
+	<body class="bg-paper text-ink font-sans">
+		<FieldTransitionOverlay />
+		<Nav />
+
+		<main class="mx-auto max-w-2xl px-6 pt-32 pb-24 sm:px-10">
+			<p class="text-xs uppercase tracking-widest opacity-60">Test</p>
+			<h1 class="font-display mt-2 text-4xl">Pagina di prova</h1>
+			<p class="mt-4">
+				Destinazione temporanea per verificare la transizione di apertura dei marker di Fields — zoom-to-fill
+				sulla forma cliccata, poi fade-out ink che rivela questa pagina già caricata sotto. Da sostituire con le
+				pagine di dettaglio reali quando le route di Fields saranno decise.
+			</p>
+			<button
+				id="back-to-fields"
+				type="button"
+				class="mt-8 inline-block text-sm uppercase tracking-widest underline hover:opacity-60"
+			>
+				← Torna a Fields
+			</button>
+		</main>
+
+		<Footer />
+	</body>
+</html>
+
+<script>
+	import { gsap } from 'gsap';
+	import { navigate } from 'astro:transitions/client';
+
+	// Stesso motivo di fields.astro: con ClientRouter lo script non si
+	// ri-esegue da solo su ogni navigazione, va riagganciato esplicitamente.
+	function setup() {
+		const button = document.getElementById('back-to-fields');
+		button?.addEventListener('click', async () => {
+			const overlay = document.getElementById('field-transition-overlay');
+			if (overlay) {
+				await gsap.to(overlay, { opacity: 1, duration: 0.3, ease: 'power1.in' });
+			}
+			navigate('/fields');
+		});
+	}
+
+	document.addEventListener('astro:page-load', setup);
+</script>

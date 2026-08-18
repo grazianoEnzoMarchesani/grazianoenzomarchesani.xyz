@@ -24,64 +24,140 @@ function helixPoint(t: number, out = new THREE.Vector3()) {
   return out.set(RADIUS * Math.cos(angle), RADIUS * Math.sin(angle), -t * PITCH);
 }
 
-function drawShapeTexture(category: FieldCategory): THREE.CanvasTexture {
-  const size = 128;
-  const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext('2d')!;
-  ctx.strokeStyle = '#1a1a19';
-  ctx.lineWidth = 6;
-  ctx.lineJoin = 'round';
-  ctx.lineCap = 'round';
+/**
+ * Sagome piene (non più solo contorno) — deciso in sessione di
+ * `/grill-me` del 2026-08-18 insieme alla transizione di apertura (vedi
+ * docs/brain/fields-spiral.md): la X resta un'eccezione, è una croce di
+ * tratti, non un'area chiudibile, quindi resta due barre sottili invece
+ * di una superficie.
+ *
+ * Geometria vettoriale vera (BufferGeometry), non una texture raster su
+ * sprite: la texture canvas usata in origine si sarebbe sgranata allo
+ * zoom-to-fill della transizione di apertura (una bitmap 128×128
+ * ingrandita ~60×), lo stesso motivo per cui un raster zoomato perde
+ * qualità mentre un vettore no.
+ */
+const MARKER_SIZE = 0.22;
 
-  const c = size / 2;
-  const r = size * 0.32;
+/**
+ * Fog "in primo piano" — deciso in sessione di `/grill-me` del
+ * 2026-08-18 (vedi docs/brain/fields-spiral.md): simmetrico al
+ * THREE.Fog di sfondo, stessa grandezza (distanza dalla camera), lato
+ * opposto — sfuma verso PAPER quando un elemento si avvicina troppo
+ * alla camera, non quando si allontana. Basato sulla distanza reale
+ * (non sulla sola coordinata Y sullo schermo): il raggio della
+ * spirale è fisso mentre il cono visivo si restringe vicino alla
+ * camera, quindi gli elementi possono uscire dal frame da qualunque
+ * bordo (alto, basso, sinistro, destro) a seconda della loro
+ * posizione angolare sulla spira — una soglia legata al solo bordo
+ * inferiore lasciava fuori quelli che esconvano lateralmente.
+ * Iniettato via onBeforeCompile invece che calcolato per oggetto su
+ * CPU: unico modo per avere una dissolvenza continua per-vertice sul
+ * filo dell'elica (non solo sui marker), e si aggancia al chunk
+ * <fog_fragment> già presente sui materiali invece di duplicarne la
+ * logica. `-mvPosition.z` è la stessa metrica di profondità che
+ * three.js usa internamente per il fog di sfondo (`vFogDepth`).
+ */
+const NEAR_FADE_START = 6.0; // profondità (world units) da cui inizia la dissolvenza
+const NEAR_FADE_CLOSE = 2.0; // profondità da cui è completa
 
-  ctx.beginPath();
+function applyNearFogFade(material: THREE.Material) {
+  material.onBeforeCompile = (shader) => {
+    shader.uniforms.uPaperColor = { value: new THREE.Color(PAPER) };
+    shader.uniforms.uNearFadeStart = { value: NEAR_FADE_START };
+    shader.uniforms.uNearFadeClose = { value: NEAR_FADE_CLOSE };
+
+    shader.vertexShader = shader.vertexShader
+      .replace(
+        '#include <common>',
+        '#include <common>\nvarying float vNearFade;\nuniform float uNearFadeStart;\nuniform float uNearFadeClose;',
+      )
+      .replace(
+        '#include <project_vertex>',
+        '#include <project_vertex>\nvNearFade = 1.0 - smoothstep( uNearFadeClose, uNearFadeStart, -mvPosition.z );',
+      );
+
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', '#include <common>\nvarying float vNearFade;\nuniform vec3 uPaperColor;')
+      .replace(
+        '#include <fog_fragment>',
+        '#include <fog_fragment>\ngl_FragColor.rgb = mix( gl_FragColor.rgb, uPaperColor, vNearFade );',
+      );
+  };
+  material.needsUpdate = true;
+}
+
+function buildShapeMesh(category: FieldCategory): THREE.Object3D {
+  const material = new THREE.MeshBasicMaterial({ color: INK, fog: true });
+  applyNearFogFade(material);
+  const r = MARKER_SIZE / 2;
+
   switch (category) {
     case 'research': // cerchio
-      ctx.arc(c, c, r, 0, Math.PI * 2);
-      break;
+      return new THREE.Mesh(new THREE.CircleGeometry(r, 32), material);
     case 'tools': // quadrato
-      ctx.rect(c - r, c - r, r * 2, r * 2);
-      break;
-    case 'teaching': // X
-      ctx.moveTo(c - r, c - r);
-      ctx.lineTo(c + r, c + r);
-      ctx.moveTo(c + r, c - r);
-      ctx.lineTo(c - r, c + r);
-      break;
-    case 'projects': // triangolo
-      ctx.moveTo(c, c - r);
-      ctx.lineTo(c + r, c + r * 0.7);
-      ctx.lineTo(c - r, c + r * 0.7);
-      ctx.closePath();
-      break;
+      return new THREE.Mesh(new THREE.PlaneGeometry(MARKER_SIZE, MARKER_SIZE), material);
+    case 'projects': {
+      // triangolo
+      const shape = new THREE.Shape();
+      shape.moveTo(0, r);
+      shape.lineTo(r * 0.9, -r * 0.7);
+      shape.lineTo(-r * 0.9, -r * 0.7);
+      shape.closePath();
+      return new THREE.Mesh(new THREE.ShapeGeometry(shape), material);
+    }
+    case 'teaching': {
+      // X — due barre sottili incrociate, non un'area piena
+      const group = new THREE.Group();
+      const barLength = MARKER_SIZE * 1.3;
+      const barThickness = MARKER_SIZE * 0.2;
+      for (const angle of [Math.PI / 4, -Math.PI / 4]) {
+        const bar = new THREE.Mesh(new THREE.PlaneGeometry(barLength, barThickness), material);
+        bar.rotation.z = angle;
+        group.add(bar);
+      }
+      return group;
+    }
   }
-  ctx.stroke();
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  return texture;
 }
 
 type MarkerObject = {
-  sprite: THREE.Sprite;
+  /** Geometria visibile — vedi buildShapeMesh(). */
+  visual: THREE.Object3D;
+  /** Piano invisibile usato solo per il raycasting: un'area di hit
+   *  rettangolare uniforme, indipendente dalla sagoma vera (la X, ad
+   *  esempio, ha un'area piena molto più piccola della sua bounding
+   *  box). */
+  hitPlane: THREE.Mesh;
   marker: FieldMarker;
+  /** false quando il marker è quasi del tutto sfumato nel fog di
+   *  primo piano (vedi NEAR_FADE_*): evita hover/click "fantasma" su
+   *  una forma ormai invisibile. */
+  interactable: boolean;
 };
 
 export type FieldsSpiralHandle = {
   destroy: () => void;
 };
 
+/** Durata dello zoom-to-fill — vedi docs/brain/fields-spiral.md,
+ *  "Transizione di apertura": rapida e decisa, non cinematica. Il
+ *  chiamante (fields.astro) usa la stessa durata per il fade-in
+ *  dell'overlay ink, così le due animazioni finiscono insieme. */
+export const OPEN_ZOOM_DURATION_MS = 450;
+
 export function initFieldsSpiral(options: {
   canvas: HTMLCanvasElement;
   pinSection: HTMLElement;
   timeline: FieldYear[];
   onHoverMarker: (marker: FieldMarker | null) => void;
+  /** Click (desktop, su un marker in hover) o secondo tap sullo stesso
+   *  marker (touch): avvia la transizione di apertura. `playZoom` esegue
+   *  l'animazione 3D e risolve a zoom-to-fill completato — il chiamante
+   *  la lancia in parallelo al fade-in dell'overlay ink. */
+  onOpenMarker: (marker: FieldMarker, playZoom: () => Promise<void>) => void;
 }): FieldsSpiralHandle {
-  const { canvas, pinSection, timeline, onHoverMarker } = options;
+  const { canvas, pinSection, timeline, onHoverMarker, onOpenMarker } = options;
   const turns = timeline.length;
   const totalLength = turns * PITCH;
 
@@ -107,10 +183,12 @@ export function initFieldsSpiral(options: {
   }
   const lineGeometry = new THREE.BufferGeometry().setFromPoints(linePoints);
   const lineMaterial = new THREE.LineBasicMaterial({ color: INK, transparent: true, opacity: 0.8 });
+  applyNearFogFade(lineMaterial);
   const helixLine = new THREE.Line(lineGeometry, lineMaterial);
   group.add(helixLine);
 
-  const shapeTextures = new Map(FIELD_CATEGORY_ORDER.map((c) => [c, drawShapeTexture(c)]));
+  const hitPlaneGeometry = new THREE.PlaneGeometry(MARKER_SIZE * 1.4, MARKER_SIZE * 1.4);
+  const hitPlaneMaterial = new THREE.MeshBasicMaterial({ visible: false });
   const markerObjects: MarkerObject[] = [];
 
   timeline.forEach((yearData, yearIndex) => {
@@ -130,17 +208,15 @@ export function initFieldsSpiral(options: {
         const t = yearIndex + localTurn;
         const position = helixPoint(t);
 
-        const material = new THREE.SpriteMaterial({
-          map: shapeTextures.get(category),
-          transparent: true,
-          fog: true,
-        });
-        const sprite = new THREE.Sprite(material);
-        sprite.position.copy(position);
-        sprite.scale.setScalar(0.22);
-        group.add(sprite);
+        const visual = buildShapeMesh(category);
+        visual.position.copy(position);
+        group.add(visual);
 
-        markerObjects.push({ sprite, marker });
+        const hitPlane = new THREE.Mesh(hitPlaneGeometry, hitPlaneMaterial);
+        hitPlane.position.copy(position);
+        group.add(hitPlane);
+
+        markerObjects.push({ visual, hitPlane, marker, interactable: true });
       });
     });
   });
@@ -158,7 +234,7 @@ export function initFieldsSpiral(options: {
   // Avvitamento: la spirale ruota e avanza lungo il proprio asse verso la camera fissa.
   function applyProgress(u: number) {
     group.position.z = u * totalLength;
-    group.rotation.z = u * turns * Math.PI * 2;
+    group.rotation.z = -u * turns * Math.PI * 2;
   }
 
   const introPlayed = sessionStorage.getItem('fields-intro-played') === '1';
@@ -168,15 +244,18 @@ export function initFieldsSpiral(options: {
   group.position.z += startZ;
 
   const scrollState = { u: 0 };
+  let scrollTrigger: ScrollTrigger | undefined;
+  let isOpening = false;
 
   function startScrollDriver() {
-    ScrollTrigger.create({
+    scrollTrigger = ScrollTrigger.create({
       trigger: pinSection,
       pin: true,
       scrub: 1,
       start: 'top top',
       end: `+=${window.innerHeight * turns * 1.2}`,
       onUpdate: (self) => {
+        if (isOpening) return;
         scrollState.u = self.progress;
         applyProgress(self.progress);
       },
@@ -198,45 +277,125 @@ export function initFieldsSpiral(options: {
     });
   }
 
-  // Hover/tap sui marker: raycasting per il pannello di preview.
+  // Hover/tap sui marker: raycasting per il pannello di preview e per
+  // il trigger della transizione di apertura.
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
   let hovered: MarkerObject | null = null;
+  let lastTappedMarkerId: string | null = null;
 
-  function pickAt(clientX: number, clientY: number) {
+  function hitTest(clientX: number, clientY: number): MarkerObject | null {
     const rect = canvas.getBoundingClientRect();
     pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
     pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1;
     raycaster.setFromCamera(pointer, camera);
-    const hits = raycaster.intersectObjects(markerObjects.map((m) => m.sprite));
-    if (hits.length === 0) {
-      if (hovered) {
-        hovered = null;
-        onHoverMarker(null);
-      }
-      return;
-    }
-    const hit = markerObjects.find((m) => m.sprite === hits[0].object) ?? null;
+    const hitPlanes = markerObjects.filter((m) => m.interactable).map((m) => m.hitPlane);
+    const hits = raycaster.intersectObjects(hitPlanes);
+    if (hits.length === 0) return null;
+    return markerObjects.find((m) => m.hitPlane === hits[0].object) ?? null;
+  }
+
+  function setHovered(hit: MarkerObject | null) {
     if (hit !== hovered) {
       hovered = hit;
       onHoverMarker(hit?.marker ?? null);
     }
   }
 
+  /** Anima il marker cliccato fino a riempire lo schermo — vedi
+   *  docs/brain/fields-spiral.md, "Transizione di apertura". Il filo
+   *  dell'elica e gli altri marker restano fermi: solo la sagoma
+   *  cliccata si ingrandisce e si avvicina alla camera.
+   *
+   *  La camera è ferma su (0,0,CAMERA_Z) e guarda l'origine: un marker
+   *  che si limitasse ad avvicinarsi in z crescerebbe restando dov'era
+   *  in x/y (se era decentrato sulla spira, resterebbe decentrato anche
+   *  a piena scala). Per "colpire in faccia" lo spettatore deve invece
+   *  convergere sull'asse ottico (x,y → 0) mentre si avvicina — il
+   *  gruppo della spirale è fermo durante l'apertura (scroll bloccato,
+   *  vedi isOpening), quindi la posizione LOCALE del marker coincide
+   *  con quella nel mondo a meno della trasformazione rigida del
+   *  gruppo, che non sposta l'asse z: portare x/y locali a 0 centra il
+   *  marker sull'asse camera indipendentemente da dove si trovava sulla
+   *  spira. */
+  function playOpenZoom(hit: MarkerObject): Promise<void> {
+    return new Promise((resolve) => {
+      gsap.to(hit.visual.scale, {
+        x: 60,
+        y: 60,
+        z: 60,
+        duration: OPEN_ZOOM_DURATION_MS / 1000,
+        ease: 'power2.in',
+      });
+      gsap.to(hit.visual.position, {
+        x: 0,
+        y: 0,
+        z: CAMERA_Z - 0.2,
+        duration: OPEN_ZOOM_DURATION_MS / 1000,
+        ease: 'power2.in',
+        onComplete: () => resolve(),
+      });
+    });
+  }
+
+  function tryOpen(hit: MarkerObject) {
+    if (isOpening) return;
+    isOpening = true;
+    onHoverMarker(null);
+    onOpenMarker(hit.marker, () => playOpenZoom(hit));
+  }
+
   function onPointerMove(e: PointerEvent) {
-    if (e.pointerType === 'touch') return;
-    pickAt(e.clientX, e.clientY);
+    if (e.pointerType === 'touch' || isOpening) return;
+    setHovered(hitTest(e.clientX, e.clientY));
   }
   function onPointerDown(e: PointerEvent) {
-    if (e.pointerType !== 'touch') return;
-    pickAt(e.clientX, e.clientY);
+    if (e.pointerType !== 'touch' || isOpening) return;
+    const hit = hitTest(e.clientX, e.clientY);
+    if (hit && hit.marker.id === lastTappedMarkerId) {
+      tryOpen(hit);
+      return;
+    }
+    lastTappedMarkerId = hit?.marker.id ?? null;
+    setHovered(hit);
+  }
+  function onClick(e: MouseEvent) {
+    if (isOpening) return;
+    const hit = hitTest(e.clientX, e.clientY);
+    if (hit) tryOpen(hit);
   }
 
   canvas.addEventListener('pointermove', onPointerMove);
   canvas.addEventListener('pointerdown', onPointerDown);
+  canvas.addEventListener('click', onClick);
+
+  // Soglia di sfumatura oltre la quale un marker smette di essere
+  // interagibile — vedi NEAR_FADE_* e docs/brain/fields-spiral.md.
+  // Ricalcolata su CPU (solo per i marker, non per il filo) perché
+  // l'hit-test non può leggere il fade calcolato nello shader.
+  const HIT_TEST_DISABLE_FADE = 0.85;
+  const viewSpacePosition = new THREE.Vector3();
+
+  function smoothstep(edge0: number, edge1: number, x: number) {
+    const t = THREE.MathUtils.clamp((x - edge0) / (edge1 - edge0), 0, 1);
+    return t * t * (3 - 2 * t);
+  }
 
   let frame = 0;
   function animate() {
+    // Billboard: ogni marker guarda sempre la camera (THREE.Sprite lo
+    // faceva da solo, la geometria vettoriale no).
+    for (const m of markerObjects) {
+      m.visual.quaternion.copy(camera.quaternion);
+      m.hitPlane.quaternion.copy(camera.quaternion);
+
+      // Stessa metrica di profondità usata nello shader (-mvPosition.z):
+      // vale su qualunque bordo, non solo quello inferiore.
+      m.hitPlane.getWorldPosition(viewSpacePosition).applyMatrix4(camera.matrixWorldInverse);
+      const depth = -viewSpacePosition.z;
+      const fade = 1 - smoothstep(NEAR_FADE_CLOSE, NEAR_FADE_START, depth);
+      m.interactable = fade < HIT_TEST_DISABLE_FADE;
+    }
     renderer.render(scene, camera);
     frame = requestAnimationFrame(animate);
   }
@@ -248,6 +407,8 @@ export function initFieldsSpiral(options: {
       window.removeEventListener('resize', resize);
       canvas.removeEventListener('pointermove', onPointerMove);
       canvas.removeEventListener('pointerdown', onPointerDown);
+      canvas.removeEventListener('click', onClick);
+      scrollTrigger?.kill();
       renderer.dispose();
     },
   };

@@ -1,0 +1,78 @@
+---
+titolo: "Reading a thermal image is harder than taking one"
+data: 2025-09-30
+sommario: "The colours in a thermal photograph are a rendering choice, not a measurement. Everything that makes the picture legible is also what makes it unusable as data."
+tag: ["Thermography", "Field measurement", "Warmish", "Urban surfaces"]
+fonte: "Warmish — thermal image analysis tool, 2025"
+fonteUrl: "https://doi.org/10.5281/zenodo.16887040"
+---
+
+A thermal camera is the most persuasive instrument in environmental
+analysis, and that is its problem. The image comes out looking like
+evidence: a façade in red, a shaded corner in blue, an unambiguous story
+about where the heat is. Put it in a report and nobody asks a question.
+
+They should, because at least four decisions were made between the
+sensor and the picture, and none of them are visible in it.
+
+## What the camera assumed on your behalf
+
+**Emissivity.** The sensor measures radiance and converts it to
+temperature using an assumed emissivity, typically 0.95. That is roughly
+right for concrete, plaster and vegetation. It is wrong for polished
+metal, wrong for glass at an angle, and wrong enough for wet surfaces
+that a puddle can read several degrees off. A single global value applied
+to a street scene containing all of these produces a map with errors that
+vary by material — which is to say, errors that look like a pattern.
+
+**Reflected apparent temperature.** Every surface reflects some of the
+radiation around it. In an urban canyon at midday, part of what you read
+on a shaded wall is the sunlit wall opposite. Unless the reflected
+component was set from an actual measurement, it was set from a default.
+
+**The scale.** The colour range is stretched between two values, and
+those values are almost always chosen automatically per image. Two
+photographs of the same street taken ten minutes apart can use different
+scales, which means the colours are not comparable — a fact that survives
+into surprisingly many published figures.
+
+**The palette.** Iron, rainbow, and most of the other classic thermal
+palettes are not perceptually uniform. They compress differences in some
+parts of the range and exaggerate them in others, and they are largely
+unreadable for red-green colour blindness. The visible boundary between
+"orange" and "red" is a palette artefact, not a thermal one.
+
+## Which is why the raw file matters
+
+None of this is an argument against thermography. It is an argument for
+working from the radiometric data rather than from the rendering.
+
+A FLIR file carries the temperature matrix and the parameters used to
+produce it. Once you can open that, the questions become answerable: what
+is the actual difference between these two surfaces, what happens if I
+correct the emissivity for this material, what is the distribution across
+this region rather than the single value the cursor happened to land on.
+
+That is what [Warmish](/tools) does — extract the matrix, expose the
+parameters, let you interrogate the image pixel by pixel and export the
+numbers. It exists because I needed it during the summer campaigns on
+travertine surfaces, where the whole question was a few degrees of
+difference between materials, and a few degrees is exactly the range in
+which the defaults are unreliable.
+
+## The field practice that goes with it
+
+The tooling only helps if the measurement was taken properly. Three
+things that make the difference, learned the slow way:
+
+Take a reference. A surface of known emissivity in the frame — a piece of
+matte tape works — gives you something to correct against.
+
+Record the conditions. Air temperature, humidity, wind, cloud cover, time
+to the minute. A thermal image without its context is a picture.
+
+Shoot the same thing repeatedly. A single frame captures a moment of a
+surface that is still exchanging heat. The interesting quantity is almost
+never the peak — it is the cooling curve after sunset, which is where
+thermal mass shows itself and where a stone city separates from a
+concrete one.

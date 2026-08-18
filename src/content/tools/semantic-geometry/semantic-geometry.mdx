@@ -1,0 +1,17 @@
+---
+nome: "semanticGeometry"
+sommario: "Attaches meaning to Rhino geometry and keeps it there through the bake."
+data: 2022-01-01
+ambiente: ["Grasshopper", "Rhino", "Human plugin"]
+repo: "https://github.com/grazianoEnzoMarchesani/semanticGeometry"
+doi: "https://doi.org/10.5281/zenodo.14547904"
+---
+
+Parametric models know what each surface *is* — a wall, a canopy, a water
+body — right up to the moment they are baked, when everything becomes an
+anonymous brep.
+
+semanticGeometry attaches custom attributes to nested geometry and carries
+them into Rhino, so that the material, the albedo or the LCZ class
+survives into the next step of the workflow. Which is exactly what an
+environmental simulation needs to read.

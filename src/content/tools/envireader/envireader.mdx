@@ -1,0 +1,18 @@
+---
+nome: "EnviReader"
+sommario: "Opens ENVI-met EDX/EDT output in a browser and turns it into charts you can actually read."
+data: 2024-01-01
+linguaggio: "JavaScript"
+ambiente: ["Web", "ENVI-met", "ECharts"]
+repo: "https://github.com/grazianoEnzoMarchesani/EnviReader"
+doi: "https://doi.org/10.5281/zenodo.14500979"
+sito: "https://envireader.altervista.org"
+---
+
+ENVI-met writes its results in a binary pair — EDX for the header, EDT
+for the grid — that only its own post-processor reads comfortably. After
+a few hundred simulations that becomes the bottleneck of the whole
+workflow.
+
+EnviReader parses both in the browser, with no install and no upload, and
+produces sections, time series and comparisons between scenarios.

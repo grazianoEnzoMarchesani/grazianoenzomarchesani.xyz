@@ -1,0 +1,246 @@
+{
+  "_nota": "Le decisioni che il .bib da solo non può prendere. «escludi» = record IRIS che non devono comparire su /publications (tesi, tool software che vivono già in /tools). «tipo» = per i record @misc — categoria ambigua per definizione — dice se vanno in 'dataset' invece che nel default 'attivita'. Ogni voce nuova non elencata qui prende il default (vedi genera-pubblicazioni.mjs): i @misc finiscono in 'attivita' finché non li sposti qui.",
+  "escludi": {
+    "11581_481330": "Tesi di dottorato (cartOut) — non è fra le pubblicazioni del sito. Per includerla: togli questa riga e aggiungi una riga in \"tipo\" con valore \"monografia\".",
+    "11581_488063": "Tool software (A_GreeNET Explorer) — ha una pagina propria in /tools, non entra qui.",
+    "11581_492904": "Tool software (Cityrhythm, il rilascio Zenodo) — /tools. Diverso dall'articolo su City Rhythm, che resta fra le pubblicazioni.",
+    "11581_488048": "Tool software (Envi-Met automation Protocol) — /tools.",
+    "11581_488023": "Tool software (EnviReader) — /tools.",
+    "11581_488047": "Tool software (orient-3Pt) — /tools.",
+    "11581_488046": "Tool software (semanticGeometry) — /tools.",
+    "11581_488043": "Tool software (spotMapper) — /tools.",
+    "11581_488044": "Tool software (streetVision) — /tools.",
+    "11581_488045": "Tool software (UnicamTools) — /tools.",
+    "11581_497744": "Tool software (Warmish) — /tools."
+  },
+  "tipo": {
+    "11581_478367": "dataset",
+    "11581_478369": "dataset",
+    "11581_488049": "dataset",
+    "11581_489223": "dataset",
+    "11581_501409": "dataset",
+    "11581_489346": "dataset",
+    "11581_469708": "dataset",
+    "11581_492905": "dataset",
+
+    "11581_497509": "atti",
+    "11581_497508": "atti",
+    "11581_497507": "atti",
+    "11581_498304": "atti",
+    "11581_496424": "atti",
+    "11581_498625": "atti",
+    "11581_454932": "capitolo",
+    "11581_493464": "capitolo",
+    "11581_440770": "capitolo"
+  },
+  "_notaTipoVoci": "Le nove chiavi sopra (dopo quelle @misc) correggono il tipo bibtex grezzo per le voci dove non coincide con la classificazione bibliografica corretta: IOP Conference Series è tecnicamente un @article per IRIS ma sono atti di convegno (meteoclimatic-scenarios, pvnb-ascoli, city-rhythm-paper); alcuni volumi (Responsive Cities, The Sustainable City, Society 5.0) sono @inbook ma sono anch'essi atti; tre @conference (why-coupling-microclimate, allombra-del-chiostro, new-baroque) sono in realtà capitoli in volumi editi da case editrici librarie, non proceedings — IRIS li ha etichettati «conference» ma citazione e editore dicono capitolo.",
+  "_notaRiviste": "IRIS esporta ogni nome di rivista tutto maiuscolo, senza distinguere fra acronimi veri (TEMA, TECHNE) e riviste che semplicemente urlano nel .bib (Sustainability, Building and Environment). Qui la forma corretta per quelle già viste; una rivista nuova, non elencata, riceve un Title Case generico.",
+  "riviste": {
+    "TEMA": "TEMA",
+    "TECHNE": "TECHNE",
+    "ANANKE": "ANANKE",
+    "AGATHÓN": "AGATHÓN",
+    "SUSTAINABILITY": "Sustainability",
+    "BUILDING AND ENVIRONMENT": "Building and Environment",
+    "URBANISTICA INFORMAZIONI": "Urbanistica Informazioni",
+    "ABITARE LA TERRA": "Abitare la Terra",
+    "TERRITORIO": "Territorio",
+    "IOP CONFERENCE SERIES. EARTH AND ENVIRONMENTAL SCIENCE": "IOP Conference Series: Earth and Environmental Science"
+  },
+  "_notaCampi": "Override puntuali per una singola voce, applicati sopra al risultato calcolato — ad ogni rigenerazione, non solo la prima volta (DEC-76: pubblicazioni.json si ricostruisce sempre da zero). Chiave = citation key del .bib, valore = i campi da forzare (titolo, autori, sede, anno), es. { \"11581_XXXXXX\": { \"sede\": \"testo scelto a mano\" } }. La maggior parte di queste voci è stata seminata automaticamente al passaggio dal meccanismo additivo (DEC-75) a quello di ricostruzione (DEC-76), per non cambiare il testo di ciò che era già pubblicato.",
+  "campi": {
+    "11581_502344": {
+      "autori": "Brownlee T. D., Camaioni C., Di Giovanni C. F., Ilardo G., Kyprianou I., Marchesani G. E., Jovanović P., Shatarat O."
+    },
+    "11581_499867": {
+      "autori": "Naboni E., Marchesani G. E., Cocci Grifoni R."
+    },
+    "11581_440770": {
+      "sede": "World Heritage and Contamination. Gangemi, 811–816"
+    },
+    "11581_493464": {
+      "titolo": "All'ombra del chiostro: analisi microclimatiche delle strutture claustrali e strategie per il progetto fra conservazione e innovazione",
+      "sede": "Le prossime sfide per i beni culturali. Arcadia Ricerche, 575–586"
+    },
+    "11581_448236": {
+      "titolo": "Architecture of complexity: (re)generative interfaces",
+      "sede": "Design in the Digital Age. Maggioli, 89–92"
+    },
+    "11581_498384": {
+      "titolo": "Bridging the theory–practice gap: a design methodology for green infrastructure implementation in mid-Adriatic coastal cities",
+      "sede": "Sustainability 18"
+    },
+    "11581_497507": {
+      "autori": "Marchesani G. E., Cocci Grifoni R., Riera D., Khodaparast M.",
+      "sede": "IOP Conference Series: Earth and Environmental Science 1568"
+    },
+    "11581_495286": {
+      "titolo": "Climate maps and urban planning in search of a reliable framework for adapting cities and communities to the impacts of climate change",
+      "sede": "Geographic Approaches to Climate Change and Mitigation. Springer, Cham, 57–65"
+    },
+    "11581_456612": {
+      "titolo": "Combinative study of urban heat island in Ascoli Piceno city with remote sensing and CFD simulation — CCUHRE project",
+      "sede": "Sustainability 14, 1–21"
+    },
+    "11581_404101": {
+      "titolo": "Cool façade optimization: a new parametric methodology for the urban heat island phenomenon",
+      "sede": "EEEIC / I&CPS Europe 2017. IEEE, 1–5"
+    },
+    "11581_496650": {
+      "titolo": "Data-Driven Design. Come l'intelligenza artificiale e il machine learning vengono utilizzati per analizzare i dati urbani, sanitari e demografici",
+      "sede": "Progetto Vitality. LetteraVentidue, 242–251"
+    },
+    "11581_427783.15": {
+      "titolo": "Density – intensity. Material and immaterial elements in assessing urban quality"
+    },
+    "11581_496649": {
+      "titolo": "Empowering Health: strumenti digitali per una vita migliore. Il ruolo delle utility digitali nella promozione di pratiche sane",
+      "sede": "Progetto Vitality. LetteraVentidue, 213–219"
+    },
+    "11581_424613": {
+      "titolo": "Energy efficiency improvements in Italian historical buildings: the case study of Ascoli Piceno",
+      "sede": "EEEIC / I&CPS Europe 2018. IEEE, 1–6"
+    },
+    "11581_466312": {
+      "titolo": "Green infrastructure for intermediate cities — the Ascoli Piceno case study",
+      "sede": "Abitare la Terra, 76–79"
+    },
+    "11581_498304": {
+      "titolo": "Innovative composite formulations for thermal regulation: a synergy of computational design and waste material valorisation to enhance outdoor thermal comfort",
+      "sede": "Responsive Cities 2025. Design Matter(s) for Decarbonization. IAAC, Barcelona, 324–341"
+    },
+    "11581_498146": {
+      "titolo": "Innovazione urbana tra tecnologie, clima e impatto sociale",
+      "sede": "Progettazione ambientale. Sfide globali, scenari di ricerca. Maggioli, 366–371"
+    },
+    "11581_405977": {
+      "titolo": "Inspired by the atmosphere. See the invisible",
+      "sede": "IMMAGINI? Conference Proceedings 2017. MDPI, 1–8"
+    },
+    "11581_404102": {
+      "titolo": "Inspired by the atmosphere: a procedural protocol that defines a meta-project based on atmospheric forces — solar radiation and wind field",
+      "sede": "EEEIC / I&CPS Europe 2017. IEEE, 1–5"
+    },
+    "11581_473224": {
+      "sede": "Un selfie dei territori. Maggioli, 102–110"
+    },
+    "11581_454936": {
+      "titolo": "La sfida delle periferie: i quartieri ERP come opportunità di risposta all'emergenza climatica e sanitaria",
+      "sede": "Urbanistica Informazioni 47, 13–15"
+    },
+    "11581_496424": {
+      "titolo": "Local climate zone mapping in historical cities: a high-resolution tool for urban climate resilience",
+      "autori": "Cocci Grifoni R., Bernabei M. S., D'Onofrio R., Marchesani G. E., Khodaparast M.",
+      "sede": "The Sustainable City XVII. WIT Press, 25–36"
+    },
+    "11581_440772": {
+      "titolo": "Mass and lightness: urban quality along the Aurelian Walls in Rome",
+      "sede": "TECHNE 19, 280–289"
+    },
+    "11581_445330": {
+      "sede": "Urban Health: Participatory Action-Research Models Contrasting Socioeconomic Inequalities in the Urban Context. Springer, Cham, 225–260"
+    },
+    "11581_498625": {
+      "titolo": "Minimum urban units (MUUs): a data-driven methodology for adaptive and climate-responsive urban planning",
+      "sede": "Society 5.0 — 5th International Conference, Revised Selected Papers. Springer, Cham, 75–86"
+    },
+    "11581_472062": {
+      "titolo": "Mitigation and adaptation strategies to offset the impacts of climate change on urban health: a European perspective"
+    },
+    "11581_491584": {
+      "titolo": "Multilevel governance approach to adaptation. The construction of the Italian Mid-Adriatic green infrastructure",
+      "autori": "D'Onofrio R., Brownlee T. D., Camaioni C., Cecchi J., Cocci Grifoni R., Malavolta S., Marchesani G. E."
+    },
+    "11581_496646": {
+      "titolo": "Multiscalare, interoperabile, transdisciplinare. Il potere e i limiti del geo-digitale nella valutazione dei contesti urbani",
+      "sede": "Progetto Vitality. LetteraVentidue, 84–95"
+    },
+    "11581_456616": {
+      "titolo": "Nuovo rinascimento",
+      "sede": "Futuribile. Idee e progetti per un futuro probabile. Capponi Editore, 54–63"
+    },
+    "11581_497509": {
+      "titolo": "Representative meteoclimatic scenarios for Mediterranean urban climate adaptation",
+      "autori": "Cocci Grifoni R., Marchesani G. E., Malavolta S., D'Onofrio R., Khodaparast M.",
+      "sede": "IOP Conference Series: Earth and Environmental Science 1568"
+    },
+    "11581_461758.3": {
+      "titolo": "Resilienza trasformativa urbana: generare nuove opportunità nel complesso sistema edifici/spazi aperti",
+      "autori": "Ottone M. F., Cocci Grifoni R., Samara Ferreira C., Porfiri S., Marchesani G. E.",
+      "sede": "ANANKE, 99–102"
+    },
+    "11581_473223": {
+      "sede": "Progettare in vivo la rigenerazione urbana. Maggioli, 187–193"
+    },
+    "11581_496645": {
+      "titolo": "Simulazione delle dinamiche urbane. Come i modelli numerici analizzano gli edifici e gli spazi esterni nel contesto delle LCZ",
+      "sede": "Progetto Vitality. LetteraVentidue, 43–56"
+    },
+    "11581_497508": {
+      "titolo": "Sustainable urban regeneration through noise mitigation and energy self-sufficiency: the Ascoli Piceno PVNB model",
+      "autori": "Khodaparast M., Ottone M. F., Cocci Grifoni R., Pasqualini C., Marchesani G. E.",
+      "sede": "IOP Conference Series: Earth and Environmental Science 1568"
+    },
+    "11581_498884": {
+      "titolo": "Towards climate adaptive urban planning: minimum urban units-based adaptation strategies to mitigate UHI with AI support",
+      "sede": "Innovative Technologies and Circular Solutions for Sustainable Urban Communities, vol. 1. Springer Nature, 23–37"
+    },
+    "11581_461766.5": {
+      "titolo": "Urban micro-forestry for climate adaptation in the smaller ports of the Mid-Adriatic Sea",
+      "sede": "AGATHÓN, 172–181"
+    },
+    "11581_454932": {
+      "titolo": "Why coupling MicroClimate and buildings in design for climate change",
+      "sede": "Progetto e costruzione: tradizione ed innovazione nella pratica dell'architettura. EdicomEdizioni, 401–413"
+    },
+    "11581_496647": {
+      "titolo": "Strategie indoor e outdoor. Una panoramica delle soluzioni tecnico-spaziali adattive",
+      "sede": "Progetto Vitality. LetteraVentidue, 106–115"
+    },
+    "11581_496648": {
+      "titolo": "Supporto alle decisioni. Un percorso basato sui dati: il ruolo degli strumenti di supporto decisionale IT, dell'intelligenza artificiale e del machine learning",
+      "sede": "Progetto Vitality. LetteraVentidue, 157–169"
+    },
+    "11581_496644": {
+      "titolo": "Zone climatiche locali. Il linguaggio segreto del calore urbano",
+      "sede": "LetteraVentidue, 23–33"
+    },
+    "11581_478367": {
+      "titolo": "Repertorio di interventi NBS e delle specie arboree per il benessere fisico e psichico della comunità urbana — LIFE20 CCA/IT/001752 A_GreeNET"
+    },
+    "11581_478369": {
+      "titolo": "Progetto VITALITY. Spoke 6 — WP6, Output 2: co-creation for citizens"
+    },
+    "11581_489223": {
+      "titolo": "ENVI-met simulation dataset for the LIFE A_GreeNET project (2019 and 2030)"
+    },
+    "11581_501409": {
+      "titolo": "ENVI-met simulation dataset — Via Milano, Pescara: urban microclimate assessment, current scenario and 2050 climate projection"
+    },
+    "11581_489346": {
+      "titolo": "LIFE+ A_GreeNet — data & report iTree Eco"
+    },
+    "11581_469708": {
+      "titolo": "VAU.TE.RE.CO. area studio Regione Marche. Analisi degli spazi aperti urbani"
+    },
+    "11581_478470": {
+      "titolo": "Meeting interno: assessment, recognition and evaluation of the «minimum urban units» — Progetto VITALITY, WP1"
+    },
+    "11581_478471": {
+      "titolo": "Progetto Cli_CCHE, quartiere Sant'Antonio: «L'Italia che verrà», poster e video mapping"
+    },
+    "11581_478363": {
+      "titolo": "Multiplier event «Water for a Friend» — Erasmus+ CliCCHE",
+      "autori": "D'Onofrio R., Camaioni C., Guaiani A., Marchesani G. E., Ottone M. F., Trusiani E., Simionato L."
+    },
+    "11581_478384": {
+      "titolo": "Workshop locale, progetto Erasmus+ CliCCHE"
+    },
+    "11581_478383": {
+      "titolo": "2° Transnational meeting del progetto Erasmus+ CliCCHE"
+    },
+    "11581_405976": {
+      "titolo": "Maker Faire 2017: live mixed reality ed esposizione dei lavori del corso di Design Computazionale"
+    }
+  }
+}

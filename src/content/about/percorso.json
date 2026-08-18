@@ -1,0 +1,161 @@
+{
+  "_nota": "Il percorso: formazione, posizioni, riconoscimenti. Serve solo alla pagina /about, ma sta in un dataset e non nel dizionario perché sono record con una data e un'istituzione — nel dizionario diventerebbero venti chiavi numerate e illeggibili. Dati dal CV aggiornato al 2026-05-16. Il peer review è stato spostato in src/data/pubblicazioni.json (vive con la bibliografia, in /publications) e le conferenze sono state tolte del tutto.",
+
+  "identita": {
+    "nome": "Graziano Enzo Marchesani",
+    "email": "graziano.marchesani@unicam.it",
+    "citta": "Ascoli Piceno",
+    "ruolo": {
+      "en": "Architect · Researcher · PhD in Sustainable Urban Planning",
+      "it": "Architetto · Ricercatore · PhD in Sustainable Urban Planning"
+    },
+    "affiliazione": {
+      "en": "School of Architecture and Design “Eduardo Vittoria” — University of Camerino",
+      "it": "Scuola di Ateneo di Architettura e Design “Eduardo Vittoria” — Università di Camerino"
+    },
+    "affiliazioneBreve": {
+      "en": "UNICAM SAAD — Ascoli Piceno",
+      "it": "UNICAM SAAD — Ascoli Piceno"
+    }
+  },
+
+  "_notaProgrammi": "I programmi che finanziano la ricerca, in forma breve. Nell'hero prendono il posto che nel sito di riferimento avevano i loghi dei clienti: stessa funzione — «qualcuno di serio ci ha messo dei soldi» — con contenuto vero. La forma estesa di ciascuno sta nel campo `programma` dei progetti in src/content/research-projects/.",
+  "programmi": [
+    "Interreg Italia-Croazia",
+    "PNRR",
+    "LIFE",
+    "Erasmus+",
+    "MUR — FAR"
+  ],
+
+  "posizioni": [
+    {
+      "id": "rtda-2026",
+      "anni": "2025 - 2026",
+      "attivo": true,
+      "titolo": {
+        "en": "Fixed-term researcher (RTD-A) — meteoclimatic characterisation of minimum urban units",
+        "it": "Ricercatore a tempo determinato (RTD-A) — caratterizzazione meteoclimatica delle unità urbane minime"
+      },
+      "ente": {
+        "en": "University of Camerino / agreement with Unione Montana del Tronto e Valfluvione",
+        "it": "Università di Camerino / accordo con l'Unione Montana del Tronto e Valfluvione"
+      }
+    },
+    {
+      "id": "rtda-vitality",
+      "anni": "2023 – 2025",
+      "titolo": {
+        "en": "Fixed-term researcher (RTD-A) — VITALITY Innovation Ecosystem",
+        "it": "Ricercatore a tempo determinato (RTD-A) — Ecosistema dell'Innovazione VITALITY"
+      },
+      "ente": { "en": "University of Camerino", "it": "Università di Camerino" }
+    },
+    {
+      "id": "assegno-agreenet",
+      "anni": "2022",
+      "titolo": {
+        "en": "Research fellow, SSD ICAR/12 — A_GreeNET Climate",
+        "it": "Assegnista di ricerca, SSD ICAR/12 — A_GreeNET Climate"
+      },
+      "ente": {
+        "en": "University of Camerino · tutor Roberta Cocci Grifoni, PI Rosalba D'Onofrio",
+        "it": "Università di Camerino · tutor Roberta Cocci Grifoni, responsabile Rosalba D'Onofrio"
+      }
+    },
+    {
+      "id": "cipro",
+      "anni": "2020",
+      "titolo": {
+        "en": "Visiting researcher — outdoor systems for microclimate control",
+        "it": "Periodo di ricerca all'estero — sistemi outdoor per il controllo microclimatico"
+      },
+      "ente": {
+        "en": "University of Cyprus, Nicosia · with Odysseas Kontovourkis and Emanuele Naboni",
+        "it": "University of Cyprus, Nicosia · con Odysseas Kontovourkis ed Emanuele Naboni"
+      }
+    },
+    {
+      "id": "borse",
+      "anni": "2016 – 2022",
+      "titolo": {
+        "en": "Research grants — outdoor thermal comfort, urban thermo-fluid dynamics, parametric optimisation",
+        "it": "Borse di studio e approfondimento — comfort termico outdoor, termofluidodinamica urbana, ottimizzazione parametrica"
+      },
+      "ente": {
+        "en": "School of Architecture and Design, University of Camerino",
+        "it": "Scuola di Architettura e Design, Università di Camerino"
+      }
+    }
+  ],
+
+  "formazione": [
+    {
+      "id": "phd",
+      "anno": "2021",
+      "titolo": {
+        "en": "PhD in Sustainable Urban Planning",
+        "it": "Dottorato di ricerca in Sustainable Urban Planning"
+      },
+      "ente": { "en": "University of Camerino", "it": "Università di Camerino" },
+      "tesi": { "en": "cartOut — Cardboard Architecture for Climate Challenge" },
+      "esito": { "en": "Excellent", "it": "Eccellente" }
+    },
+    {
+      "id": "magistrale",
+      "anno": "2016",
+      "titolo": {
+        "en": "MA in Architecture",
+        "it": "Laurea Magistrale in Architettura"
+      },
+      "ente": { "en": "University of Camerino", "it": "Università di Camerino" },
+      "tesi": {
+        "en": "Inspired by the Atmosphere — a procedural protocol for a metaproject based on solar radiation and wind field",
+        "it": "Inspired by the Atmosphere — protocollo procedurale per un metaprogetto basato su radiazione solare e campo di vento"
+      },
+      "esito": { "en": "110/110" }
+    },
+    {
+      "id": "triennale",
+      "anno": "2012",
+      "titolo": {
+        "en": "BA in Architectural Sciences",
+        "it": "Laurea Triennale in Scienze dell'Architettura"
+      },
+      "ente": { "en": "University of Camerino", "it": "Università di Camerino" },
+      "tesi": {
+        "en": "Design strategies for post-emergency temporary settlements — an “open and cover” system",
+        "it": "Strategie progettuali per insediamenti temporanei post-emergenziali — un sistema “apri e copri”"
+      },
+      "esito": { "en": "110 cum laude", "it": "110 e lode" }
+    },
+    {
+      "id": "abilitazione",
+      "anno": "2020",
+      "titolo": {
+        "en": "Professional qualification — Senior Architect",
+        "it": "Abilitazione all'esercizio della professione di Architetto Senior"
+      },
+      "ente": { "en": "Italy", "it": "Italia" }
+    }
+  ],
+
+  "riconoscimenti": [
+    {
+      "id": "corsico",
+      "anno": "2024",
+      "titolo": { "en": "“Cor/so Corsico Sostenibile” competition", "it": "Concorso “Cor/so Corsico Sostenibile”" },
+      "esito": { "en": "Winning entry", "it": "Progetto vincitore" }
+    },
+    {
+      "id": "tbm",
+      "anno": "2021",
+      "titolo": {
+        "en": "“Upcycling the public housing of Tor Bella Monaca” competition",
+        "it": "Concorso “Upcycling degli edifici ERP di Tor Bella Monaca”"
+      },
+      "esito": { "en": "Honourable mention", "it": "Convenzione d'onore" }
+    }
+  ]
+
+}

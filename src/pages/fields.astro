@@ -1,10 +1,13 @@
 ---
+import { ClientRouter } from 'astro:transitions';
 import '../styles/global.css';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
-import { getFieldsTimeline, FIELD_CATEGORY_ORDER, FIELD_CATEGORY_LABELS } from '../data/fields';
+import FieldTransitionOverlay from '../components/FieldTransitionOverlay.astro';
+import { FIELD_CATEGORY_ORDER, FIELD_CATEGORY_LABELS } from '../data/fields';
+import { getFieldsTimeline } from '../data/fields-content';
 
-const timeline = getFieldsTimeline();
+const timeline = await getFieldsTimeline();
 ---
 
 <html lang="en">
@@ -15,8 +18,10 @@ const timeline = getFieldsTimeline();
 		<meta name="viewport" content="width=device-width" />
 		<meta name="generator" content={Astro.generator} />
 		<title>Fields — Graziano Enzo Marchesani</title>
+		<ClientRouter />
 	</head>
 	<body class="bg-paper text-ink font-sans">
+		<FieldTransitionOverlay />
 		<Nav />
 
 		<main>
@@ -57,6 +62,8 @@ const timeline = getFieldsTimeline();
 					</li>
 				))}
 			</ul>
+
+			<script type="application/json" id="fields-data" is:inline set:html={JSON.stringify(timeline)} />
 		</main>
 
 		<Footer />
@@ -64,14 +71,31 @@ const timeline = getFieldsTimeline();
 </html>
 
 <script>
-	import { initFieldsSpiral } from '../scripts/fields-spiral';
-	import { getFieldsTimeline, FIELD_CATEGORY_LABELS } from '../data/fields';
+	import { gsap } from 'gsap';
+	import { navigate } from 'astro:transitions/client';
+	import { initFieldsSpiral, OPEN_ZOOM_DURATION_MS } from '../scripts/fields-spiral';
+	import { FIELD_CATEGORY_LABELS, type FieldYear } from '../data/fields';
 
-	const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-	const list = document.getElementById('fields-list');
-	const pinSection = document.getElementById('fields-pin');
+	// Route di prova per verificare la transizione (vedi
+	// docs/brain/fields-spiral.md) prima che esistano le pagine di
+	// dettaglio reali per le singole voci di Fields.
+	const TEST_DESTINATION_URL = '/fields/prova';
 
-	if (prefersReducedMotion) {
+	// Con ClientRouter lo script del modulo non viene ri-eseguito da solo
+	// a ogni navigazione (stesso URL di modulo, il browser lo deduplica):
+	// la scena va (ri)costruita esplicitamente su ogni `astro:page-load`,
+	// compreso il primo — non un listener aggiuntivo, l'unico setup.
+	let spiralHandle: { destroy: () => void } | undefined;
+
+	function setup() {
+		spiralHandle?.destroy();
+		spiralHandle = undefined;
+
+		const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		const list = document.getElementById('fields-list');
+		const pinSection = document.getElementById('fields-pin');
+
+		if (prefersReducedMotion) {
 		// La scena 3D non viene mostrata: la lista semantica diventa l'esperienza primaria.
 		pinSection?.remove();
 		list?.classList.remove('sr-only');
@@ -83,9 +107,13 @@ const timeline = getFieldsTimeline();
 		const previewTitle = document.getElementById('fields-preview-title');
 
 		if (canvas instanceof HTMLCanvasElement && pinSection && preview && previewCategory && previewTitle) {
-			const timeline = getFieldsTimeline();
+			// La timeline arriva già calcolata dal frontmatter (astro:content non
+			// è disponibile qui, questo script gira nel browser): serializzata in
+			// un tag JSON invece di essere ricalcolata lato client.
+			const dataEl = document.getElementById('fields-data');
+			const timeline: FieldYear[] = dataEl ? JSON.parse(dataEl.textContent ?? '[]') : [];
 
-			initFieldsSpiral({
+			spiralHandle = initFieldsSpiral({
 				canvas,
 				pinSection,
 				timeline,
@@ -98,7 +126,22 @@ const timeline = getFieldsTimeline();
 					previewTitle.textContent = marker.title;
 					preview.style.opacity = '1';
 				},
+				onOpenMarker: async (_marker, playZoom) => {
+					const overlay = document.getElementById('field-transition-overlay');
+					const fadeIn = overlay
+						? gsap.to(overlay, {
+								opacity: 1,
+								duration: OPEN_ZOOM_DURATION_MS / 1000,
+								ease: 'power2.in',
+							})
+						: null;
+					await Promise.all([playZoom(), fadeIn?.then(() => {})]);
+					navigate(TEST_DESTINATION_URL);
+				},
 			});
 		}
 	}
+}
+
+document.addEventListener('astro:page-load', setup);
 </script>

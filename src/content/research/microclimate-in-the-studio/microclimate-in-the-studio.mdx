@@ -1,0 +1,84 @@
+---
+titolo: "Microclimate simulation belongs in the design studio, not after it"
+data: 2025-11-12
+sommario: "Environmental analysis is usually commissioned to confirm a project that is already drawn. Run three weeks earlier, the same analysis changes the drawing instead of grading it."
+tag: ["ENVI-met", "Simulation", "Design process", "Teaching"]
+fonte: "Why coupling MicroClimate and buildings in design for climate change — EdicomEdizioni, 2021"
+---
+
+There is a standard place in the process where microclimate analysis
+happens. The design is essentially finished, the plan is fixed, the
+sections are drawn, and someone runs a simulation to demonstrate that the
+result is acceptable. If the numbers are bad, the response is a canopy
+here and a lighter paving there.
+
+This is not useless. It is just the least valuable moment at which it
+could have been done.
+
+## What the geometry has already decided
+
+By the time a scheme is fixed, most of the microclimatic outcome is
+locked. The orientation of the block, the width and direction of the
+streets, the height ratio between the two sides of a canyon, the amount
+of exposed thermal mass, whether the prevailing wind can get in at all —
+these are the variables with the largest effect, and they are all decided
+in the first fortnight of a project, usually on intuition.
+
+What remains negotiable at the end — surface albedo, tree species,
+shading devices — matters, but it operates in the margin left by the
+geometry. Adding trees to a canyon whose section traps radiation is
+buying back a fraction of what the section gave away.
+
+## The obstacle is the turnaround time
+
+The reason simulation lives at the end is not ignorance. It is that a
+full ENVI-met run on a real urban model takes hours to prepare and hours
+to compute, and the answer arrives after the design conversation has
+moved on. A tool that answers in two days cannot participate in a
+decision made in an afternoon.
+
+So the practical problem is not "should we simulate earlier" — everybody
+agrees — but "what can be answered fast enough to be part of the
+conversation".
+
+Most of the work I do on tooling comes from this. Building
+[unicamTools](/tools) so a comfort study on a real square is an
+afternoon's work rather than a specialist commission. Building the
+[ENVI-met automation protocol](/tools) so the model preparation is a
+scripted sequence instead of an artisanal one. Building
+[EnviReader](/tools) so reading the output does not require the software
+that produced it.
+
+None of these makes the physics faster. They make everything around the
+physics faster, which turns out to be where the days go.
+
+## Coupling, and why it is the real argument
+
+The chapter written with Naboni, Gherri, Di Nunzio, Maiullari, Cocci
+Grifoni and Fiorito makes a stronger claim than "simulate earlier". It
+argues that the building model and the microclimate model have to be
+coupled, because each is a boundary condition for the other.
+
+The building's energy demand depends on the microclimate outside its
+envelope, which is not the airport weather file. The microclimate depends
+on the surfaces, the waste heat and the geometry of the buildings. Run
+separately, both models are solving the wrong problem with confident
+precision.
+
+Coupling them is technically awkward and computationally expensive, and
+in practice it is done rarely. But the case for it is not perfectionism:
+it is that the uncoupled error is systematic and always in the same
+direction — it underestimates summer discomfort, in exactly the climate
+scenarios where getting it wrong costs the most.
+
+## What this means for teaching
+
+If you accept the argument, the consequence for a design studio is
+concrete. Environmental analysis cannot be a specialist course that
+students take in parallel; it has to be a tool they reach for during the
+design, at the resolution the design currently has.
+
+Which is why the courses I teach start with a rough model and a bad
+simulation in week one, rather than a good simulation in week ten. A bad
+simulation of the right question, early, beats a good simulation of a
+decision already taken.

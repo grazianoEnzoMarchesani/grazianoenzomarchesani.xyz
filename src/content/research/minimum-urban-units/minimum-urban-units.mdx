@@ -1,0 +1,160 @@
+---
+titolo: "Minimum urban units: finding the smallest piece of city that still has a climate"
+data: 2026-02-24
+sommario: "Adaptation plans are written for districts and applied to streets. The mismatch is not administrative — it is physical, and it has a size."
+tag: ["Minimum urban units", "Adaptation", "Urban planning", "VITALITY"]
+fonte: "Minimum urban units (MUUs): a data-driven methodology for adaptive and climate-responsive urban planning — Society 5.0, Springer, 2026"
+fonteUrl: "https://doi.org/10.1007/978-3-032-15463-7_7"
+---
+
+Every climate adaptation plan has to decide what it is planning *for*.
+The administrative answer is the district, the census tract, the
+neighbourhood — units that exist because someone had to draw a line for
+the purposes of counting people. The physical answer is different, and
+the two rarely coincide.
+
+A census tract can contain a shaded courtyard, an eight-lane road and a
+park. Averaged, it has a temperature that describes none of the three.
+Any measure sized on that average will be too much in one place and too
+little in another.
+
+## The unit has to be defined by behaviour
+
+The idea behind the minimum urban unit is straightforward once stated:
+the relevant unit is the smallest portion of urban fabric that behaves
+coherently — thermally, morphologically, and in terms of how people use
+it. Inside it, one measure works everywhere. Across its boundary, you
+need a different one.
+
+Finding it is the hard part, because it is a clustering problem with a
+physical constraint. We work from three families of input:
+
+**Morphology.** Building surface fraction, height, sky view factor,
+street aspect ratio, permeability. These come from the LCZ pipeline and
+determine how the fabric traps and releases heat.
+
+**Measured and simulated climate.** Surface temperature from remote
+sensing, air temperature and comfort indices from CFD and ENVI-met
+simulation, on both current conditions and 2050 scenarios.
+
+**Use.** Who is there, when, and how exposed they are. Footfall,
+demographics, the presence of schools, care homes, markets. A hot square
+that is empty at two in the afternoon is a different problem from a hot
+square with a bus stop on it.
+
+The unit emerges where these three agree. It is usually smaller than a
+census tract and larger than a building plot: in the Marche towns we
+worked on, roughly the scale of a street segment with its frontages, or a
+square with the blocks around it.
+
+## Why it changes what you can propose
+
+Two consequences, and the second is the one that convinced me.
+
+The first is precision. Once the unit is defined you can attach a target
+to it and check whether the target is met — a reduction in UTCI, a number
+of hours above threshold, an increase in shaded area at 3 p.m. in July.
+Vague plans become verifiable plans.
+
+The second is that the unit is a size a municipality can actually act on.
+A district-scale adaptation plan is a document. A minimum urban unit is a
+piece of work: one street, one square, one schoolyard, with a cost, a
+contractor and a completion date. The plan becomes a queue of units
+ordered by priority, and priority can be computed — from exposure, from
+vulnerability of the population, from how much improvement the geometry
+allows.
+
+That reordering is what the VITALITY work was about, and what the
+AI-supported version in the Springer chapter pushes further: using
+machine learning not to decide, but to rank — to say which twenty of two
+hundred units would return the most comfort per euro.
+
+## The honest limit
+
+A unit defined by data inherits the data's blind spots. Where the
+morphological inputs are poor — informal fabric, mixed heights, recent
+change not yet in the cadastre — the clustering produces units that look
+tidy and are wrong. The method needs ground truth, and ground truth means
+someone walking the street with a sensor.
+
+Which is, in the end, still the most reliable instrument we have.
+
+{/*
+IT — in attesa dell'infrastruttura bilingue (vedi docs/brain/content-plan.md).
+
+titolo: "Unità urbane minime: trovare il pezzo di città più piccolo che ha ancora un clima"
+sommario: "I piani di adattamento si scrivono sui quartieri e si applicano alle strade. Lo scarto non è amministrativo — è fisico, e ha una dimensione."
+
+Ogni piano di adattamento climatico deve decidere *per cosa* sta
+pianificando. La risposta amministrativa è il quartiere, la sezione di
+censimento, il rione — unità che esistono perché qualcuno ha dovuto
+tracciare una linea per contare le persone. La risposta fisica è un'altra
+cosa, e le due coincidono di rado.
+
+Una sezione di censimento può contenere una corte ombreggiata, una strada
+a quattro corsie e un parco. Mediata, ha una temperatura che non descrive
+nessuno dei tre. Qualsiasi misura dimensionata su quella media sarà
+troppa in un punto e troppo poca in un altro.
+
+## L'unità va definita dal comportamento
+
+L'idea dietro l'unità urbana minima è semplice, una volta detta: l'unità
+rilevante è la porzione più piccola di tessuto che si comporta in modo
+coerente — dal punto di vista termico, morfologico e dell'uso che se ne
+fa. Dentro, una misura funziona ovunque. Oltre il confine, ne serve
+un'altra.
+
+Trovarla è la parte difficile, perché è un problema di clustering con un
+vincolo fisico. Si lavora su tre famiglie di dati:
+
+**Morfologia.** Frazione di superficie costruita, altezze, sky view
+factor, rapporto d'aspetto della strada, permeabilità. Arrivano dalla
+pipeline LCZ e determinano come il tessuto intrappola e rilascia calore.
+
+**Clima misurato e simulato.** Temperatura superficiale da
+telerilevamento, temperatura dell'aria e indici di comfort da CFD ed
+ENVI-met, sia sulle condizioni attuali sia sugli scenari al 2050.
+
+**Uso.** Chi c'è, quando, e quanto è esposto. Flussi pedonali,
+demografia, presenza di scuole, case di riposo, mercati. Una piazza
+rovente e vuota alle due del pomeriggio è un problema diverso da una
+piazza rovente con una fermata dell'autobus.
+
+L'unità emerge dove le tre cose concordano. Di solito è più piccola di
+una sezione di censimento e più grande di un lotto: nelle città marchigiane
+su cui abbiamo lavorato, all'incirca la scala di un tratto di strada con i
+suoi fronti, o di una piazza con gli isolati attorno.
+
+## Perché cambia quello che si può proporre
+
+Due conseguenze, e la seconda è quella che mi ha convinto.
+
+La prima è la precisione. Definita l'unità, le si può attaccare un
+obiettivo e verificare se è stato raggiunto — una riduzione di UTCI, un
+numero di ore sopra soglia, un aumento della superficie in ombra alle
+15 di luglio. I piani vaghi diventano piani verificabili.
+
+La seconda è che l'unità ha una dimensione su cui un Comune può davvero
+agire. Un piano di adattamento di scala urbana è un documento. Un'unità
+urbana minima è un lavoro: una strada, una piazza, un cortile
+scolastico, con un costo, un'impresa e una data di fine. Il piano diventa
+una coda di unità ordinate per priorità, e la priorità si può calcolare —
+dall'esposizione, dalla vulnerabilità di chi ci abita, da quanto
+miglioramento la geometria consente.
+
+È questo riordino il senso del lavoro dentro VITALITY, e la versione
+assistita dall'AI nel capitolo Springer lo spinge più avanti: usare il
+machine learning non per decidere, ma per ordinare — per dire quali venti
+unità su duecento restituiscono più comfort per euro speso.
+
+## Il limite, detto chiaro
+
+Un'unità definita dai dati eredita i punti ciechi dei dati. Dove gli
+input morfologici sono scarsi — tessuti informali, altezze miste,
+trasformazioni recenti non ancora a catasto — il clustering produce unità
+che sembrano ordinate e sono sbagliate. Il metodo ha bisogno di verità a
+terra, e verità a terra vuol dire qualcuno che cammina in strada con un
+sensore.
+
+Che resta, alla fine, lo strumento più affidabile che abbiamo.
+*/}

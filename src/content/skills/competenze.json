@@ -1,0 +1,772 @@
+{
+  "_nota": "Trasformato da node.json del vecchio sito il 2026-08-12. Il campo 'desctiption' aveva un refuso ed e diventato 'descrizione'. 'symbolSize' e stato tolto: serviva a un grafo a forze, il grafico a corde non lo usa. I testi sono in inglese; la chiave 'it' si aggiunge quando serve. Il legame 23<->31 era ripetuto nelle due direzioni ed e stato unificato: nel grafico a corde avrebbe raddoppiato lo spessore di quel nastro.",
+  "categorie": [
+    {
+      "id": 0,
+      "nome": {
+        "en": "About Me"
+      }
+    },
+    {
+      "id": 1,
+      "nome": {
+        "en": "Computational Design"
+      }
+    },
+    {
+      "id": 2,
+      "nome": {
+        "en": "Thermo-Fluid Dynamics and Microclimate"
+      }
+    },
+    {
+      "id": 3,
+      "nome": {
+        "en": "Open Data and Open Source"
+      }
+    },
+    {
+      "id": 4,
+      "nome": {
+        "en": "Software Development"
+      }
+    },
+    {
+      "id": 5,
+      "nome": {
+        "en": "Visualization"
+      }
+    },
+    {
+      "id": 6,
+      "nome": {
+        "en": "Digital Modeling and Fabrication"
+      }
+    },
+    {
+      "id": 7,
+      "nome": {
+        "en": "Digital Media and Content Creation"
+      }
+    },
+    {
+      "id": 8,
+      "nome": {
+        "en": "Teaching and Training"
+      }
+    },
+    {
+      "id": 9,
+      "nome": {
+        "en": "Research"
+      }
+    },
+    {
+      "id": 10,
+      "nome": {
+        "en": "Consulting"
+      }
+    },
+    {
+      "id": 11,
+      "nome": {
+        "en": "Peer Review"
+      }
+    }
+  ],
+  "competenze": [
+    {
+      "id": 0,
+      "categoria": 0,
+      "peso": 12,
+      "nome": {
+        "en": "Graziano Enzo Marchesani"
+      },
+      "descrizione": {
+        "en": "Research, teaching and consulting in Sustainable Urban Planning and Architecture"
+      }
+    },
+    {
+      "id": 1,
+      "categoria": 1,
+      "peso": 8,
+      "nome": {
+        "en": "Computational Design and Parametric Modeling"
+      },
+      "descrizione": {
+        "en": "Mastery of parametric systems for advanced algorithmic design; Complex process automation"
+      }
+    },
+    {
+      "id": 2,
+      "categoria": 1,
+      "peso": 6,
+      "nome": {
+        "en": "Visual Programming and Scripting"
+      },
+      "descrizione": {
+        "en": "Expertise in Grasshopper, Python; Development of custom solutions and plugins"
+      }
+    },
+    {
+      "id": 3,
+      "categoria": 1,
+      "peso": 4,
+      "nome": {
+        "en": "Generative Algorithms"
+      },
+      "descrizione": {
+        "en": "Expertise in generating design through computational methods"
+      }
+    },
+    {
+      "id": 4,
+      "categoria": 1,
+      "peso": 4,
+      "nome": {
+        "en": "BIM (Building Information Modeling)"
+      },
+      "descrizione": {
+        "en": "Expertise in BIM processes for building design and management"
+      }
+    },
+    {
+      "id": 5,
+      "categoria": 2,
+      "peso": 8,
+      "nome": {
+        "en": "Thermo-Fluid Dynamics and Microclimate Analysis"
+      },
+      "descrizione": {
+        "en": "Expertise in urban thermal analysis; Advanced simulations using ENVI-met and EnergyPlus"
+      }
+    },
+    {
+      "id": 6,
+      "categoria": 2,
+      "peso": 6,
+      "nome": {
+        "en": "Climate Data Integration and Analysis"
+      },
+      "descrizione": {
+        "en": "Skill in collecting, integrating and analyzing climate data for design purposes"
+      }
+    },
+    {
+      "id": 7,
+      "categoria": 2,
+      "peso": 6,
+      "nome": {
+        "en": "CFD Simulation"
+      },
+      "descrizione": {
+        "en": "Experience in computational fluid dynamics simulation to evaluate urban environmental performance"
+      }
+    },
+    {
+      "id": 8,
+      "categoria": 2,
+      "peso": 5,
+      "nome": {
+        "en": "Urban Heat Island Mitigation Strategies"
+      },
+      "descrizione": {
+        "en": "Knowledge of urban heat island mitigation methods"
+      }
+    },
+    {
+      "id": 9,
+      "categoria": 2,
+      "peso": 5,
+      "nome": {
+        "en": "Environmental Monitoring"
+      },
+      "descrizione": {
+        "en": "Experience in using instruments for the monitoring of urban environmental metrics"
+      }
+    },
+    {
+      "id": 10,
+      "categoria": 3,
+      "peso": 7,
+      "nome": {
+        "en": "Open Data and Open Source Platforms"
+      },
+      "descrizione": {
+        "en": "Advocacy of open data; Use of tools like Ladybug Tools, QGIS and Blender"
+      }
+    },
+    {
+      "id": 11,
+      "categoria": 3,
+      "peso": 5,
+      "nome": {
+        "en": "Geospatial Data Analysis"
+      },
+      "descrizione": {
+        "en": "Ability to analyze and visualize geospatial data using GIS software"
+      }
+    },
+    {
+      "id": 12,
+      "categoria": 3,
+      "peso": 6,
+      "nome": {
+        "en": "Data Pipeline Management"
+      },
+      "descrizione": {
+        "en": "Expertise in creating and managing data pipelines for environmental analysis"
+      }
+    },
+    {
+      "id": 13,
+      "categoria": 4,
+      "peso": 7,
+      "nome": {
+        "en": "Software Development and Programming"
+      },
+      "descrizione": {
+        "en": "Skills in Python, C++, C#, Java, JavaScript, HTML, CSS; Creation of custom tools for design"
+      }
+    },
+    {
+      "id": 14,
+      "categoria": 4,
+      "peso": 5,
+      "nome": {
+        "en": "API and Plugin Development"
+      },
+      "descrizione": {
+        "en": "Experience in creating APIs and plugins for Grasshopper and other platforms"
+      }
+    },
+    {
+      "id": 15,
+      "categoria": 4,
+      "peso": 5,
+      "nome": {
+        "en": "Data Analysis Tool Development"
+      },
+      "descrizione": {
+        "en": "Skill in creating custom data analysis tools for research and design"
+      }
+    },
+    {
+      "id": 16,
+      "categoria": 5,
+      "peso": 7,
+      "nome": {
+        "en": "Visualization and Representation"
+      },
+      "descrizione": {
+        "en": "Expertise in architectural representation; Creation of multimedia content; Dynamic data visualization"
+      }
+    },
+    {
+      "id": 17,
+      "categoria": 5,
+      "peso": 5,
+      "nome": {
+        "en": "VR/AR and Immersive Technologies"
+      },
+      "descrizione": {
+        "en": "Experience with Virtual Reality and Augmented Reality tools for architecture"
+      }
+    },
+    {
+      "id": 18,
+      "categoria": 5,
+      "peso": 5,
+      "nome": {
+        "en": "Video Mapping and Animation"
+      },
+      "descrizione": {
+        "en": "Skilled in video mapping techniques; 2D/3D animation"
+      }
+    },
+    {
+      "id": 19,
+      "categoria": 6,
+      "peso": 7,
+      "nome": {
+        "en": "Digital Modeling and Prototyping"
+      },
+      "descrizione": {
+        "en": "Specialization in 3D modeling; Experience in 3D printing, CNC milling and digital fabrication"
+      }
+    },
+    {
+      "id": 20,
+      "categoria": 6,
+      "peso": 5,
+      "nome": {
+        "en": "3D Digitization and Scanning"
+      },
+      "descrizione": {
+        "en": "Experience with digital scanning techniques, including photogrammetry"
+      }
+    },
+    {
+      "id": 21,
+      "categoria": 7,
+      "peso": 7,
+      "nome": {
+        "en": "Digital Media and Content Creation"
+      },
+      "descrizione": {
+        "en": "Expertise in graphic design; Production of audiovisual content integrated with data and open source tools"
+      }
+    },
+    {
+      "id": 22,
+      "categoria": 7,
+      "peso": 5,
+      "nome": {
+        "en": "Photography and Videography"
+      },
+      "descrizione": {
+        "en": "Skilled in photography and videography for architectural representation"
+      }
+    },
+    {
+      "id": 23,
+      "categoria": 8,
+      "peso": 8,
+      "nome": {
+        "en": "University Teaching and Specialized Training"
+      },
+      "descrizione": {
+        "en": "Extensive experience in university teaching; Development of courses and workshops"
+      }
+    },
+    {
+      "id": 24,
+      "categoria": 8,
+      "peso": 6,
+      "nome": {
+        "en": "Research Dissemination and Scientific Publications"
+      },
+      "descrizione": {
+        "en": "Experience in presenting research; Publications on scientific journals"
+      }
+    },
+    {
+      "id": 25,
+      "categoria": 9,
+      "peso": 9,
+      "nome": {
+        "en": "Sustainable Urban Planning and Design Research"
+      },
+      "descrizione": {
+        "en": "Extensive research experience in areas like Urban Resilience, Urban Regeneration, Architectural Innovation, Environmental Improvement and Urban Sustainability"
+      }
+    },
+    {
+      "id": 26,
+      "categoria": 9,
+      "peso": 6,
+      "nome": {
+        "en": "Urban Resilience"
+      },
+      "descrizione": {
+        "en": "Research and interventions to increase resilience in urban contexts"
+      }
+    },
+    {
+      "id": 27,
+      "categoria": 9,
+      "peso": 6,
+      "nome": {
+        "en": "Urban Regeneration"
+      },
+      "descrizione": {
+        "en": "Research and design to improve existing urban area"
+      }
+    },
+    {
+      "id": 28,
+      "categoria": 9,
+      "peso": 5,
+      "nome": {
+        "en": "Architectural Innovation"
+      },
+      "descrizione": {
+        "en": "Research and practice in architectural innovation"
+      }
+    },
+    {
+      "id": 29,
+      "categoria": 9,
+      "peso": 5,
+      "nome": {
+        "en": "Environmental Improvement"
+      },
+      "descrizione": {
+        "en": "Research and application of innovative environmental strategies"
+      }
+    },
+    {
+      "id": 30,
+      "categoria": 9,
+      "peso": 6,
+      "nome": {
+        "en": "Urban Sustainability"
+      },
+      "descrizione": {
+        "en": "Research and interventions to achieve urban sustainability"
+      }
+    },
+    {
+      "id": 31,
+      "categoria": 10,
+      "peso": 6,
+      "nome": {
+        "en": "Consulting"
+      },
+      "descrizione": {
+        "en": "Consulting on various topics such as climate change, sustainability and regeneration"
+      }
+    },
+    {
+      "id": 32,
+      "categoria": 11,
+      "peso": 4,
+      "nome": {
+        "en": "Peer Review"
+      },
+      "descrizione": {
+        "en": "Reviewer for international scientific journals and publications; Editorial review of academic volumes"
+      }
+    },
+    {
+      "id": 33,
+      "categoria": 9,
+      "peso": 6,
+      "nome": {
+        "en": "AI and Data-Driven Urban Design"
+      },
+      "descrizione": {
+        "en": "Application of artificial intelligence and machine learning to urban, health and demographic data; Decision-support tools for adaptive, climate-responsive planning"
+      }
+    },
+    {
+      "id": 34,
+      "categoria": 3,
+      "peso": 6,
+      "nome": {
+        "en": "Open-Source Research Software Development"
+      },
+      "descrizione": {
+        "en": "Authoring and publishing open-source tools and plugins for environmental and computational design; Development of automation frameworks for ENVI-met, Grasshopper and GIS workflows"
+      }
+    },
+    {
+      "id": 35,
+      "categoria": 2,
+      "peso": 5,
+      "nome": {
+        "en": "Local Climate Zone (LCZ) Mapping"
+      },
+      "descrizione": {
+        "en": "High-resolution classification of urban climate zones; Application to historical and mid-Adriatic urban contexts for climate resilience"
+      }
+    },
+    {
+      "id": 36,
+      "categoria": 8,
+      "peso": 5,
+      "nome": {
+        "en": "Thesis Supervision and Mentoring"
+      },
+      "descrizione": {
+        "en": "Co-supervision of graduate theses; Long-term teaching tutorship in environmental design and communication courses"
+      }
+    }
+  ],
+  "legami": [
+    {
+      "da": 0,
+      "a": 1
+    },
+    {
+      "da": 0,
+      "a": 5
+    },
+    {
+      "da": 0,
+      "a": 10
+    },
+    {
+      "da": 0,
+      "a": 13
+    },
+    {
+      "da": 0,
+      "a": 16
+    },
+    {
+      "da": 0,
+      "a": 19
+    },
+    {
+      "da": 0,
+      "a": 21
+    },
+    {
+      "da": 0,
+      "a": 23
+    },
+    {
+      "da": 0,
+      "a": 25
+    },
+    {
+      "da": 0,
+      "a": 31
+    },
+    {
+      "da": 0,
+      "a": 32
+    },
+    {
+      "da": 1,
+      "a": 2
+    },
+    {
+      "da": 1,
+      "a": 3
+    },
+    {
+      "da": 1,
+      "a": 4
+    },
+    {
+      "da": 2,
+      "a": 13
+    },
+    {
+      "da": 3,
+      "a": 25
+    },
+    {
+      "da": 4,
+      "a": 19
+    },
+    {
+      "da": 5,
+      "a": 6
+    },
+    {
+      "da": 5,
+      "a": 7
+    },
+    {
+      "da": 5,
+      "a": 8
+    },
+    {
+      "da": 5,
+      "a": 9
+    },
+    {
+      "da": 6,
+      "a": 10
+    },
+    {
+      "da": 7,
+      "a": 19
+    },
+    {
+      "da": 8,
+      "a": 25
+    },
+    {
+      "da": 9,
+      "a": 16
+    },
+    {
+      "da": 10,
+      "a": 11
+    },
+    {
+      "da": 10,
+      "a": 12
+    },
+    {
+      "da": 11,
+      "a": 25
+    },
+    {
+      "da": 12,
+      "a": 16
+    },
+    {
+      "da": 13,
+      "a": 14
+    },
+    {
+      "da": 13,
+      "a": 15
+    },
+    {
+      "da": 14,
+      "a": 1
+    },
+    {
+      "da": 15,
+      "a": 5
+    },
+    {
+      "da": 13,
+      "a": 16
+    },
+    {
+      "da": 16,
+      "a": 17
+    },
+    {
+      "da": 16,
+      "a": 18
+    },
+    {
+      "da": 17,
+      "a": 19
+    },
+    {
+      "da": 18,
+      "a": 21
+    },
+    {
+      "da": 19,
+      "a": 20
+    },
+    {
+      "da": 20,
+      "a": 21
+    },
+    {
+      "da": 21,
+      "a": 22
+    },
+    {
+      "da": 22,
+      "a": 16
+    },
+    {
+      "da": 23,
+      "a": 24
+    },
+    {
+      "da": 24,
+      "a": 25
+    },
+    {
+      "da": 23,
+      "a": 31
+    },
+    {
+      "da": 25,
+      "a": 26
+    },
+    {
+      "da": 25,
+      "a": 27
+    },
+    {
+      "da": 25,
+      "a": 28
+    },
+    {
+      "da": 25,
+      "a": 29
+    },
+    {
+      "da": 25,
+      "a": 30
+    },
+    {
+      "da": 26,
+      "a": 27
+    },
+    {
+      "da": 27,
+      "a": 28
+    },
+    {
+      "da": 28,
+      "a": 29
+    },
+    {
+      "da": 29,
+      "a": 30
+    },
+    {
+      "da": 26,
+      "a": 5
+    },
+    {
+      "da": 27,
+      "a": 19
+    },
+    {
+      "da": 28,
+      "a": 1
+    },
+    {
+      "da": 29,
+      "a": 10
+    },
+    {
+      "da": 30,
+      "a": 21
+    },
+    {
+      "da": 24,
+      "a": 32
+    },
+    {
+      "da": 32,
+      "a": 25
+    },
+    {
+      "da": 31,
+      "a": 25
+    },
+    {
+      "da": 13,
+      "a": 25
+    },
+    {
+      "da": 10,
+      "a": 13
+    },
+    {
+      "da": 25,
+      "a": 33
+    },
+    {
+      "da": 33,
+      "a": 13
+    },
+    {
+      "da": 10,
+      "a": 34
+    },
+    {
+      "da": 34,
+      "a": 14
+    },
+    {
+      "da": 5,
+      "a": 35
+    },
+    {
+      "da": 35,
+      "a": 11
+    },
+    {
+      "da": 23,
+      "a": 36
+    }
+  ]
+}
