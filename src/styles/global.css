@@ -1,1 +1,33 @@
 @import "tailwindcss";
+@import "@fontsource/anton";
+@import "@fontsource-variable/inter";
+
+@theme {
+  /* Due soli colori: quasi-nero verso il grigio, quasi-bianco verso il panna. Nessun accento. */
+  --color-ink: #1a1a19;
+  --color-paper: #f4f1ea;
+
+  --font-display: "Anton", sans-serif;
+  --font-sans: "Inter Variable", "Inter", sans-serif;
+}
+
+@supports (font-variation-settings: normal) {
+  :root {
+    --font-sans: "Inter Variable", sans-serif;
+  }
+}
+
+html {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+body {
+  font-family: var(--font-sans);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

@@ -20,7 +20,7 @@ Vedi [constraints.md](constraints.md) per i vincoli che hanno guidato queste sce
 
 ## Animazioni
 
-- **GSAP**, **Lenis**, **Three.js** — usati "alla bisogna" a seconda della sezione. L'utente li ha già usati in passato con buoni risultati.
+- **GSAP** — installato e in uso (`ScrollTrigger`) dalla sessione del 2026-08-18 per il contatore di sezione della home (vedi [design.md](design.md)). **Lenis** e **Three.js** restano previsti "alla bisogna" ma non ancora installati/usati. Niente Lenis per lo scroll-snap della home: si tiene lo scroll-snap CSS nativo, coordinato con GSAP via `scroller` custom su `#scroll-container` (l'elemento che scrolla non è la window/body ma `<main>`).
 
 ## Contenuti
 
@@ -32,7 +32,12 @@ Vedi [constraints.md](constraints.md) per i vincoli che hanno guidato queste sce
 
 ## Font
 
-- Variable fonts **self-hosted** (niente Google Fonts esterni).
+- Font **self-hosted** (niente Google Fonts esterni), via pacchetti
+  `@fontsource`/`@fontsource-variable` (niente download manuale di file
+  font, anche quando la scelta parte da una pagina Google Fonts). Scelta
+  attuale (vedi [design.md](design.md)): **Anton** (`@fontsource/anton`,
+  display/titoli) + **Inter Variable** (`@fontsource-variable/inter`,
+  UI/testo).
 
 ## Grafici
 

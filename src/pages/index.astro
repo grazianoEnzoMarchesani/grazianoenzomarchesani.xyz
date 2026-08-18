@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import { identita, sezioni } from '../data/home';
 ---
 
 <html lang="en">
@@ -9,9 +10,133 @@ import '../styles/global.css';
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="viewport" content="width=device-width" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
+		<title>{identita.nome}</title>
 	</head>
-	<body>
-		<h1>Astro</h1>
+	<body class="bg-paper text-ink font-sans">
+		<nav class="fixed inset-x-0 top-0 z-20 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-6 py-4 text-xs uppercase tracking-widest sm:px-10">
+			<a href="/" class="font-medium">GM</a>
+			<ul class="flex flex-wrap gap-x-5 gap-y-1">
+				{sezioni.map((s) => (
+					<li><a href={s.href} class="hover:opacity-60 transition-opacity">{s.titolo}</a></li>
+				))}
+			</ul>
+		</nav>
+
+		<div
+			id="section-counter"
+			class="pointer-events-none fixed inset-x-0 top-[calc(50dvh-7vw-3.75rem)] z-20 flex justify-center text-xs uppercase tracking-widest opacity-0 sm:inset-x-auto sm:left-10 sm:top-1/2 sm:block sm:-translate-y-1/2"
+			aria-hidden="true"
+		>
+			<span class="flex items-center gap-1 rounded-full bg-paper/80 px-3 py-1 tabular-nums backdrop-blur-sm">
+				<span id="section-counter-mask" class="relative inline-block h-[1em] w-[2ch] overflow-hidden align-middle">
+					<span class="section-counter-digit absolute inset-0 flex items-center justify-center">01</span>
+				</span>
+				<span>/ {String(sezioni.length).padStart(2, '0')}</span>
+			</span>
+		</div>
+
+		<main id="scroll-container" class="h-dvh snap-y snap-mandatory overflow-y-scroll scroll-smooth">
+			<section class="relative flex h-dvh snap-start flex-col items-center justify-center px-6 text-center">
+				<p class="mb-4 text-xs uppercase tracking-widest opacity-60 sm:text-sm">{identita.ruolo}</p>
+				<h1 class="font-display text-[12vw] leading-[0.95] sm:text-[8vw]">{identita.nome}</h1>
+				<p class="mt-4 text-xs uppercase tracking-widest opacity-60 sm:text-sm">{identita.affiliazione}</p>
+			</section>
+
+			{sezioni.map((s) => (
+				<a
+					href={s.href}
+					class="group relative flex h-dvh snap-start flex-col items-center justify-center gap-6 px-6 text-center"
+					aria-label={`Vai a ${s.titolo}`}
+				>
+					<h2 class="font-display text-[14vw] leading-[0.95] sm:text-[9vw]">{s.titolo}</h2>
+					<span class="text-2xl opacity-0 transition-opacity duration-200 group-hover:opacity-60 group-focus-visible:opacity-60" aria-hidden="true">↓</span>
+				</a>
+			))}
+		</main>
+
+		<footer class="pointer-events-none fixed inset-x-0 bottom-0 z-20 flex justify-center px-6 py-4 text-xs uppercase tracking-widest sm:justify-end sm:px-10">
+			<a href={`mailto:${'graziano.marchesani@unicam.it'}`} class="pointer-events-auto hover:opacity-60 transition-opacity">
+				graziano.marchesani@unicam.it
+			</a>
+		</footer>
 	</body>
 </html>
+
+<style>
+	:global(html) {
+		scroll-behavior: smooth;
+	}
+</style>
+
+<script>
+	import { gsap } from 'gsap';
+	import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+	gsap.registerPlugin(ScrollTrigger);
+
+	const scroller = document.getElementById('scroll-container');
+	const badge = document.getElementById('section-counter');
+	const mask = document.getElementById('section-counter-mask');
+	const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	if (scroller && badge && mask) {
+		let current = mask.querySelector<HTMLElement>('.section-counter-digit');
+
+		const setDigit = (value: string, direction: 1 | -1) => {
+			if (current?.textContent === value) return;
+
+			if (prefersReducedMotion) {
+				if (current) {
+					current.textContent = value;
+				}
+				return;
+			}
+
+			const incoming = document.createElement('span');
+			incoming.className = 'section-counter-digit absolute inset-0 flex items-center justify-center';
+			incoming.textContent = value;
+			gsap.set(incoming, { yPercent: direction === 1 ? 100 : -100 });
+			mask.appendChild(incoming);
+
+			const outgoing = current;
+			const tl = gsap.timeline({
+				defaults: { duration: 0.5, ease: 'power3.inOut' },
+				onComplete: () => outgoing?.remove(),
+			});
+			if (outgoing) tl.to(outgoing, { yPercent: direction === 1 ? -100 : 100 }, 0);
+			tl.to(incoming, { yPercent: 0 }, 0);
+
+			current = incoming;
+		};
+
+		const showBadge = (show: boolean) => {
+			gsap.to(badge, { opacity: show ? 1 : 0, duration: 0.3, overwrite: true });
+		};
+
+		const sections = Array.from(scroller.children) as HTMLElement[];
+
+		sections.forEach((el, i) => {
+			if (i === 0) {
+				ScrollTrigger.create({
+					trigger: el,
+					scroller,
+					start: 'top top',
+					end: 'bottom top',
+					onLeave: () => showBadge(true),
+					onEnterBack: () => showBadge(false),
+				});
+				return;
+			}
+
+			const value = String(i).padStart(2, '0');
+			ScrollTrigger.create({
+				trigger: el,
+				scroller,
+				start: 'top center',
+				end: 'bottom center',
+				onEnter: () => setDigit(value, 1),
+				onEnterBack: () => setDigit(value, -1),
+			});
+		});
+	}
+</script>
