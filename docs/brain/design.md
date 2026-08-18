@@ -12,8 +12,10 @@ requisito generale che ha guidato queste scelte.
 
 Riferimento di partenza: [Codrops — Scroll-Driven 3D Cube Gallery](https://tympanus.net/codrops/2026/05/26/building-a-scroll-driven-3d-cube-gallery-in-webflow-with-gsap/).
 Ripreso solo il **ritmo** (titoli a tutta pagina in sequenza scroll-driven),
-non la tecnologia (Webflow, esclusa a priori) né il cubo 3D, per ora
-rimandato — vedi "Sospeso" sotto.
+non la tecnologia (Webflow, esclusa a priori) né il cubo 3D: per la
+**home** il pin dell'intera sezione resta deliberatamente escluso (vedi
+sotto). Un pattern di pin scroll-driven è invece usato altrove, nella
+pagina interna **Fields** — vedi [fields-spiral.md](fields-spiral.md).
 
 ## Palette
 
@@ -108,11 +110,5 @@ valuta se e cosa aggiungere in seguito.
 
 ## Sospeso (da riprendere in sessioni future)
 
-- **Cube gallery 3D / Three.js**: l'utente lo trova ancora troppo
-  complesso per ora. Da rivalutare dopo che la base è stabile. Nota
-  (2026-08-18): l'utente vuole un'animazione "elaborata, probabilmente
-  con 3D" per l'interfaccia di **Fields** (vedi
-  [content-plan.md](content-plan.md)) — riapre parzialmente questo
-  punto, da riconciliare in sessione dedicata quando si progetta Fields.
 - **Approfondimento tipografico** ("giochi" serif/sans più elaborati).
 - **Eventuale accento colore**, se emerge un'esigenza concreta.

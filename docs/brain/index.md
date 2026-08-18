@@ -12,4 +12,5 @@ Due tipi di file:
 - [stack.md](stack.md) — stack tecnico scelto e perché. *Decisione.*
 - [content-plan.md](content-plan.md) — cosa deve contenere il sito, migrazione dal vecchio sito. *Decisione.*
 - [design.md](design.md) — direzione visiva/estetica. *Decisione.*
+- [fields-spiral.md](fields-spiral.md) — l'animazione 3D della pagina Fields (la spirale scroll-driven). *Decisione.*
 - [session-log.md](session-log.md) — cronologia breve, una voce per sessione. *Log.*

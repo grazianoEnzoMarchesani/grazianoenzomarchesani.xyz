@@ -1,0 +1,104 @@
+---
+import '../styles/global.css';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import { getFieldsTimeline, FIELD_CATEGORY_ORDER, FIELD_CATEGORY_LABELS } from '../data/fields';
+
+const timeline = getFieldsTimeline();
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" href="/favicon.ico" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<title>Fields — Graziano Enzo Marchesani</title>
+	</head>
+	<body class="bg-paper text-ink font-sans">
+		<Nav />
+
+		<main>
+			<section id="fields-pin" class="relative h-dvh w-full overflow-hidden" aria-hidden="true">
+				<canvas id="fields-canvas" class="absolute inset-0 h-full w-full"></canvas>
+
+				<div
+					id="fields-preview"
+					class="pointer-events-none fixed bottom-20 left-6 z-20 max-w-xs rounded-md border border-ink/10 bg-paper/90 px-4 py-3 opacity-0 backdrop-blur-sm transition-opacity duration-150 sm:bottom-10 sm:left-10"
+				>
+					<p id="fields-preview-category" class="text-xs uppercase tracking-widest opacity-60"></p>
+					<p id="fields-preview-title" class="mt-1 text-sm"></p>
+				</div>
+			</section>
+
+			<ul
+				id="fields-list"
+				class="sr-only mx-auto max-w-2xl space-y-12 px-6 pt-28 pb-24 sm:px-10"
+				aria-label="Elenco cronologico dei contenuti Fields"
+			>
+				{timeline.map((yearData) => (
+					<li>
+						<span class="font-display text-3xl">{yearData.year}</span>
+						<ul class="mt-4 space-y-6">
+							{FIELD_CATEGORY_ORDER.map((category) => {
+								const items = yearData.markers.filter((m) => m.category === category);
+								if (items.length === 0) return null;
+								return (
+									<li>
+										<span class="text-xs uppercase tracking-widest opacity-60">{FIELD_CATEGORY_LABELS[category]}</span>
+										<ul class="mt-2 space-y-1">
+											{items.map((m) => <li class="text-sm">{m.title}</li>)}
+										</ul>
+									</li>
+								);
+							})}
+						</ul>
+					</li>
+				))}
+			</ul>
+		</main>
+
+		<Footer />
+	</body>
+</html>
+
+<script>
+	import { initFieldsSpiral } from '../scripts/fields-spiral';
+	import { getFieldsTimeline, FIELD_CATEGORY_LABELS } from '../data/fields';
+
+	const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	const list = document.getElementById('fields-list');
+	const pinSection = document.getElementById('fields-pin');
+
+	if (prefersReducedMotion) {
+		// La scena 3D non viene mostrata: la lista semantica diventa l'esperienza primaria.
+		pinSection?.remove();
+		list?.classList.remove('sr-only');
+		list?.removeAttribute('aria-hidden');
+	} else {
+		const canvas = document.getElementById('fields-canvas');
+		const preview = document.getElementById('fields-preview');
+		const previewCategory = document.getElementById('fields-preview-category');
+		const previewTitle = document.getElementById('fields-preview-title');
+
+		if (canvas instanceof HTMLCanvasElement && pinSection && preview && previewCategory && previewTitle) {
+			const timeline = getFieldsTimeline();
+
+			initFieldsSpiral({
+				canvas,
+				pinSection,
+				timeline,
+				onHoverMarker: (marker) => {
+					if (!marker) {
+						preview.style.opacity = '0';
+						return;
+					}
+					previewCategory.textContent = FIELD_CATEGORY_LABELS[marker.category];
+					previewTitle.textContent = marker.title;
+					preview.style.opacity = '1';
+				},
+			});
+		}
+	}
+</script>

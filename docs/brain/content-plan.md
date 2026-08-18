@@ -41,12 +41,10 @@ in nav. Dettagli implementativi (route, schema content collection
 unificato o meno, URL delle singole voci) non ancora decisi — sessione
 dedicata da aprire quando si passa all'implementazione.
 
-**Animazione prevista per Fields**: l'utente vuole qualcosa di
-elaborato, probabilmente con una componente 3D — da discutere con
-calma in una sessione dedicata. Nota: questo riapre parzialmente la
-questione "cube gallery 3D / Three.js" già segnata come sospesa in
-[design.md](design.md) ("troppo complessa per ora"); da riconciliare
-quando si affronta il tema.
+**Animazione di Fields**: decisa e implementata in prima versione,
+sessione del 2026-08-18 — una spirale 3D scroll-driven (Three.js), vista
+d'ingresso/esplorativa non filtrabile ancora. Dettagli completi in
+[fields-spiral.md](fields-spiral.md).
 
 ## Migrazione dal vecchio sito
 

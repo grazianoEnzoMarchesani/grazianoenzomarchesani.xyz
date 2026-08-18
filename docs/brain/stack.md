@@ -7,7 +7,7 @@ Vedi [constraints.md](constraints.md) per i vincoli che hanno guidato queste sce
 ## Core
 
 - **Astro** — framework principale, output statico. Gestisce le pagine e gli articoli come contenuti tipizzati.
-- **TypeScript**.
+- **TypeScript**. Type-checking via `@astrojs/check` (devDependency, aggiunta 2026-08-18) — `npx astro check`.
 - **MDX** per i contenuti — serve perché nelle pagine devono poter comparire componenti veri (grafici, embed video, immagini ottimizzate), non solo sintassi Markdown.
 
 ## UI framework
@@ -20,7 +20,8 @@ Vedi [constraints.md](constraints.md) per i vincoli che hanno guidato queste sce
 
 ## Animazioni
 
-- **GSAP** — installato e in uso (`ScrollTrigger`) dalla sessione del 2026-08-18 per il contatore di sezione della home (vedi [design.md](design.md)). **Lenis** e **Three.js** restano previsti "alla bisogna" ma non ancora installati/usati. Niente Lenis per lo scroll-snap della home: si tiene lo scroll-snap CSS nativo, coordinato con GSAP via `scroller` custom su `#scroll-container` (l'elemento che scrolla non è la window/body ma `<main>`).
+- **GSAP** — installato e in uso (`ScrollTrigger`) dalla sessione del 2026-08-18 per il contatore di sezione della home (vedi [design.md](design.md)) e per il pin/scrub della spirale 3D di Fields (vedi [fields-spiral.md](fields-spiral.md)). Niente Lenis per lo scroll-snap della home: si tiene lo scroll-snap CSS nativo, coordinato con GSAP via `scroller` custom su `#scroll-container` (l'elemento che scrolla non è la window/body ma `<main>`). **Lenis** resta previsto "alla bisogna", non ancora installato/usato.
+- **Three.js** — installato e in uso dalla sessione del 2026-08-18 per la spirale 3D della pagina Fields (vedi [fields-spiral.md](fields-spiral.md)); prima adozione, non più solo "prevista alla bisogna". Nota: il chunk che lo include supera i 500kB minificati (warning Vite al build) — accettato consapevolmente, da monitorare se incide sulla velocità percepita.
 
 ## Contenuti
 
