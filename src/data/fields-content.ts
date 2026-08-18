@@ -55,3 +55,40 @@ export async function getFieldsTimeline(): Promise<FieldYear[]> {
   const years = [...byYear.keys()].sort((a, b) => b - a);
   return years.map((year) => ({ year, markers: byYear.get(year)! }));
 }
+
+/**
+ * Ritorna tutti i marker ordinati esattamente secondo l'ordine di posizionamento
+ * lungo la spirale (anno decrescente -> categorie in FIELD_CATEGORY_ORDER -> marker).
+ */
+export async function getOrderedFieldMarkers(): Promise<FieldMarker[]> {
+  const timeline = await getFieldsTimeline();
+  const ordered: FieldMarker[] = [];
+
+  for (const yearData of timeline) {
+    const byCategory = new Map<FieldCategory, FieldMarker[]>();
+    for (const marker of yearData.markers) {
+      if (!byCategory.has(marker.category)) byCategory.set(marker.category, []);
+      byCategory.get(marker.category)!.push(marker);
+    }
+
+    for (const category of ['research', 'tools', 'teaching', 'projects'] as FieldCategory[]) {
+      const markers = byCategory.get(category) ?? [];
+      for (const m of markers) {
+        ordered.push(m);
+      }
+    }
+  }
+
+  return ordered;
+}
+
+export async function getAdjacentFieldMarker(currentId: string): Promise<{ next?: FieldMarker; prev?: FieldMarker }> {
+  const list = await getOrderedFieldMarkers();
+  const index = list.findIndex((m) => m.id === currentId);
+  if (index === -1) return {};
+  return {
+    prev: index > 0 ? list[index - 1] : undefined,
+    next: index < list.length - 1 ? list[index + 1] : undefined,
+  };
+}
+

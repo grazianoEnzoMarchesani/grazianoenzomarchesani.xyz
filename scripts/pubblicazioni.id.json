@@ -1,0 +1,231 @@
+{
+  "_nota": "Id fissato una volta per sempre per ogni voce, indicizzato per chiave bibtex (IRIS). Serve perché genera-pubblicazioni.mjs ricostruisce pubblicazioni.json da zero ad ogni run (DEC-76): senza questa mappa, uno slug ricalcolato dal titolo genererebbe un id nuovo (e più brutto, tipo lo slug intero) ad ogni giro invece di riusare quello già scelto. Si aggiorna da sola quando compare una voce nuova: non va tenuta a mano, salvo per correggere un id sbagliato.",
+  "11581_499867": {
+    "sezione": "voci",
+    "id": "3d-facade-geometry"
+  },
+  "11581_440770": {
+    "sezione": "voci",
+    "id": "new-baroque"
+  },
+  "11581_493464": {
+    "sezione": "voci",
+    "id": "allombra-del-chiostro"
+  },
+  "11581_448236": {
+    "sezione": "voci",
+    "id": "architecture-of-complexity"
+  },
+  "11581_498384": {
+    "sezione": "voci",
+    "id": "bridging-theory-practice"
+  },
+  "11581_497507": {
+    "sezione": "voci",
+    "id": "city-rhythm-paper"
+  },
+  "11581_495286": {
+    "sezione": "voci",
+    "id": "climate-maps-urban-planning"
+  },
+  "11581_456612": {
+    "sezione": "voci",
+    "id": "combinative-uhi-ascoli"
+  },
+  "11581_404101": {
+    "sezione": "voci",
+    "id": "cool-facade-optimization"
+  },
+  "11581_496650": {
+    "sezione": "voci",
+    "id": "data-driven-design"
+  },
+  "11581_427783.15": {
+    "sezione": "voci",
+    "id": "density-intensity"
+  },
+  "11581_496649": {
+    "sezione": "voci",
+    "id": "empowering-health"
+  },
+  "11581_424613": {
+    "sezione": "voci",
+    "id": "energy-efficiency-historical"
+  },
+  "11581_466312": {
+    "sezione": "voci",
+    "id": "green-infrastructure-intermediate-cities"
+  },
+  "11581_498304": {
+    "sezione": "voci",
+    "id": "innovative-composite-formulations"
+  },
+  "11581_498146": {
+    "sezione": "voci",
+    "id": "innovazione-urbana-tecnologie"
+  },
+  "11581_405977": {
+    "sezione": "voci",
+    "id": "see-the-invisible"
+  },
+  "11581_404102": {
+    "sezione": "voci",
+    "id": "inspired-by-the-atmosphere"
+  },
+  "11581_473224": {
+    "sezione": "voci",
+    "id": "grande-bellezza-spazio-urbano"
+  },
+  "11581_454936": {
+    "sezione": "voci",
+    "id": "sfida-delle-periferie"
+  },
+  "11581_496424": {
+    "sezione": "voci",
+    "id": "lcz-historical-cities"
+  },
+  "11581_440772": {
+    "sezione": "voci",
+    "id": "mass-and-lightness"
+  },
+  "11581_445330": {
+    "sezione": "voci",
+    "id": "methodological-comparison"
+  },
+  "11581_498625": {
+    "sezione": "voci",
+    "id": "muu-society-5"
+  },
+  "11581_501406": {
+    "sezione": "voci",
+    "id": "misure-urbane"
+  },
+  "11581_472062": {
+    "sezione": "voci",
+    "id": "mitigation-adaptation-urban-health"
+  },
+  "11581_491584": {
+    "sezione": "voci",
+    "id": "multilevel-governance"
+  },
+  "11581_496646": {
+    "sezione": "voci",
+    "id": "multiscalare-interoperabile"
+  },
+  "11581_456616": {
+    "sezione": "voci",
+    "id": "nuovo-rinascimento"
+  },
+  "11581_497509": {
+    "sezione": "voci",
+    "id": "meteoclimatic-scenarios"
+  },
+  "11581_461758.3": {
+    "sezione": "voci",
+    "id": "resilienza-trasformativa-urbana"
+  },
+  "11581_473223": {
+    "sezione": "voci",
+    "id": "scarto-vs-risorsa"
+  },
+  "11581_496645": {
+    "sezione": "voci",
+    "id": "simulazione-dinamiche-urbane"
+  },
+  "11581_497508": {
+    "sezione": "voci",
+    "id": "pvnb-ascoli"
+  },
+  "11581_498884": {
+    "sezione": "voci",
+    "id": "towards-climate-adaptive-planning"
+  },
+  "11581_461766.5": {
+    "sezione": "voci",
+    "id": "urban-micro-forestry"
+  },
+  "11581_454932": {
+    "sezione": "voci",
+    "id": "why-coupling-microclimate"
+  },
+  "11581_496647": {
+    "sezione": "voci",
+    "id": "strategie-indoor-outdoor"
+  },
+  "11581_496648": {
+    "sezione": "voci",
+    "id": "supporto-alle-decisioni"
+  },
+  "11581_496644": {
+    "sezione": "voci",
+    "id": "zone-climatiche-locali"
+  },
+  "11581_478367": {
+    "sezione": "dataset",
+    "id": "repertorio-nbs"
+  },
+  "11581_478369": {
+    "sezione": "dataset",
+    "id": "vitality-spoke6-output2"
+  },
+  "11581_488049": {
+    "sezione": "dataset",
+    "id": "fetch-framework"
+  },
+  "11581_489223": {
+    "sezione": "dataset",
+    "id": "envimet-agreenet"
+  },
+  "11581_501409": {
+    "sezione": "dataset",
+    "id": "envimet-via-milano"
+  },
+  "11581_489346": {
+    "sezione": "dataset",
+    "id": "itree-eco"
+  },
+  "11581_469708": {
+    "sezione": "dataset",
+    "id": "vautereco-marche"
+  },
+  "11581_478470": {
+    "sezione": "attivita",
+    "id": "vitality-muu-meeting"
+  },
+  "11581_478471": {
+    "sezione": "attivita",
+    "id": "clicche-video-mapping"
+  },
+  "11581_478363": {
+    "sezione": "attivita",
+    "id": "clicche-water-for-a-friend"
+  },
+  "11581_478384": {
+    "sezione": "attivita",
+    "id": "clicche-workshop-locale"
+  },
+  "11581_478383": {
+    "sezione": "attivita",
+    "id": "clicche-transnational-meeting-2"
+  },
+  "11581_405976": {
+    "sezione": "attivita",
+    "id": "maker-faire-2017"
+  },
+  "11581_502344": {
+    "sezione": "voci",
+    "id": "clicche-higher-education-on-climate-change-adaptation-and"
+  },
+  "11581_492905": {
+    "sezione": "dataset",
+    "id": "life-agreenet-projects-and-results"
+  },
+  "11581_478387": {
+    "sezione": "attivita",
+    "id": "mobilit-ap"
+  },
+  "11581_478468": {
+    "sezione": "attivita",
+    "id": "revisioni-del-progetto-vitality-pnrr-ecosistema-dell"
+  }
+}

@@ -1,0 +1,52 @@
+---
+/** Stili condivisi per il corpo Markdown/MDX delle quattro pagine di dettaglio di Fields. */
+---
+
+<div class="field-article">
+	<slot />
+</div>
+
+<style>
+	.field-article :global(h2) {
+		font-family: var(--font-display);
+		margin-top: 2.5rem;
+		font-size: 1.5rem;
+		line-height: 1.1;
+	}
+
+	.field-article :global(p) {
+		margin-top: 1rem;
+		line-height: 1.7;
+	}
+
+	.field-article :global(a) {
+		text-decoration: underline;
+		text-underline-offset: 2px;
+	}
+
+	.field-article :global(a:hover) {
+		opacity: 0.6;
+	}
+
+	.field-article :global(ul),
+	.field-article :global(ol) {
+		margin-top: 1rem;
+		padding-left: 1.25rem;
+	}
+
+	.field-article :global(ul) {
+		list-style: disc;
+	}
+
+	.field-article :global(ol) {
+		list-style: decimal;
+	}
+
+	.field-article :global(li) {
+		margin-top: 0.5rem;
+	}
+
+	.field-article :global(li + li) {
+		margin-top: 0.25rem;
+	}
+</style>

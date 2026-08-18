@@ -16,7 +16,8 @@ const PAPER = 0xf4f1ea;
 const RADIUS = 2.2;
 const PITCH = 3; // distanza lungo l'asse per un giro/anno completo
 const SEGMENTS_PER_TURN = 64;
-const CAMERA_Z = 5;
+const CAMERA_Z = 4.2;
+const CAMERA_FOV = 76; // Prospettiva grandangolare esasperata per effetto tunnel immersivo
 
 // Punto sull'elica: t in "giri" assoluti (0 = imboccatura/2026, cresce verso il passato).
 function helixPoint(t: number, out = new THREE.Vector3()) {
@@ -37,7 +38,7 @@ function helixPoint(t: number, out = new THREE.Vector3()) {
  * ingrandita ~60×), lo stesso motivo per cui un raster zoomato perde
  * qualità mentre un vettore no.
  */
-const MARKER_SIZE = 0.22;
+const MARKER_SIZE = .27;
 
 /**
  * Fog "in primo piano" — deciso in sessione di `/grill-me` del
@@ -58,8 +59,8 @@ const MARKER_SIZE = 0.22;
  * logica. `-mvPosition.z` è la stessa metrica di profondità che
  * three.js usa internamente per il fog di sfondo (`vFogDepth`).
  */
-const NEAR_FADE_START = 6.0; // profondità (world units) da cui inizia la dissolvenza
-const NEAR_FADE_CLOSE = 2.0; // profondità da cui è completa
+const NEAR_FADE_START = 4.2; // profondità (world units) da cui inizia la dissolvenza con grandangolo
+const NEAR_FADE_CLOSE = 1.6; // profondità da cui è completa prima del piano camera
 
 function applyNearFogFade(material: THREE.Material) {
   material.onBeforeCompile = (shader) => {
@@ -134,6 +135,10 @@ type MarkerObject = {
    *  primo piano (vedi NEAR_FADE_*): evita hover/click "fantasma" su
    *  una forma ormai invisibile. */
   interactable: boolean;
+  /** Posizione angolare/di spira lungo l'elica (t in giri). */
+  t: number;
+  /** Elemento DOM del titolo dinamico fluttuante (se labelsContainer è presente). */
+  labelEl?: HTMLButtonElement;
 };
 
 export type FieldsSpiralHandle = {
@@ -149,23 +154,21 @@ export const OPEN_ZOOM_DURATION_MS = 450;
 export function initFieldsSpiral(options: {
   canvas: HTMLCanvasElement;
   pinSection: HTMLElement;
+  labelsContainer?: HTMLElement;
   timeline: FieldYear[];
-  onHoverMarker: (marker: FieldMarker | null) => void;
-  /** Click (desktop, su un marker in hover) o secondo tap sullo stesso
-   *  marker (touch): avvia la transizione di apertura. `playZoom` esegue
-   *  l'animazione 3D e risolve a zoom-to-fill completato — il chiamante
-   *  la lancia in parallelo al fade-in dell'overlay ink. */
+  onHoverMarker?: (marker: FieldMarker | null) => void;
+  /** Click/tap su un marker o sul suo titolo: avvia la transizione di apertura. */
   onOpenMarker: (marker: FieldMarker, playZoom: () => Promise<void>) => void;
 }): FieldsSpiralHandle {
-  const { canvas, pinSection, timeline, onHoverMarker, onOpenMarker } = options;
+  const { canvas, pinSection, labelsContainer, timeline, onHoverMarker, onOpenMarker } = options;
   const turns = timeline.length;
   const totalLength = turns * PITCH;
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
-  scene.fog = new THREE.Fog(PAPER, PITCH * 1.5, totalLength * 0.85);
+  scene.fog = new THREE.Fog(PAPER, PITCH * 1.8, totalLength * 0.85);
 
-  const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 100);
+  const camera = new THREE.PerspectiveCamera(CAMERA_FOV, 1, 0.1, 100);
   camera.position.set(0, 0, CAMERA_Z);
   camera.lookAt(0, 0, 0);
 
@@ -216,14 +219,36 @@ export function initFieldsSpiral(options: {
         hitPlane.position.copy(position);
         group.add(hitPlane);
 
-        markerObjects.push({ visual, hitPlane, marker, interactable: true });
+        let labelEl: HTMLButtonElement | undefined;
+        if (labelsContainer) {
+          labelEl = document.createElement('button');
+          labelEl.type = 'button';
+          labelEl.className =
+            'fields-marker-label pointer-events-none absolute left-0 top-0 text-left font-sans text-xs uppercase tracking-widest text-ink transition-opacity duration-100 select-none leading-snug cursor-pointer group outline-none focus:outline-none';
+          labelEl.style.opacity = '0';
+          labelEl.style.whiteSpace = 'normal';
+          labelEl.style.wordBreak = 'break-word';
+          labelEl.style.transform = 'translate3d(-9999px, -9999px, 0)';
+
+          const span = document.createElement('span');
+          span.className = 'group-hover:underline';
+          span.textContent = marker.title;
+          labelEl.appendChild(span);
+
+          labelsContainer.appendChild(labelEl);
+        }
+
+        markerObjects.push({ visual, hitPlane, marker, interactable: true, t, labelEl });
       });
     });
   });
 
+  let width = pinSection.clientWidth;
+  let height = pinSection.clientHeight;
+
   function resize() {
-    const width = pinSection.clientWidth;
-    const height = pinSection.clientHeight;
+    width = pinSection.clientWidth;
+    height = pinSection.clientHeight;
     renderer.setSize(width, height, false);
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
@@ -237,13 +262,32 @@ export function initFieldsSpiral(options: {
     group.rotation.z = -u * turns * Math.PI * 2;
   }
 
-  const introPlayed = sessionStorage.getItem('fields-intro-played') === '1';
+  const savedMarkerId = sessionStorage.getItem('fields-target-marker');
+  sessionStorage.removeItem('fields-target-marker');
+
+  // Calcola eventuale progress target u [0, 1] per allineare la spirale al marker
+  let initialProgress = 0;
+  if (savedMarkerId) {
+    const targetObj = markerObjects.find((m) => m.marker.id === savedMarkerId);
+    if (targetObj) {
+      // Inverti applyProgress per posizionare il marker a una distanza visibile naturale (es. Z ~ 0 rispetto all'origine del gruppo)
+      // t * PITCH è la distanza locale z del marker. group.position.z = u * totalLength.
+      // Posizione Z nel mondo prima di rotazione/traslazione asse = -localZ + group.position.z
+      // Per portare il marker vicino all'imboccatura/camera: u = -targetObj.visual.position.z / totalLength
+      const targetU = THREE.MathUtils.clamp(-targetObj.visual.position.z / totalLength, 0, 1);
+      initialProgress = targetU;
+    }
+  }
+
+  const introPlayed = (sessionStorage.getItem('fields-intro-played') === '1') || !!savedMarkerId;
   const startZ = -totalLength * 0.4;
 
-  applyProgress(0);
-  group.position.z += startZ;
+  applyProgress(initialProgress);
+  if (!introPlayed) {
+    group.position.z += startZ;
+  }
 
-  const scrollState = { u: 0 };
+  const scrollState = { u: initialProgress };
   let scrollTrigger: ScrollTrigger | undefined;
   let isOpening = false;
 
@@ -260,10 +304,15 @@ export function initFieldsSpiral(options: {
         applyProgress(self.progress);
       },
     });
+
+    if (initialProgress > 0 && scrollTrigger) {
+      const scrollPos = scrollTrigger.start + initialProgress * (scrollTrigger.end - scrollTrigger.start);
+      window.scrollTo(0, scrollPos);
+    }
   }
 
   if (introPlayed) {
-    applyProgress(0);
+    applyProgress(initialProgress);
     startScrollDriver();
   } else {
     gsap.to(group.position, {
@@ -277,12 +326,23 @@ export function initFieldsSpiral(options: {
     });
   }
 
+  let currentFocusedMarker: MarkerObject | null = null;
+  let focusTween: gsap.core.Tween | null = null;
+
+  function stopAutoScroll() {
+    if (focusTween) {
+      focusTween.kill();
+      focusTween = null;
+    }
+  }
+
+  window.addEventListener('wheel', stopAutoScroll, { passive: true });
+  window.addEventListener('touchstart', stopAutoScroll, { passive: true });
+
   // Hover/tap sui marker: raycasting per il pannello di preview e per
   // il trigger della transizione di apertura.
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
-  let hovered: MarkerObject | null = null;
-  let lastTappedMarkerId: string | null = null;
 
   function hitTest(clientX: number, clientY: number): MarkerObject | null {
     const rect = canvas.getBoundingClientRect();
@@ -295,29 +355,17 @@ export function initFieldsSpiral(options: {
     return markerObjects.find((m) => m.hitPlane === hits[0].object) ?? null;
   }
 
-  function setHovered(hit: MarkerObject | null) {
-    if (hit !== hovered) {
-      hovered = hit;
-      onHoverMarker(hit?.marker ?? null);
-    }
+  function onPointerMove(e: MouseEvent) {
+    if (isOpening) return;
+    const hit = hitTest(e.clientX, e.clientY);
+    canvas.style.cursor = hit ? 'pointer' : 'default';
   }
+  canvas.addEventListener('mousemove', onPointerMove, { passive: true });
 
   /** Anima il marker cliccato fino a riempire lo schermo — vedi
    *  docs/brain/fields-spiral.md, "Transizione di apertura". Il filo
    *  dell'elica e gli altri marker restano fermi: solo la sagoma
-   *  cliccata si ingrandisce e si avvicina alla camera.
-   *
-   *  La camera è ferma su (0,0,CAMERA_Z) e guarda l'origine: un marker
-   *  che si limitasse ad avvicinarsi in z crescerebbe restando dov'era
-   *  in x/y (se era decentrato sulla spira, resterebbe decentrato anche
-   *  a piena scala). Per "colpire in faccia" lo spettatore deve invece
-   *  convergere sull'asse ottico (x,y → 0) mentre si avvicina — il
-   *  gruppo della spirale è fermo durante l'apertura (scroll bloccato,
-   *  vedi isOpening), quindi la posizione LOCALE del marker coincide
-   *  con quella nel mondo a meno della trasformazione rigida del
-   *  gruppo, che non sposta l'asse z: portare x/y locali a 0 centra il
-   *  marker sull'asse camera indipendentemente da dove si trovava sulla
-   *  spira. */
+   *  cliccata si ingrandisce e si avvicina alla camera. */
   function playOpenZoom(hit: MarkerObject): Promise<void> {
     return new Promise((resolve) => {
       gsap.to(hit.visual.scale, {
@@ -340,34 +388,60 @@ export function initFieldsSpiral(options: {
 
   function tryOpen(hit: MarkerObject) {
     if (isOpening) return;
+    stopAutoScroll();
     isOpening = true;
-    onHoverMarker(null);
+    onHoverMarker?.(null);
     onOpenMarker(hit.marker, () => playOpenZoom(hit));
   }
 
-  function onPointerMove(e: PointerEvent) {
-    if (e.pointerType === 'touch' || isOpening) return;
-    setHovered(hitTest(e.clientX, e.clientY));
-  }
-  function onPointerDown(e: PointerEvent) {
-    if (e.pointerType !== 'touch' || isOpening) return;
-    const hit = hitTest(e.clientX, e.clientY);
-    if (hit && hit.marker.id === lastTappedMarkerId) {
-      tryOpen(hit);
-      return;
-    }
-    lastTappedMarkerId = hit?.marker.id ?? null;
-    setHovered(hit);
-  }
-  function onClick(e: MouseEvent) {
-    if (isOpening) return;
-    const hit = hitTest(e.clientX, e.clientY);
-    if (hit) tryOpen(hit);
+  function focusMarker(hit: MarkerObject) {
+    if (!scrollTrigger || isOpening) return;
+    stopAutoScroll();
+    const targetU = THREE.MathUtils.clamp(hit.t / turns, 0, 1);
+    const targetScroll = scrollTrigger.start + targetU * (scrollTrigger.end - scrollTrigger.start);
+    const scrollObj = { y: window.scrollY };
+
+    focusTween = gsap.to(scrollObj, {
+      y: targetScroll,
+      duration: 0.7,
+      ease: 'power2.out',
+      onUpdate: () => {
+        window.scrollTo(0, scrollObj.y);
+      },
+      onInterrupt: () => {
+        focusTween = null;
+      },
+      onComplete: () => {
+        focusTween = null;
+      },
+    });
   }
 
-  canvas.addEventListener('pointermove', onPointerMove);
-  canvas.addEventListener('pointerdown', onPointerDown);
+  function onClick(e: MouseEvent | TouchEvent) {
+    if (isOpening) return;
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    const hit = hitTest(clientX, clientY);
+    if (!hit) return;
+
+    if (hit === currentFocusedMarker) {
+      tryOpen(hit);
+    } else {
+      focusMarker(hit);
+    }
+  }
+
   canvas.addEventListener('click', onClick);
+
+  // Collega click a ciascuna etichetta DOM creata (apre sempre direttamente)
+  for (const m of markerObjects) {
+    if (m.labelEl) {
+      m.labelEl.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!isOpening) tryOpen(m);
+      });
+    }
+  }
 
   // Soglia di sfumatura oltre la quale un marker smette di essere
   // interagibile — vedi NEAR_FADE_* e docs/brain/fields-spiral.md.
@@ -375,6 +449,8 @@ export function initFieldsSpiral(options: {
   // l'hit-test non può leggere il fade calcolato nello shader.
   const HIT_TEST_DISABLE_FADE = 0.85;
   const viewSpacePosition = new THREE.Vector3();
+  const worldSpacePosition = new THREE.Vector3();
+  const projVector = new THREE.Vector3();
 
   function smoothstep(edge0: number, edge1: number, x: number) {
     const t = THREE.MathUtils.clamp((x - edge0) / (edge1 - edge0), 0, 1);
@@ -383,19 +459,115 @@ export function initFieldsSpiral(options: {
 
   let frame = 0;
   function animate() {
-    // Billboard: ogni marker guarda sempre la camera (THREE.Sprite lo
-    // faceva da solo, la geometria vettoriale no).
+    const currentProgress = scrollState.u;
+    const currentTurnFocus = currentProgress * turns;
+
+    let minMarker: MarkerObject | null = null;
+    let minAbsDt = Infinity;
+
+    // Billboard & Near Fog Depth check
     for (const m of markerObjects) {
       m.visual.quaternion.copy(camera.quaternion);
       m.hitPlane.quaternion.copy(camera.quaternion);
 
       // Stessa metrica di profondità usata nello shader (-mvPosition.z):
       // vale su qualunque bordo, non solo quello inferiore.
-      m.hitPlane.getWorldPosition(viewSpacePosition).applyMatrix4(camera.matrixWorldInverse);
+      m.hitPlane.getWorldPosition(worldSpacePosition);
+      viewSpacePosition.copy(worldSpacePosition).applyMatrix4(camera.matrixWorldInverse);
       const depth = -viewSpacePosition.z;
       const fade = 1 - smoothstep(NEAR_FADE_CLOSE, NEAR_FADE_START, depth);
       m.interactable = fade < HIT_TEST_DISABLE_FADE;
+
+      const absDt = Math.abs(currentTurnFocus - m.t);
+      if (m.interactable && depth > 0.5 && absDt < minAbsDt) {
+        minAbsDt = absDt;
+        minMarker = m;
+      }
     }
+
+    if (minMarker && minAbsDt < 0.08) {
+      currentFocusedMarker = minMarker;
+    } else {
+      currentFocusedMarker = null;
+    }
+
+    // Scala dinamica: ingrandimento fluido in concomitanza del focus
+    if (!isOpening) {
+      for (const m of markerObjects) {
+        const absDt = Math.abs(currentTurnFocus - m.t);
+        let scale = 1.0;
+        if (absDt < 0.5) {
+          if (m === minMarker && absDt < 0.08) {
+            const activeFactor = 1 - smoothstep(0.0, 0.08, absDt);
+            scale = 1.0 + 0.5 * (0.5 + 0.5 * activeFactor);
+          } else {
+            const adjFactor = 1 - smoothstep(0.01, 0.14, absDt);
+            scale = 1.0 + 0.18 * adjFactor;
+          }
+        }
+        m.visual.scale.set(scale, scale, scale);
+      }
+    }
+
+    // Aggiornamento posizioni proiettate e opacità per i titoli dinamici
+    if (labelsContainer) {
+      for (const m of markerObjects) {
+        if (!m.labelEl) continue;
+
+        if (isOpening) {
+          m.labelEl.style.opacity = '0';
+          m.labelEl.style.pointerEvents = 'none';
+          continue;
+        }
+
+        m.hitPlane.getWorldPosition(worldSpacePosition);
+        viewSpacePosition.copy(worldSpacePosition).applyMatrix4(camera.matrixWorldInverse);
+        const depth = -viewSpacePosition.z;
+
+        const nearFade = 1 - smoothstep(NEAR_FADE_CLOSE, NEAR_FADE_START, depth);
+        if (depth <= 0.5 || nearFade >= HIT_TEST_DISABLE_FADE) {
+          m.labelEl.style.opacity = '0';
+          m.labelEl.style.pointerEvents = 'none';
+          continue;
+        }
+
+        const absDt = Math.abs(currentTurnFocus - m.t);
+
+        let opacity = 0;
+        if (absDt < 0.15) {
+          if (m === minMarker && absDt < 0.08) {
+            // Marker attivo al punto focale (ore 3): opacità 100%
+            const activeFactor = 1 - smoothstep(0.0, 0.08, absDt);
+            opacity = 0.5 + 0.5 * activeFactor;
+          } else {
+            // Marker vicini precedenti e successivi: opacità ridotta subordinata (~30-35%)
+            const adjFactor = 1 - smoothstep(0.01, 0.14, absDt);
+            opacity = 0.35 * adjFactor;
+          }
+        }
+
+        if (opacity < 0.05) {
+          m.labelEl.style.opacity = '0';
+          m.labelEl.style.pointerEvents = 'none';
+          continue;
+        }
+
+        projVector.copy(worldSpacePosition).project(camera);
+        const screenX = (projVector.x * 0.5 + 0.5) * width;
+        const screenY = (-projVector.y * 0.5 + 0.5) * height;
+
+        const offsetX = 52;
+        const labelX = screenX + offsetX;
+        const labelY = screenY;
+        const availableWidth = Math.max(100, width - labelX - 28);
+
+        m.labelEl.style.maxWidth = `${Math.min(220, availableWidth)}px`;
+        m.labelEl.style.transform = `translate3d(${labelX.toFixed(1)}px, ${labelY.toFixed(1)}px, 0) translateY(-50%)`;
+        m.labelEl.style.opacity = opacity.toFixed(2);
+        m.labelEl.style.pointerEvents = opacity > 0.2 ? 'auto' : 'none';
+      }
+    }
+
     renderer.render(scene, camera);
     frame = requestAnimationFrame(animate);
   }
@@ -404,10 +576,15 @@ export function initFieldsSpiral(options: {
   return {
     destroy: () => {
       cancelAnimationFrame(frame);
+      stopAutoScroll();
       window.removeEventListener('resize', resize);
-      canvas.removeEventListener('pointermove', onPointerMove);
-      canvas.removeEventListener('pointerdown', onPointerDown);
+      window.removeEventListener('wheel', stopAutoScroll);
+      window.removeEventListener('touchstart', stopAutoScroll);
+      canvas.removeEventListener('mousemove', onPointerMove);
       canvas.removeEventListener('click', onClick);
+      if (labelsContainer) {
+        labelsContainer.innerHTML = '';
+      }
       scrollTrigger?.kill();
       renderer.dispose();
     },

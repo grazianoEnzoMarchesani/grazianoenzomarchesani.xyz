@@ -20,7 +20,7 @@ Vedi [constraints.md](constraints.md) per i vincoli che hanno guidato queste sce
 
 ## Animazioni
 
-- **GSAP** — installato e in uso (`ScrollTrigger`) dalla sessione del 2026-08-18 per il contatore di sezione della home (vedi [design.md](design.md)) e per il pin/scrub della spirale 3D di Fields (vedi [fields-spiral.md](fields-spiral.md)). Niente Lenis per lo scroll-snap della home: si tiene lo scroll-snap CSS nativo, coordinato con GSAP via `scroller` custom su `#scroll-container` (l'elemento che scrolla non è la window/body ma `<main>`). **Lenis** resta previsto "alla bisogna", non ancora installato/usato.
+- **GSAP** — installato e in uso (`ScrollTrigger`, `quickTo`, interpolazioni transform/opacity) per il contatore di sezione della home (vedi [design.md](design.md)), per il pin/scrub della spirale 3D di Fields (vedi [fields-spiral.md](fields-spiral.md)) e per il mazzo di carte interattivo 3D della pagina Skills (`MazzoCompetenze.astro`, modalità stack e ventaglio). Niente Lenis per lo scroll-snap della home: si tiene lo scroll-snap CSS nativo, coordinato con GSAP via `scroller` custom su `#scroll-container` (l'elemento che scrolla non è la window/body ma `<main>`). **Lenis** resta previsto "alla bisogna", non ancora installato/usato.
 - **Three.js** — installato e in uso dalla sessione del 2026-08-18 per la spirale 3D della pagina Fields (vedi [fields-spiral.md](fields-spiral.md)); prima adozione, non più solo "prevista alla bisogna". Nota: il chunk che lo include supera i 500kB minificati (warning Vite al build) — accettato consapevolmente, da monitorare se incide sulla velocità percepita.
 
 ## Contenuti

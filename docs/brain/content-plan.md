@@ -101,15 +101,17 @@ raw a contenuto reale nelle pagine:
   (`copiaMediaLocali()`, placeholder `{{media:id}}`, copia in
   `public/<collection>/<slug>/`); le immagini migrate usano
   `astro:assets` (import diretto o schema `image()` nella collection).
-- **Publications**: si riporta l'intera pipeline `references.bib` →
-  JSON del vecchio sito (script `genera-pubblicazioni.mjs` e
-  l'integrazione Astro che rigenera `src/data/pubblicazioni.json` ad
-  ogni build/salvataggio del `.bib`, non ancora copiati in questo
-  repo — solo i JSON/`.bib` sono stati copiati finora), invece di
-  ricostruire da zero.
-- **Skills**: rimandato — `competenze.json` (dati per un chord
-  diagram) resta copiato così com'è, la pagina Skills si affronta in
-  una sessione dedicata quando ci si arriva.
+- **Publications**: pipeline `references.bib` → JSON e pagina `/publications`
+  completate (sessione 2026-08-18). Portati da `sitoBello2`: `scripts/lib/bibtex.mjs`,
+  `scripts/genera-pubblicazioni.mjs`, `scripts/integrazione-pubblicazioni.mjs`
+  (agganciato a `astro.config.mjs` su build/dev/watcher), `scripts/pubblicazioni.id.json`
+  (per stabilità degli ID). Creati `src/lib/pubblicazioni.ts`, `src/lib/citazioni.ts`
+  (5 stili: APA, MLA, Harvard, Chicago, BibTeX), `src/components/TastoCitazione.astro`
+  e `src/pages/publications.astro` con 4 sezioni (Timeline per anno con filtri interattivi
+  e sticky year, Datasets & Reports, Dissemination & Outreach, Peer Review). Testi
+  direttamente in inglese (infrastruttura bilingue rimandata come da piano).
+- **About**: completata (sessione 2026-08-19). Creato `src/lib/identita.ts` (accesso tipizzato a `src/content/about/percorso.json`, 5 paragrafi bio in inglese, collegamenti di ricerca ORCID/IRIS/GitHub e social LinkedIn/Instagram, stato CV) e `src/pages/about.astro` con layout editoriale a 2 colonne (ritratto via `astro:assets`, bio, tasto CV; record strutturati per Posizioni con indicatore `Current`, Formazione con tesi ed esito, Riconoscimenti e concorsi).
+- **Skills**: completata (sessione 2026-08-19). Creato `src/lib/competenze.ts` (accesso tipizzato a `src/content/skills/competenze.json`, 32 competenze arricchite con le relazioni di collegamento, raggruppamento per 3 famiglie e 11 categorie per il glossario, statistiche `quante` e sintesi nodo 0), `src/components/MazzoCompetenze.astro` (mazzo 3D animato GSAP in stile monocromatico paper/ink con modalità stack scroll-driven senza scroll-trapping e modalità ventaglio a raggiera ellittica con campionamento d'arco uniforme) e `src/pages/skills.astro` (struttura a 2 sezioni: hero + palco interattivo in alto, glossario editoriale strutturato in basso).
 
 **Fatto** (sessione 2026-08-18): `src/content.config.ts` scritto con le
 quattro collection di Fields (`glob` loader nativo, non `bilingue()`),
@@ -147,10 +149,30 @@ generati da seed — dettagli tecnici in [fields-spiral.md](fields-spiral.md)
 ("Dati"). `astro check`/`astro build` puliti, JSON generato verificato
 con titoli reali.
 
-Prossimo passo concreto: pagine/route per le singole voci di Fields
-(`/fields/research/<slug>` ecc., oggi il click/hover sul marker apre solo
-un pannello di preview) — dettagli implementativi (URL, layout della
-pagina di dettaglio) non ancora decisi.
+**Pagine di dettaglio di Fields implementate** (sessione 2026-08-18):
+una route dinamica Astro per collection (`src/pages/fields/research/[slug].astro`,
+`tools/[slug].astro`, `teaching/[slug].astro`, `projects/[slug].astro`),
+`getStaticPaths()` + `getCollection()`/`render()`, `params.slug` = `entry.id`
+(coerente con l'`id` già usato dai marker della spirale, `<categoria>/<slug>`
+→ URL `/fields/<categoria>/<slug>`). Quattro template separati (non uno
+generico a schema unione) perché i campi mostrati differiscono per
+collection: research (tag, fonte/fonteUrl), tools (linguaggio/ambiente,
+repo/doi/sito/licenza), teaching (istituzione/luogo/tipo/anni), projects
+(luogo/ruolo/tipo/esito/url) — coerente con la decisione sopra di non
+fondere gli schemi. Corpo Markdown/MDX reso con `<Content />` dentro
+`FieldArticleBody.astro` (nuovo componente condiviso, stili minimi per
+h2/p/a/liste, niente plugin typography). Pulsante di ritorno estratto in
+`BackToFieldsButton.astro` (stessa sequenza overlay ink + `navigate('/fields')`
+già usata dalla pagina di prova). `fields.astro` aggiornato:
+`onOpenMarker` naviga ora a `/fields/${marker.id}` invece della route di
+prova; `src/pages/fields/prova.astro` rimossa (sostituita dalle pagine
+reali). Verificato con `astro check` (0 errori), `astro build` (48 pagine,
+tutte le voci delle 4 collection generate correttamente) e controllo
+HTTP/HTML su dev server per una voce per categoria più uno slug
+inesistente (404 corretto). Non verificato in browser reale/screenshot:
+nessun tool headless (`chromium-cli`/Playwright) disponibile in questa
+sessione — il click sul marker della spirale che porta alla pagina reale
+non è stato confermato visivamente, solo per lettura del codice.
 
 ## Lingua
 

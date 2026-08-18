@@ -1,0 +1,718 @@
+---
+import { mazzoCompetenze } from '../lib/competenze';
+
+interface Props {
+  descrizione?: string;
+  etichettaCollegate?: string;
+}
+
+const {
+  descrizione = 'Interactive deck of skills and interconnections',
+  etichettaCollegate = 'Connected skills',
+} = Astro.props;
+
+const competenze = mazzoCompetenze('en');
+---
+
+<div class="mazzo-competenze w-full" data-mazzo>
+  <div
+    class="mazzo-palco relative w-full"
+    data-palco
+    role="group"
+    aria-label={descrizione}
+  >
+    <div class="mazzo-carte" data-carte>
+      {
+        competenze.map((c, i) => (
+          <button
+            type="button"
+            class="carta"
+            data-id={c.id}
+            data-index={i}
+            data-collegati={c.collegati.join(',')}
+            aria-expanded="false"
+          >
+            <span class="carta-testata">
+              <span class="carta-categoria">{c.categoria}</span>
+              {c.collegati.length > 0 && (
+                <span class="carta-peso">
+                  <span aria-hidden="true">{String(c.collegati.length).padStart(2, '0')}</span>
+                  <span class="sr-only">
+                    {etichettaCollegate} {c.collegati.length}
+                  </span>
+                </span>
+              )}
+            </span>
+
+            <span class="carta-tratto" aria-hidden="true"></span>
+
+            <strong class="carta-nome">{c.nome}</strong>
+
+            <span class="carta-piede">
+              <p class="carta-descrizione">{c.descrizione}</p>
+            </span>
+          </button>
+        ))
+      }
+    </div>
+
+    {/* Script sincrono inline per evitare il flash visivo della griglia prima dell'avvio di GSAP */}
+    <script is:inline>
+      (function () {
+        function nascondi(palco) {
+          try {
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            var carte = palco.querySelector('[data-carte]');
+            if (!carte) return;
+            carte.classList.add('js-stack');
+            Array.prototype.forEach.call(carte.querySelectorAll('.carta'), function (carta, i) {
+              carta.style.opacity = i === 0 ? '1' : '0';
+              carta.style.pointerEvents = i === 0 ? 'auto' : 'none';
+            });
+          } catch (e) {}
+        }
+
+        var palcoImmediato = document.currentScript && document.currentScript.closest('[data-palco]');
+        if (palcoImmediato) nascondi(palcoImmediato);
+
+        document.addEventListener('astro:page-load', function () {
+          document.querySelectorAll('[data-palco]').forEach(nascondi);
+        });
+      })();
+    </script>
+  </div>
+</div>
+
+<style>
+  /* --------------------------------------------------- Stato di base (Accessibile / No-JS) */
+  .mazzo-competenze {
+    width: 100%;
+  }
+
+  .mazzo-palco {
+    position: relative;
+    width: 100%;
+  }
+
+  .mazzo-carte {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    :global(html.js) .mazzo-carte:not(.js-stack) .carta:not(:first-child) {
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
+
+  /* --------------------------------------------------- Stile della Carta */
+  .carta {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-height: 12rem;
+    padding: 1.5rem;
+    border-radius: 1.25rem;
+    border: 1px solid color-mix(in srgb, var(--color-ink) 14%, transparent);
+    background-color: var(--color-paper);
+    text-align: left;
+    cursor: pointer;
+    box-shadow: 0 8px 24px -12px rgb(0 0 0 / 0.12);
+    transition:
+      filter 0.3s ease,
+      border-color 0.3s ease,
+      background-color 0.3s ease,
+      color 0.3s ease;
+  }
+
+  .carta-testata {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .carta-categoria {
+    font-family: var(--font-mono, monospace);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--color-ink) 60%, transparent);
+    padding-top: 0.2rem;
+  }
+
+  .carta-peso {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    color: color-mix(in srgb, var(--color-ink) 35%, transparent);
+    margin-top: -0.25rem;
+  }
+
+  .carta-tratto {
+    display: block;
+    width: 1.75rem;
+    height: 2px;
+    margin-top: 0.75rem;
+    border-radius: 1px;
+    background: color-mix(in srgb, var(--color-ink) 40%, transparent);
+  }
+
+  .carta-nome {
+    font-family: var(--font-display);
+    font-size: clamp(1.15rem, 2.4vw, 1.5rem);
+    line-height: 1.12;
+    letter-spacing: normal;
+    text-transform: uppercase;
+    color: var(--color-ink);
+    margin-top: 0.75rem;
+  }
+
+  .carta-piede {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid color-mix(in srgb, var(--color-ink) 10%, transparent);
+  }
+
+  .carta-descrizione {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-family: var(--font-sans);
+    font-size: 0.82rem;
+    line-height: 1.5;
+    color: color-mix(in srgb, var(--color-ink) 70%, transparent);
+  }
+
+  /* --------------------------------------------------- Stati di Selezione / Inversione */
+  .carta.is-centro {
+    background-color: var(--color-ink);
+    color: var(--color-paper);
+    border-color: var(--color-ink);
+    box-shadow: 0 28px 60px -20px rgb(0 0 0 / 0.5);
+  }
+
+  .carta.is-centro .carta-categoria {
+    color: color-mix(in srgb, var(--color-paper) 60%, transparent);
+  }
+
+  .carta.is-centro .carta-peso {
+    color: color-mix(in srgb, var(--color-paper) 40%, transparent);
+  }
+
+  .carta.is-centro .carta-tratto {
+    background: color-mix(in srgb, var(--color-paper) 50%, transparent);
+  }
+
+  .carta.is-centro .carta-nome {
+    color: var(--color-paper);
+  }
+
+  .carta.is-centro .carta-piede {
+    border-top-color: color-mix(in srgb, var(--color-paper) 15%, transparent);
+  }
+
+  .carta.is-centro .carta-descrizione {
+    color: color-mix(in srgb, var(--color-paper) 80%, transparent);
+    -webkit-line-clamp: 4;
+  }
+
+  .carta.is-connessa {
+    background-color: var(--color-paper);
+    border-color: color-mix(in srgb, var(--color-ink) 35%, transparent);
+    box-shadow: 0 16px 40px -16px rgb(0 0 0 / 0.22);
+  }
+
+  .carta.is-sbiadita {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* --------------------------------------------------- Stato JS Stack (GSAP) */
+  .mazzo-carte.js-stack {
+    display: block;
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  .js-stack .carta {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: min(clamp(18rem, 28vw, 28rem), 86vw);
+    height: clamp(13.5rem, 19vw, 19.5rem);
+    min-height: 0;
+    will-change: transform, opacity;
+    box-shadow: 0 18px 42px -20px rgb(0 0 0 / 0.22);
+    transition:
+      filter 0.3s ease,
+      border-color 0.3s ease,
+      background-color 0.3s ease,
+      color 0.3s ease;
+  }
+
+  .mazzo-palco:has(.js-stack) {
+    height: clamp(28rem, 62vh, 46rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    isolation: isolate;
+    transform: translateY(clamp(-1.5rem, -2.5vw, -0.75rem));
+    transition: transform 0.4s ease;
+  }
+
+  .mazzo-palco.is-fan {
+    transform: translateY(0);
+  }
+
+  @media (max-width: 767px) {
+    .mazzo-palco:has(.js-stack) {
+      height: clamp(22rem, 65vw, 32rem);
+      transform: translateY(-0.5rem);
+    }
+
+    .js-stack .carta {
+      width: min(17.5rem, 88vw);
+      height: 14rem;
+      padding: 1.25rem;
+    }
+  }
+</style>
+
+<script>
+  import { gsap } from 'gsap';
+
+  function avvia(mazzo: HTMLElement, signal: AbortSignal) {
+    const palco = mazzo.querySelector<HTMLElement>('[data-palco]');
+    const contenitoreCarte = mazzo.querySelector<HTMLElement>('[data-carte]');
+    if (!palco || !contenitoreCarte) return;
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion) {
+      avviaRipiego(contenitoreCarte, signal);
+      return;
+    }
+
+    const carte = Array.from(contenitoreCarte.querySelectorAll<HTMLButtonElement>('.carta'));
+    const perId = new Map(carte.map((c) => [Number(c.dataset.id), c]));
+    contenitoreCarte.classList.add('js-stack');
+
+    let modo: 'stack' | 'fan' = 'stack';
+    let indiceCorrente = 0;
+    let centro: number | null = null;
+
+    /* ---------------------------------------------------- Gestione Stack */
+    function posaStack(
+      carta: HTMLButtonElement,
+      delta: number,
+      animata: boolean,
+      inCima: boolean,
+      durata = 0.5,
+    ) {
+      const assoluto = Math.abs(delta);
+      const visibile = delta > -3.4 && delta < 1.3;
+
+      const target =
+        delta <= 0
+          ? {
+              x: 0,
+              y: 0,
+              yPercent: delta * 9,
+              scale: 1 - Math.min(assoluto, 3.4) * 0.075,
+              opacity: inCima ? 1 : visibile ? 1 - Math.min(assoluto, 3.4) * 0.3 : 0,
+              rotate: delta * -2.5,
+              zIndex: Math.round(100 - assoluto * 10),
+            }
+          : {
+              x: 0,
+              y: 0,
+              yPercent: delta * 62,
+              scale: 1 - Math.min(delta, 1.3) * 0.08,
+              opacity: inCima ? 1 : visibile ? 1 - delta * 0.72 : 0,
+              rotate: 0,
+              zIndex: Math.round(100 - delta * 20),
+            };
+
+      carta.style.pointerEvents = target.opacity > 0.5 ? 'auto' : 'none';
+
+      if (target.opacity > 0) {
+        carta.style.display = '';
+      }
+
+      if (animata) {
+        gsap.to(carta, {
+          ...target,
+          duration: durata,
+          ease: 'power3.out',
+          overwrite: 'auto',
+          onComplete:
+            target.opacity === 0
+              ? () => {
+                  carta.style.display = 'none';
+                }
+              : undefined,
+        });
+      } else {
+        gsap.set(carta, target);
+        carta.style.display = target.opacity === 0 ? 'none' : '';
+      }
+    }
+
+    function disegnaStack(animata = false, durata = 0.5) {
+      let indiceInCima = 0;
+      let minimoAssoluto = Infinity;
+      carte.forEach((_, i) => {
+        const assoluto = Math.abs(i - indiceCorrente);
+        if (assoluto < minimoAssoluto) {
+          minimoAssoluto = assoluto;
+          indiceInCima = i;
+        }
+      });
+      carte.forEach((carta, i) =>
+        posaStack(carta, i - indiceCorrente, animata, i === indiceInCima, durata),
+      );
+    }
+
+    disegnaStack();
+
+    /* ---------------------------------------------------- Rotellina e Touch locali */
+    const FATTORE_ROTELLINA = 0.0065;
+    const bersaglio = { valore: 0 };
+    const animaIndice = gsap.quickTo(bersaglio, 'valore', {
+      duration: 0.4,
+      ease: 'power2.out',
+      onUpdate: () => {
+        indiceCorrente = bersaglio.valore;
+        if (modo === 'stack') disegnaStack(false);
+      },
+    });
+
+    const SOGLIA_CONFINE = 0.02;
+    function proponiIndice(delta: number, evento: Event) {
+      if (modo !== 'stack') return;
+      const alConfine =
+        (indiceCorrente <= SOGLIA_CONFINE && delta < 0) ||
+        (indiceCorrente >= carte.length - 1 - SOGLIA_CONFINE && delta > 0);
+      if (alConfine) return;
+      evento.preventDefault();
+      const nuovo = Math.min(carte.length - 1, Math.max(0, indiceCorrente + delta));
+      animaIndice(nuovo);
+    }
+
+    const DURATA_CHIUSURA_SCROLL = 0.5;
+    let bloccaFinoA = 0;
+
+    function chiudiConTween() {
+      if (modo !== 'fan') return;
+      chiudi(true, DURATA_CHIUSURA_SCROLL);
+      bloccaFinoA = Date.now() + DURATA_CHIUSURA_SCROLL * 1000;
+    }
+
+    palco.addEventListener(
+      'wheel',
+      (evento) => {
+        if (modo === 'fan') {
+          evento.preventDefault();
+          chiudiConTween();
+          return;
+        }
+        if (Date.now() < bloccaFinoA) {
+          evento.preventDefault();
+          return;
+        }
+        proponiIndice(evento.deltaY * FATTORE_ROTELLINA, evento);
+      },
+      { passive: false },
+    );
+
+    let ultimoToccoY: number | null = null;
+    palco.addEventListener(
+      'touchstart',
+      (evento) => {
+        ultimoToccoY = evento.touches[0]?.clientY ?? null;
+      },
+      { passive: true },
+    );
+
+    palco.addEventListener(
+      'touchmove',
+      (evento) => {
+        if (ultimoToccoY === null) return;
+        const y = evento.touches[0]?.clientY ?? ultimoToccoY;
+        const delta = (ultimoToccoY - y) * 0.02;
+        if (modo === 'fan') {
+          evento.preventDefault();
+          chiudiConTween();
+          ultimoToccoY = y;
+          return;
+        }
+        if (Date.now() < bloccaFinoA) {
+          evento.preventDefault();
+          ultimoToccoY = y;
+          return;
+        }
+        proponiIndice(delta, evento);
+        ultimoToccoY = y;
+      },
+      { passive: false },
+    );
+
+    /* ---------------------------------------------------- Ventaglio a Raggiera Ellittica */
+    function angoliAdArcoUniforme(totale: number, apertura: number, rx: number, ry: number) {
+      if (totale <= 1) return [0];
+      const campioni = 120;
+      const inizio = -apertura / 2;
+      const passo = apertura / campioni;
+      const lunghezze = [0];
+      let prec = { x: Math.sin(inizio) * rx, y: -Math.cos(inizio) * ry };
+      for (let i = 1; i <= campioni; i++) {
+        const ang = inizio + passo * i;
+        const punto = { x: Math.sin(ang) * rx, y: -Math.cos(ang) * ry };
+        lunghezze.push(lunghezze[i - 1] + Math.hypot(punto.x - prec.x, punto.y - prec.y));
+        prec = punto;
+      }
+      const lunghezzaTotale = lunghezze[campioni];
+      return Array.from({ length: totale }, (_, i) => {
+        const bersaglio = (i / (totale - 1)) * lunghezzaTotale;
+        let lo = 0,
+          hi = campioni;
+        while (lo < hi) {
+          const mid = (lo + hi) >> 1;
+          if (lunghezze[mid] < bersaglio) lo = mid + 1;
+          else hi = mid;
+        }
+        const idx = Math.max(1, Math.min(campioni, lo));
+        const l0 = lunghezze[idx - 1];
+        const l1 = lunghezze[idx];
+        const t = l1 > l0 ? (bersaglio - l0) / (l1 - l0) : 0;
+        return inizio + passo * (idx - 1) + passo * t;
+      });
+    }
+
+    function apri(id: number) {
+      const carta = perId.get(id);
+      if (!carta) return;
+
+      modo = 'fan';
+      centro = id;
+      palco!.classList.add('is-fan');
+
+      carte.forEach((c) => {
+        c.style.display = '';
+      });
+
+      const collegati = new Set((carta.dataset.collegati ?? '').split(',').filter(Boolean));
+      const collegateArr = carte.filter((c) => collegati.has(c.dataset.id ?? ''));
+      const totale = collegateArr.length;
+
+      const scalaConnessa =
+        totale <= 2
+          ? 0.8
+          : totale <= 4
+            ? 0.72
+            : totale <= 7
+              ? 0.6
+              : Math.max(0.46, 0.6 - (totale - 7) * 0.03);
+
+      const palcoWidth = palco!.clientWidth;
+      const palcoHeight = palco!.clientHeight;
+
+      const rx = Math.max(80, palcoWidth * 0.38);
+      const ry = Math.max(60, palcoHeight * 0.34);
+
+      const aperturaAngolare = totale === 1 ? 0 : Math.min(Math.PI * 1.65, 1.0 + totale * 0.28);
+      const angoli = angoliAdArcoUniforme(totale, aperturaAngolare, rx, ry);
+
+      carte.forEach((c) => {
+        const suoId = Number(c.dataset.id);
+        c.setAttribute('aria-expanded', String(suoId === id));
+
+        if (suoId === id) {
+          gsap.to(c, {
+            x: 0,
+            y: 25,
+            xPercent: 0,
+            yPercent: 0,
+            scale: 1.02,
+            rotate: 0,
+            opacity: 1,
+            zIndex: 500,
+            duration: 0.5,
+            ease: 'power3.out',
+            overwrite: 'auto',
+          });
+          c.style.pointerEvents = 'auto';
+          c.classList.add('is-centro');
+          c.classList.remove('is-sbiadita', 'is-connessa');
+          return;
+        }
+
+        const indiceCollegata = collegateArr.indexOf(c);
+        if (indiceCollegata !== -1) {
+          const angolo = angoli[indiceCollegata];
+          const rotazione = Math.max(-14, Math.min(14, (angolo * 180) / Math.PI / 7));
+          gsap.to(c, {
+            x: Math.sin(angolo) * rx,
+            y: -Math.cos(angolo) * ry - 15,
+            xPercent: 0,
+            yPercent: 0,
+            rotate: rotazione,
+            scale: scalaConnessa,
+            opacity: 1,
+            zIndex: 300 + indiceCollegata,
+            duration: 0.5,
+            delay: 0.025 * indiceCollegata,
+            ease: 'power3.out',
+            overwrite: 'auto',
+          });
+          c.style.pointerEvents = 'auto';
+          c.classList.add('is-connessa');
+          c.classList.remove('is-sbiadita', 'is-centro');
+          return;
+        }
+
+        gsap.to(c, {
+          x: 0,
+          y: 0,
+          xPercent: 0,
+          yPercent: 0,
+          scale: 0.8,
+          opacity: 0,
+          zIndex: 1,
+          duration: 0.35,
+          ease: 'power2.out',
+          overwrite: 'auto',
+        });
+        c.style.pointerEvents = 'none';
+        c.classList.add('is-sbiadita');
+        c.classList.remove('is-connessa', 'is-centro');
+      });
+    }
+
+    function chiudi(animato = true, durata = 0.5) {
+      if (modo !== 'fan') return;
+      modo = 'stack';
+      centro = null;
+      palco!.classList.remove('is-fan');
+
+      carte.forEach((c) => {
+        c.setAttribute('aria-expanded', 'false');
+        c.classList.remove('is-centro', 'is-connessa', 'is-sbiadita');
+      });
+      disegnaStack(animato, durata);
+    }
+
+    contenitoreCarte.addEventListener(
+      'click',
+      (evento) => {
+        const carta = (evento.target as HTMLElement).closest<HTMLButtonElement>('.carta');
+        if (!carta) return;
+        const id = Number(carta.dataset.id);
+        if (modo === 'fan' && id === centro) {
+          chiudi();
+        } else {
+          apri(id);
+        }
+      },
+      { signal },
+    );
+
+    document.addEventListener(
+      'click',
+      (evento) => {
+        if (modo === 'fan' && !palco!.contains(evento.target as Node)) chiudi();
+      },
+      { signal },
+    );
+
+    document.addEventListener(
+      'keydown',
+      (evento) => {
+        if (evento.key === 'Escape' && modo === 'fan') chiudi();
+      },
+      { signal },
+    );
+
+    window.addEventListener(
+      'wheel',
+      (evento) => {
+        if (modo === 'fan') {
+          evento.preventDefault();
+          chiudiConTween();
+        } else if (Date.now() < bloccaFinoA) {
+          evento.preventDefault();
+        }
+      },
+      { passive: false, signal },
+    );
+
+    window.addEventListener(
+      'touchmove',
+      (evento) => {
+        if (modo === 'fan') {
+          evento.preventDefault();
+          chiudiConTween();
+        } else if (Date.now() < bloccaFinoA) {
+          evento.preventDefault();
+        }
+      },
+      { passive: false, signal },
+    );
+  }
+
+  /* ---------------------------------------------------- Ripiego senza animazioni */
+  function avviaRipiego(contenitoreCarte: HTMLElement, signal: AbortSignal) {
+    const carte = Array.from(contenitoreCarte.querySelectorAll<HTMLButtonElement>('.carta'));
+    let attiva: HTMLButtonElement | null = null;
+
+    contenitoreCarte.addEventListener(
+      'click',
+      (evento) => {
+        const carta = (evento.target as HTMLElement).closest<HTMLButtonElement>('.carta');
+        if (!carta) return;
+
+        const riapri = carta !== attiva;
+        for (const c of carte) {
+          c.classList.remove('is-centro', 'is-connessa', 'is-sbiadita');
+          c.setAttribute('aria-expanded', 'false');
+        }
+
+        if (!riapri) {
+          attiva = null;
+          return;
+        }
+
+        attiva = carta;
+        carta.classList.add('is-centro');
+        carta.setAttribute('aria-expanded', 'true');
+        const collegati = new Set((carta.dataset.collegati ?? '').split(',').filter(Boolean));
+        for (const c of carte) {
+          if (c === carta) continue;
+          if (collegati.has(c.dataset.id ?? '')) c.classList.add('is-connessa');
+          else c.classList.add('is-sbiadita');
+        }
+      },
+      { signal },
+    );
+  }
+
+  let controllerMazzi: AbortController | undefined;
+
+  function iniziaMazzi() {
+    controllerMazzi?.abort();
+    controllerMazzi = new AbortController();
+    const { signal } = controllerMazzi;
+    document.querySelectorAll<HTMLElement>('[data-mazzo]').forEach((mazzo) => avvia(mazzo, signal));
+  }
+
+  document.addEventListener('astro:page-load', iniziaMazzi);
+</script>

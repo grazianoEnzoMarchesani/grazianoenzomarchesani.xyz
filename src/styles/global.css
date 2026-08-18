@@ -31,3 +31,17 @@ body {
     scroll-behavior: auto;
   }
 }
+
+*,
+*::before,
+*::after {
+  -webkit-tap-highlight-color: transparent;
+}
+
+*:focus,
+*:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+

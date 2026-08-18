@@ -1,0 +1,496 @@
+{
+  "_nota": "La bibliografia. È un DATASET e non una collezione .md perché decine di voci sono decine di righe di metadati senza prosa: file col corpo vuoto sarebbero solo attrito. Stesso ragionamento di competenze.json. src/data/pubblicazioni.json è generato da references.bib (scripts/genera-pubblicazioni.mjs, DEC-75/76): non modificarlo a mano, si perderebbe al prossimo giro. Per correggere una voce, usa pubblicazioni.regole.json — «campi» per forzare un valore, «escludi»/«tipo» per le decisioni che il .bib da solo non può prendere. Gli autori sono normalizzati a «Cognome N. N.»: il nome di Graziano viene evidenziato a schermo cercando la stringa in `io`.",
+  "aggiornato": "2026-08-18",
+  "io": "Marchesani G. E.",
+  "profili": {
+    "orcid": "https://orcid.org/0000-0002-4723-5099",
+    "iris": "https://pubblicazioni.unicam.it/cris/rp/rp06042",
+    "github": "https://github.com/grazianoEnzoMarchesani"
+  },
+  "voci": [
+    {
+      "id": "3d-facade-geometry",
+      "tipo": "articolo",
+      "anno": 2026,
+      "titolo": "3D façade geometry as a dual passive control in hot urban canyons: reducing street MRT and cooling loads",
+      "autori": "Naboni E., Marchesani G. E., Cocci Grifoni R.",
+      "sede": "Building and Environment 297",
+      "fonte": {
+        "rivista": "Building and Environment",
+        "volume": "297"
+      },
+      "doi": "10.1016/j.buildenv.2026.114479"
+    },
+    {
+      "id": "bridging-theory-practice",
+      "tipo": "articolo",
+      "anno": 2026,
+      "titolo": "Bridging the theory–practice gap: a design methodology for green infrastructure implementation in mid-Adriatic coastal cities",
+      "autori": "Brownlee T. D., Malavolta S., Marchesani G. E.",
+      "sede": "Sustainability 18",
+      "doi": "10.3390/su18031690"
+    },
+    {
+      "id": "clicche-higher-education-on-climate-change-adaptation-and",
+      "tipo": "articolo",
+      "anno": 2026,
+      "titolo": "CliCCHE. Higher education on climate change adaptation and urban health",
+      "autori": "Brownlee T. D., Camaioni C., Di Giovanni C. F., Ilardo G., Kyprianou I., Marchesani G. E., Jovanović P., Shatarat O.",
+      "sede": "Territorio n. 111, 134–144",
+      "fonte": {
+        "rivista": "Territorio",
+        "numero": "111",
+        "pagine": "134–144"
+      },
+      "doi": "10.3280/tr2024-111012"
+    },
+    {
+      "id": "misure-urbane",
+      "tipo": "monografia",
+      "anno": 2026,
+      "titolo": "Misure urbane",
+      "autori": "Marchesani G. E.",
+      "sede": "KDP, Ascoli Piceno",
+      "fonte": {
+        "editore": "KDP",
+        "luogo": "Ascoli Piceno"
+      }
+    },
+    {
+      "id": "multilevel-governance",
+      "tipo": "articolo",
+      "anno": 2025,
+      "titolo": "Multilevel governance approach to adaptation. The construction of the Italian Mid-Adriatic green infrastructure",
+      "autori": "D'Onofrio R., Brownlee T. D., Camaioni C., Cecchi J., Cocci Grifoni R., Malavolta S., Marchesani G. E.",
+      "sede": "TEMA 18(1), 113–130",
+      "fonte": {
+        "rivista": "TEMA",
+        "volume": "18",
+        "numero": "1",
+        "pagine": "113–130"
+      },
+      "doi": "10.6093/1970-9870/11157"
+    },
+    {
+      "id": "mitigation-adaptation-urban-health",
+      "tipo": "articolo",
+      "anno": 2023,
+      "titolo": "Mitigation and adaptation strategies to offset the impacts of climate change on urban health: a European perspective",
+      "autori": "Kyprianou I., Artopoulos G., Bonomolo A., Brownlee T. D., Cachado R. Á., Camaioni C., Đokić V., D'Onofrio R., Đukanović Z., Fasola S., Di Giovanni C. F., Cocci Grifoni R., Hadjinicolaou P., Ilardo G., Jovanović P., La Grutta S., Malizia V., Marchesani G. E., Ottone M. F., Trusiani E., Živković J., Carlucci S.",
+      "sede": "Building and Environment 238, 1–13",
+      "fonte": {
+        "rivista": "Building and Environment",
+        "volume": "238",
+        "pagine": "1–13"
+      },
+      "doi": "10.1016/j.buildenv.2023.110226"
+    },
+    {
+      "id": "combinative-uhi-ascoli",
+      "tipo": "articolo",
+      "anno": 2022,
+      "titolo": "Combinative study of urban heat island in Ascoli Piceno city with remote sensing and CFD simulation — CCUHRE project",
+      "autori": "Cocci Grifoni R., Caprari G., Marchesani G. E.",
+      "sede": "Sustainability 14, 1–21",
+      "doi": "10.3390/su14020688"
+    },
+    {
+      "id": "green-infrastructure-intermediate-cities",
+      "tipo": "articolo",
+      "anno": 2022,
+      "titolo": "Green infrastructure for intermediate cities — the Ascoli Piceno case study",
+      "autori": "Cocci Grifoni R., Ottone M. F., Riera D., Marchesani G. E., Romanella D.",
+      "sede": "Abitare la Terra, 76–79"
+    },
+    {
+      "id": "resilienza-trasformativa-urbana",
+      "tipo": "articolo",
+      "anno": 2022,
+      "titolo": "Resilienza trasformativa urbana: generare nuove opportunità nel complesso sistema edifici/spazi aperti",
+      "autori": "Ottone M. F., Cocci Grifoni R., Samara Ferreira C., Porfiri S., Marchesani G. E.",
+      "sede": "ANANKE, 99–102"
+    },
+    {
+      "id": "urban-micro-forestry",
+      "tipo": "articolo",
+      "anno": 2022,
+      "titolo": "Urban micro-forestry for climate adaptation in the smaller ports of the Mid-Adriatic Sea",
+      "autori": "Cocci Grifoni R., Brownlee T. D., Marchesani G. E., Ottone M. F.",
+      "sede": "AGATHÓN, 172–181",
+      "doi": "10.19229/2464-9309/11152022"
+    },
+    {
+      "id": "sfida-delle-periferie",
+      "tipo": "articolo",
+      "anno": 2020,
+      "titolo": "La sfida delle periferie: i quartieri ERP come opportunità di risposta all'emergenza climatica e sanitaria",
+      "autori": "Cocci Grifoni R., Ottone M. F., Marchesani G. E.",
+      "sede": "Urbanistica Informazioni 47, 13–15"
+    },
+    {
+      "id": "mass-and-lightness",
+      "tipo": "articolo",
+      "anno": 2020,
+      "titolo": "Mass and lightness: urban quality along the Aurelian Walls in Rome",
+      "autori": "Ottone M. F., Cocci Grifoni R., Marchesani G. E.",
+      "sede": "TECHNE 19, 280–289",
+      "doi": "10.13128/techne-7821"
+    },
+    {
+      "id": "density-intensity",
+      "tipo": "articolo",
+      "anno": 2019,
+      "titolo": "Density – intensity. Material and immaterial elements in assessing urban quality",
+      "autori": "Ottone M. F., Cocci Grifoni R., Marchesani G. E., Riera D.",
+      "sede": "TECHNE 17, 278–288",
+      "fonte": {
+        "rivista": "TECHNE",
+        "volume": "17",
+        "pagine": "278–288"
+      },
+      "doi": "10.13128/Techne-24022"
+    },
+    {
+      "id": "towards-climate-adaptive-planning",
+      "tipo": "capitolo",
+      "anno": 2026,
+      "titolo": "Towards climate adaptive urban planning: minimum urban units-based adaptation strategies to mitigate UHI with AI support",
+      "autori": "Cognoli R., Marchesani G. E., Cocci Grifoni R., Ruggiero R., Iommi M.",
+      "sede": "Innovative Technologies and Circular Solutions for Sustainable Urban Communities, vol. 1. Springer Nature, 23–37",
+      "doi": "10.1007/978-3-031-99036-6"
+    },
+    {
+      "id": "allombra-del-chiostro",
+      "tipo": "capitolo",
+      "anno": 2025,
+      "titolo": "All'ombra del chiostro: analisi microclimatiche delle strutture claustrali e strategie per il progetto fra conservazione e innovazione",
+      "autori": "Petrucci E., Cocci Grifoni R., Marchesani G. E.",
+      "sede": "Le prossime sfide per i beni culturali. Arcadia Ricerche, 575–586"
+    },
+    {
+      "id": "climate-maps-urban-planning",
+      "tipo": "capitolo",
+      "anno": 2025,
+      "titolo": "Climate maps and urban planning in search of a reliable framework for adapting cities and communities to the impacts of climate change",
+      "autori": "D'Onofrio R., Caprari G., Cocci Grifoni R., Conti F., Marchesani G. E., Malavolta S., Pierantoni I., Sargolini M.",
+      "sede": "Geographic Approaches to Climate Change and Mitigation. Springer, Cham, 57–65"
+    },
+    {
+      "id": "data-driven-design",
+      "tipo": "capitolo",
+      "anno": 2025,
+      "titolo": "Data-Driven Design. Come l'intelligenza artificiale e il machine learning vengono utilizzati per analizzare i dati urbani, sanitari e demografici",
+      "autori": "Marchesani G. E., Cognoli R.",
+      "sede": "Progetto Vitality. LetteraVentidue, 242–251"
+    },
+    {
+      "id": "empowering-health",
+      "tipo": "capitolo",
+      "anno": 2025,
+      "titolo": "Empowering Health: strumenti digitali per una vita migliore. Il ruolo delle utility digitali nella promozione di pratiche sane",
+      "autori": "Marchesani G. E., Benedetti D.",
+      "sede": "Progetto Vitality. LetteraVentidue, 213–219"
+    },
+    {
+      "id": "innovazione-urbana-tecnologie",
+      "tipo": "capitolo",
+      "anno": 2025,
+      "titolo": "Innovazione urbana tra tecnologie, clima e impatto sociale",
+      "autori": "Cocci Grifoni R., Marchesani G. E., Riera D.",
+      "sede": "Progettazione ambientale. Sfide globali, scenari di ricerca. Maggioli, 366–371",
+      "doi": "10.30448/UNI.916.72445"
+    },
+    {
+      "id": "multiscalare-interoperabile",
+      "tipo": "capitolo",
+      "anno": 2025,
+      "titolo": "Multiscalare, interoperabile, transdisciplinare. Il potere e i limiti del geo-digitale nella valutazione dei contesti urbani",
+      "autori": "Caprari G., Marchesani G. E., Malavolta S., Cognoli R.",
+      "sede": "Progetto Vitality. LetteraVentidue, 84–95"
+    },
+    {
+      "id": "simulazione-dinamiche-urbane",
+      "tipo": "capitolo",
+      "anno": 2025,
+      "titolo": "Simulazione delle dinamiche urbane. Come i modelli numerici analizzano gli edifici e gli spazi esterni nel contesto delle LCZ",
+      "autori": "Malavolta S., Marchesani G. E., Vagias A., Cocci Grifoni R.",
+      "sede": "Progetto Vitality. LetteraVentidue, 43–56"
+    },
+    {
+      "id": "strategie-indoor-outdoor",
+      "tipo": "capitolo",
+      "anno": 2025,
+      "titolo": "Strategie indoor e outdoor. Una panoramica delle soluzioni tecnico-spaziali adattive",
+      "autori": "Cognoli R., Marchesani G. E., Malavolta S.",
+      "sede": "Progetto Vitality. LetteraVentidue, 106–115"
+    },
+    {
+      "id": "supporto-alle-decisioni",
+      "tipo": "capitolo",
+      "anno": 2025,
+      "titolo": "Supporto alle decisioni. Un percorso basato sui dati: il ruolo degli strumenti di supporto decisionale IT, dell'intelligenza artificiale e del machine learning",
+      "autori": "Caprari G., Bernabei M. S., Marchesani G. E., Cognoli R., Iommi M., D'Onofrio R., Cocci Grifoni R.",
+      "sede": "Progetto Vitality. LetteraVentidue, 157–169"
+    },
+    {
+      "id": "zone-climatiche-locali",
+      "tipo": "capitolo",
+      "anno": 2025,
+      "titolo": "Zone climatiche locali. Il linguaggio segreto del calore urbano",
+      "autori": "Cocci Grifoni R., Marchesani G. E., Ottone M. F.",
+      "sede": "LetteraVentidue, 23–33"
+    },
+    {
+      "id": "grande-bellezza-spazio-urbano",
+      "tipo": "capitolo",
+      "anno": 2023,
+      "titolo": "La grande bellezza dello spazio urbano",
+      "autori": "Cocci Grifoni R., Tonelli C., Riera D., Marchesani G. E., Cardone B., Nardi G., Romanella D., Brownlee T. D.",
+      "sede": "Un selfie dei territori. Maggioli, 102–110"
+    },
+    {
+      "id": "why-coupling-microclimate",
+      "tipo": "capitolo",
+      "anno": 2021,
+      "titolo": "Why coupling MicroClimate and buildings in design for climate change",
+      "autori": "Naboni E., Gherri B., Marchesani G. E., Di Nunzio A., Maiullari D., Cocci Grifoni R., Fiorito F.",
+      "sede": "Progetto e costruzione: tradizione ed innovazione nella pratica dell'architettura. EdicomEdizioni, 401–413"
+    },
+    {
+      "id": "new-baroque",
+      "tipo": "capitolo",
+      "anno": 2020,
+      "titolo": "A new baroque for the environmental quality of the city",
+      "autori": "Cocci Grifoni R., Ottone M. F., Marchesani G. E.",
+      "sede": "World Heritage and Contamination. Gangemi, 811–816"
+    },
+    {
+      "id": "architecture-of-complexity",
+      "tipo": "capitolo",
+      "anno": 2020,
+      "titolo": "Architecture of complexity: (re)generative interfaces",
+      "autori": "Cocci Grifoni R., Marchesani G. E.",
+      "sede": "Design in the Digital Age. Maggioli, 89–92"
+    },
+    {
+      "id": "methodological-comparison",
+      "tipo": "capitolo",
+      "anno": 2020,
+      "titolo": "Methodological comparison of different projects",
+      "autori": "Salvatori L. M., Marceca M., Paglione L., Angelozzi A., Caminada S., Errigo M., Tofani M., Battisti A., Barnocchi A., Bodini C., Riccio M., Maralla R., Gentilini V., Cacciatore F., Trusiani E., D'Onofrio R., Cocci Grifoni R., Pierantozzi M., Petrucci E., Odoguardi I., Marchesani G. E., Sgro C., Camaioni C., Sangiorgi D., Lucchi F., Carrera M., Paoletti F., Greco A. D., Iorio S.",
+      "sede": "Urban Health: Participatory Action-Research Models Contrasting Socioeconomic Inequalities in the Urban Context. Springer, Cham, 225–260",
+      "doi": "10.1007/978-3-030-49446-9_16"
+    },
+    {
+      "id": "nuovo-rinascimento",
+      "tipo": "capitolo",
+      "anno": 2020,
+      "titolo": "Nuovo rinascimento",
+      "autori": "Cocci Grifoni R., Bonvini A., Marchesani G. E., Romanella D., Tassetti P.",
+      "sede": "Futuribile. Idee e progetti per un futuro probabile. Capponi Editore, 54–63"
+    },
+    {
+      "id": "scarto-vs-risorsa",
+      "tipo": "capitolo",
+      "anno": 2020,
+      "titolo": "Scarto vs Risorsa. Proposte per la rigenerazione dei residui urbani. Team RAP",
+      "autori": "Baiani S., Ulisse A., Brownlee T. D., Conteduca M., De Caro A., D'Ottavi S., Marchesani G. E., Nickayin S., Riera D., Romanella D., Romano M., Stefàno D.",
+      "sede": "Progettare in vivo la rigenerazione urbana. Maggioli, 187–193"
+    },
+    {
+      "id": "muu-society-5",
+      "tipo": "atti",
+      "anno": 2026,
+      "titolo": "Minimum urban units (MUUs): a data-driven methodology for adaptive and climate-responsive urban planning",
+      "autori": "Cocci Grifoni R., D'Onofrio R., Bernabei M. S., Marchesani G. E., Khodaparast M., Riera D.",
+      "sede": "Society 5.0 — 5th International Conference, Revised Selected Papers. Springer, Cham, 75–86",
+      "doi": "10.1007/978-3-032-15463-7_7"
+    },
+    {
+      "id": "city-rhythm-paper",
+      "tipo": "atti",
+      "anno": 2025,
+      "titolo": "City Rhythm: geo-temporal platform for integrated analysis of flows, microclimate and UHI risk",
+      "autori": "Marchesani G. E., Cocci Grifoni R., Riera D., Khodaparast M.",
+      "sede": "IOP Conference Series: Earth and Environmental Science 1568",
+      "doi": "10.1088/1755-1315/1568/1/012039"
+    },
+    {
+      "id": "innovative-composite-formulations",
+      "tipo": "atti",
+      "anno": 2025,
+      "titolo": "Innovative composite formulations for thermal regulation: a synergy of computational design and waste material valorisation to enhance outdoor thermal comfort",
+      "autori": "Cocci Grifoni R., Khodaparast M., Pasqualini C., Marchesani G. E.",
+      "sede": "Responsive Cities 2025. Design Matter(s) for Decarbonization. IAAC, Barcelona, 324–341"
+    },
+    {
+      "id": "lcz-historical-cities",
+      "tipo": "atti",
+      "anno": 2025,
+      "titolo": "Local climate zone mapping in historical cities: a high-resolution tool for urban climate resilience",
+      "autori": "Cocci Grifoni R., Bernabei M. S., D'Onofrio R., Marchesani G. E., Khodaparast M.",
+      "sede": "The Sustainable City XVII. WIT Press, 25–36",
+      "doi": "10.2495/sc250031"
+    },
+    {
+      "id": "meteoclimatic-scenarios",
+      "tipo": "atti",
+      "anno": 2025,
+      "titolo": "Representative meteoclimatic scenarios for Mediterranean urban climate adaptation",
+      "autori": "Cocci Grifoni R., Marchesani G. E., Malavolta S., D'Onofrio R., Khodaparast M.",
+      "sede": "IOP Conference Series: Earth and Environmental Science 1568",
+      "doi": "10.1088/1755-1315/1568/1/012045"
+    },
+    {
+      "id": "pvnb-ascoli",
+      "tipo": "atti",
+      "anno": 2025,
+      "titolo": "Sustainable urban regeneration through noise mitigation and energy self-sufficiency: the Ascoli Piceno PVNB model",
+      "autori": "Khodaparast M., Ottone M. F., Cocci Grifoni R., Pasqualini C., Marchesani G. E.",
+      "sede": "IOP Conference Series: Earth and Environmental Science 1568",
+      "doi": "10.1088/1755-1315/1568/1/012038"
+    },
+    {
+      "id": "energy-efficiency-historical",
+      "tipo": "atti",
+      "anno": 2018,
+      "titolo": "Energy efficiency improvements in Italian historical buildings: the case study of Ascoli Piceno",
+      "autori": "Cocci Grifoni R., Petrucci E., Tascini S., Pierantozzi M., Lapucci D., Marchesani G. E.",
+      "sede": "EEEIC / I&CPS Europe 2018. IEEE, 1–6",
+      "doi": "10.1109/EEEIC.2018.8642896"
+    },
+    {
+      "id": "cool-facade-optimization",
+      "tipo": "atti",
+      "anno": 2017,
+      "titolo": "Cool façade optimization: a new parametric methodology for the urban heat island phenomenon",
+      "autori": "Cocci Grifoni R., Tascini S., Cesario E., Marchesani G. E.",
+      "sede": "EEEIC / I&CPS Europe 2017. IEEE, 1–5",
+      "doi": "10.1109/EEEIC.2017.7977677"
+    },
+    {
+      "id": "see-the-invisible",
+      "tipo": "atti",
+      "anno": 2017,
+      "titolo": "Inspired by the atmosphere. See the invisible",
+      "autori": "Rossi D., Cocci Grifoni R., Marchesani G. E., Rosa M.",
+      "sede": "IMMAGINI? Conference Proceedings 2017. MDPI, 1–8",
+      "doi": "10.3390/proceedings1090906"
+    },
+    {
+      "id": "inspired-by-the-atmosphere",
+      "tipo": "atti",
+      "anno": 2017,
+      "titolo": "Inspired by the atmosphere: a procedural protocol that defines a meta-project based on atmospheric forces — solar radiation and wind field",
+      "autori": "Cocci Grifoni R., Pierantozzi M., Marchesani G. E., Rosa M.",
+      "sede": "EEEIC / I&CPS Europe 2017. IEEE, 1–5",
+      "doi": "10.1109/EEEIC.2017.7977678"
+    }
+  ],
+  "_notaDataset": "Dataset, report e output tecnico-scientifici: non sono pubblicazioni con revisione, e infatti non entrano nel conteggio. Stanno in fondo alla pagina /publications perché per un partner di ricerca «esiste il dato» vale quanto «esiste il paper».",
+  "dataset": [
+    {
+      "id": "envimet-via-milano",
+      "anno": 2026,
+      "titolo": "ENVI-met simulation dataset — Via Milano, Pescara: urban microclimate assessment, current scenario and 2050 climate projection",
+      "autori": "Marchesani G. E., Cocci Grifoni R."
+    },
+    {
+      "id": "envimet-agreenet",
+      "anno": 2025,
+      "titolo": "ENVI-met simulation dataset for the LIFE A_GreeNET project (2019 and 2030)",
+      "autori": "Marchesani G. E., Cocci Grifoni R.",
+      "doi": "10.5281/zenodo.14762492"
+    },
+    {
+      "id": "itree-eco",
+      "anno": 2025,
+      "titolo": "LIFE+ A_GreeNet — data & report iTree Eco",
+      "autori": "Cecchi J., Malavolta S., D'Onofrio R., Marchesani G. E., Catorci A., Giorgini I.",
+      "doi": "10.5281/zenodo.14811561"
+    },
+    {
+      "id": "life-agreenet-projects-and-results",
+      "anno": 2025,
+      "titolo": "Life+ AGREENet Projects and Results",
+      "autori": "Malavolta S., Marchesani G. E., Brownlee T. D., Lupini S., D'Onofrio R., Cocci Grifoni R., Cecchi J., Caprari G.",
+      "doi": "10.5281/zenodo.14894783"
+    },
+    {
+      "id": "fetch-framework",
+      "anno": 2024,
+      "titolo": "FETCH (Framework for Environmental Type-Classification Hub)",
+      "autori": "Marchesani G. E., Bernabei M. S., Cocci Grifoni R., Khodaparast M.",
+      "doi": "10.5281/zenodo.14548164"
+    },
+    {
+      "id": "vitality-spoke6-output2",
+      "anno": 2023,
+      "titolo": "Progetto VITALITY. Spoke 6 — WP6, Output 2: co-creation for citizens",
+      "autori": "D'Onofrio R., Cocci Grifoni R., Sargolini M., Pierantoni I., Marchesani G. E., Coccia L., Cipolletti S., Grappasonni I., Paniccià M., Iommi M., Cognoli R., Losco G., Ruggiero R., Ottone M. F."
+    },
+    {
+      "id": "repertorio-nbs",
+      "anno": 2022,
+      "titolo": "Repertorio di interventi NBS e delle specie arboree per il benessere fisico e psichico della comunità urbana — LIFE20 CCA/IT/001752 A_GreeNET",
+      "autori": "D'Onofrio R., Cocci Grifoni R., Ottone M. F., Marchesani G. E., Trusiani E."
+    },
+    {
+      "id": "vautereco-marche",
+      "anno": 2021,
+      "titolo": "VAU.TE.RE.CO. area studio Regione Marche. Analisi degli spazi aperti urbani",
+      "autori": "Sargolini M., Ottone M. F., Cocci Grifoni R., Porfiri S., Marchesani G. E."
+    }
+  ],
+  "_notaAttivita": "Attività e disseminazione: seminari, workshop, mostre, meeting di progetto. Non sono output di ricerca né dati tecnici — sono la parte pubblica e organizzativa del lavoro, utile a chi vuole vedere il contesto oltre alla bibliografia.",
+  "attivita": [
+    {
+      "id": "vitality-muu-meeting",
+      "anno": 2023,
+      "titolo": "Meeting interno: assessment, recognition and evaluation of the «minimum urban units» — Progetto VITALITY, WP1",
+      "autori": "D'Onofrio R., Pierantoni I., Sargolini M., Cocci Grifoni R., Marchesani G. E., Ottone M. F., Ruggiero R., Cognoli R., Losco G., Iommi M., Grappasonni I., Paniccià M., Coccia L., Cipolletti S., Giostra G., Corvaro G., Conti F., Neri E., Bernabei M. S."
+    },
+    {
+      "id": "clicche-water-for-a-friend",
+      "anno": 2023,
+      "titolo": "Multiplier event «Water for a Friend» — Erasmus+ CliCCHE",
+      "autori": "D'Onofrio R., Camaioni C., Guaiani A., Marchesani G. E., Ottone M. F., Trusiani E., Simionato L."
+    },
+    {
+      "id": "clicche-video-mapping",
+      "anno": 2023,
+      "titolo": "Progetto Cli_CCHE, quartiere Sant'Antonio: «L'Italia che verrà», poster e video mapping",
+      "autori": "D'Onofrio R., Camaioni C., Guaiani A., Marchesani G. E., Porfiri S., Conti F."
+    },
+    {
+      "id": "revisioni-del-progetto-vitality-pnrr-ecosistema-dell",
+      "anno": 2023,
+      "titolo": "REVISIONI DEL PROGETTO VITALITY. PNRR_ECOSISTEMA DELL'INNOVAZIONE Work Package 6: Training and Educational Activities Task 6.1 - Training for the green and digital transition for indoor-outdoor spaces",
+      "autori": "D'Onofrio R., Pierantoni I., Cocci Grifoni R., Ottone M. F., Bernabei M. S., Marchesani G. E., Coccia L., Cipolletti S., Giostra G., Corvaro G., Neri E., Losco G., Iommi M., Cognoli R., Ruggiero R., Grappasonni I., Paniccià M., Conti F."
+    },
+    {
+      "id": "clicche-workshop-locale",
+      "anno": 2023,
+      "titolo": "Workshop locale, progetto Erasmus+ CliCCHE",
+      "autori": "D'Onofrio R., Camaioni C., Guaiani A., Conti F., Porfiri S., Simionato L., Malavolta S., Marchesani G. E., Cocci Grifoni R."
+    },
+    {
+      "id": "clicche-transnational-meeting-2",
+      "anno": 2022,
+      "titolo": "2° Transnational meeting del progetto Erasmus+ CliCCHE",
+      "autori": "D'Onofrio R., Cocci Grifoni R., Ottone M. F., Brownlee T. D., Marchesani G. E., Camaioni C., Trusiani E."
+    },
+    {
+      "id": "mobilit-ap",
+      "anno": 2022,
+      "titolo": "Mobilit_AP",
+      "autori": "Ottone M. F., Cocci Grifoni R., D'Onofrio R., Petrucci E., Riera D., Marchesani G. E., Romanella D."
+    },
+    {
+      "id": "maker-faire-2017",
+      "anno": 2017,
+      "titolo": "Maker Faire 2017: live mixed reality ed esposizione dei lavori del corso di Design Computazionale",
+      "autori": "Rossi D., Olivieri A., Marchesani G. E., Paciotti D."
+    }
+  ]
+}

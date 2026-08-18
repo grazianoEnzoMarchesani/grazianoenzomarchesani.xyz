@@ -1,0 +1,119 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import '../styles/global.css';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import MazzoCompetenze from '../components/MazzoCompetenze.astro';
+import { perCategoria, quante, sintesi } from '../lib/competenze';
+
+const gruppi = perCategoria('en');
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Skills & Expertise — Graziano Enzo Marchesani</title>
+    <meta
+      name="description"
+      content="Core computational design, microclimate simulation, and digital modeling expertise of Graziano Enzo Marchesani."
+    />
+    <ClientRouter />
+  </head>
+  <body class="bg-paper text-ink font-sans antialiased selection:bg-ink selection:text-paper">
+    <Nav />
+
+    <main class="mx-auto max-w-5xl px-6 pt-32 pb-32 sm:px-10">
+      {/* ---------------------------------------------------- Header & Stage Animato */}
+      <section aria-label="Skills Overview and Interactive Map" class="border-b border-ink/15 pb-16 sm:pb-24">
+        {/* Header Introduttivo */}
+        <header class="max-w-3xl space-y-4">
+          <p class="font-mono text-xs uppercase tracking-widest text-ink/60">
+            Core Strengths · Methodologies & Tooling
+          </p>
+
+          <h1 class="font-display text-[clamp(2.75rem,7vw,5.5rem)] leading-none tracking-normal uppercase">
+            Skills & Expertise
+          </h1>
+
+          <p class="text-base leading-relaxed text-ink/80 sm:text-lg">
+            {sintesi.descrizione.en}
+          </p>
+
+          <div class="flex flex-wrap items-center gap-x-6 gap-y-1.5 pt-2 font-mono text-xs text-ink/50 uppercase tracking-wider">
+            <span>
+              {quante.competenze} Competences · {quante.categorie} Categories
+            </span>
+            <span class="text-ink/30 hidden sm:inline">|</span>
+            <span class="text-[0.72rem] text-ink/60">
+              Scroll over deck to browse · Click a card to explore connections
+            </span>
+          </div>
+        </header>
+
+        {/* Palco Mazzo Interattivo a Tutta Larghezza */}
+        <div class="mt-8 sm:mt-12 w-full">
+          <MazzoCompetenze />
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------- Glossario Editoriale Esteso */}
+      <section aria-label="Comprehensive Competence Glossary" class="pt-20">
+        <header class="mb-14 space-y-3">
+          <p class="font-mono text-xs uppercase tracking-widest text-ink/60">
+            Structured Directory
+          </p>
+          <h2 class="font-display text-[clamp(2rem,5vw,3.5rem)] leading-none uppercase text-ink">
+            Every Competence, in Words
+          </h2>
+          <p class="max-w-2xl text-sm leading-relaxed text-ink/70 sm:text-base">
+            A comprehensive breakdown of scientific methods, computational workflows, and tools
+            applied across research, teaching, and professional practice.
+          </p>
+        </header>
+
+        <div class="space-y-16">
+          {
+            gruppi.map((gruppo) => (
+              <div class="space-y-6">
+                <div class="flex items-center gap-3 border-b border-ink/15 pb-4">
+                  <span class="inline-block size-2 rounded-full bg-ink" aria-hidden="true" />
+                  <h3 class="font-display text-2xl uppercase tracking-tight text-ink">
+                    {gruppo.nome}
+                  </h3>
+                </div>
+
+                <div class="space-y-8">
+                  {gruppo.categorie.map((categoria) => (
+                    <div class="space-y-3">
+                      <h4 class="font-mono text-xs uppercase tracking-widest text-ink/50 pt-2">
+                        {categoria.nome}
+                      </h4>
+                      <div class="divide-y divide-ink/10 border-t border-ink/10">
+                        {categoria.competenze.map((competenza) => (
+                          <div class="grid gap-x-8 gap-y-1.5 py-4 sm:grid-cols-[16rem_1fr] sm:items-baseline">
+                            <p class="font-medium leading-snug text-ink text-[0.95rem]">
+                              {competenza.nome}
+                            </p>
+                            <p class="text-sm leading-relaxed text-ink/75">
+                              {competenza.descrizione}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))
+          }
+        </div>
+      </section>
+    </main>
+
+    <Footer />
+  </body>
+</html>

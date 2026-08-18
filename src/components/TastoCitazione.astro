@@ -1,0 +1,175 @@
+---
+import { generaCitazioni, stiliCitazione, etichettaStile, type TipoCitabile, type VoceCitabile } from "../lib/citazioni";
+
+interface Props {
+  voce: VoceCitabile;
+  tipo: TipoCitabile;
+}
+
+const { voce, tipo } = Astro.props;
+const citazioni = generaCitazioni(voce, tipo);
+---
+
+<div class="cita relative inline-flex items-center" data-cita>
+  <div
+    class="cita__capsula relative inline-flex items-center rounded-full bg-paper/80 p-0.5 text-xs uppercase tracking-widest transition-all duration-300 ease-out"
+  >
+    {/* Stili espandibili a sinistra */}
+    <div
+      class="cita__stili grid grid-cols-[0fr] opacity-0 transition-[grid-template-columns,opacity] duration-300 ease-out pointer-events-none"
+      data-cita-stili
+    >
+      <div class="flex items-center gap-0.5 overflow-hidden whitespace-nowrap px-1">
+        {
+          stiliCitazione.map((stile) => (
+            <button
+              type="button"
+              class="cita__voce rounded-full px-2.5 py-1 text-[11px] uppercase tracking-wider text-ink/60 transition-colors hover:bg-ink hover:text-paper cursor-pointer outline-none focus:outline-none select-none"
+              data-cita-testo={citazioni[stile]}
+              title={`Copy ${etichettaStile[stile]} format`}
+            >
+              {etichettaStile[stile]}
+            </button>
+          ))
+        }
+      </div>
+    </div>
+
+    {/* Bottone Trigger ancorato a destra (+ CITE) */}
+    <button
+      type="button"
+      class="cita__trigger relative z-10 flex items-center gap-1.5 rounded-full px-3 py-1 text-xs uppercase tracking-widest text-ink/60 transition-colors hover:text-ink cursor-pointer outline-none focus:outline-none select-none"
+      data-cita-trigger
+      aria-expanded="false"
+      aria-label={`Open citation formats for: ${voce.titolo}`}
+    >
+      <span class="cita__icon inline-block text-[11px] opacity-40 transition-transform duration-300 ease-out" aria-hidden="true">+</span>
+      <span>Cite</span>
+    </button>
+  </div>
+
+  {/* Tooltip feedback di copia */}
+  <span
+    class="cita__feedback font-sans text-[10px] uppercase tracking-widest pointer-events-none absolute top-full z-30 mt-1.5 whitespace-nowrap rounded-full bg-ink px-2.5 py-0.5 text-paper opacity-0 transition-all duration-200"
+    data-cita-feedback
+    role="status"
+    aria-live="polite"
+  >
+    Copied!
+  </span>
+</div>
+
+<style>
+  .cita[data-open="true"] .cita__stili {
+    grid-template-columns: 1fr;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .cita[data-open="true"] .cita__icon {
+    transform: rotate(45deg);
+    opacity: 0.7;
+  }
+
+  .cita[data-open="true"] .cita__trigger {
+    color: var(--color-ink);
+    font-weight: 500;
+  }
+</style>
+
+<script>
+  let staccaGlobali: (() => void) | undefined;
+
+  function chiudiTuttiTranne(aperto?: HTMLElement | null) {
+    document.querySelectorAll<HTMLElement>('[data-cita][data-open="true"]').forEach((c) => {
+      if (c !== aperto) {
+        c.removeAttribute('data-open');
+        const trigger = c.querySelector<HTMLButtonElement>('[data-cita-trigger]');
+        if (trigger) trigger.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
+  function mostraFeedback(cita: HTMLElement, bottone: HTMLElement) {
+    const feedback = cita.querySelector<HTMLElement>('[data-cita-feedback]');
+    if (!feedback) return;
+    const rectCita = cita.getBoundingClientRect();
+    const rectBottone = bottone.getBoundingClientRect();
+    const centro = rectBottone.left - rectCita.left + rectBottone.width / 2;
+
+    feedback.style.left = `${centro}px`;
+    feedback.style.opacity = '1';
+    feedback.style.transform = 'translate(-50%, 0)';
+
+    window.setTimeout(() => {
+      feedback.style.opacity = '0';
+      feedback.style.transform = 'translate(-50%, 4px)';
+    }, 1000);
+  }
+
+  function iniziaCitazioni() {
+    staccaGlobali?.();
+
+    const alClick = (evento: MouseEvent) => {
+      const target = evento.target as HTMLElement;
+
+      // Click su voce formato (APA, MLA, ecc.)
+      const voce = target.closest<HTMLButtonElement>('[data-cita-testo]');
+      if (voce) {
+        const cita = voce.closest<HTMLElement>('[data-cita]');
+        const testo = voce.dataset.citaTesto ?? '';
+        navigator.clipboard?.writeText(testo).then(() => {
+          if (cita) {
+            mostraFeedback(cita, voce);
+            // Richiude morbidamente dopo la copia
+            window.setTimeout(() => {
+              cita.removeAttribute('data-open');
+              const trigger = cita.querySelector<HTMLButtonElement>('[data-cita-trigger]');
+              if (trigger) trigger.setAttribute('aria-expanded', 'false');
+            }, 750);
+          }
+        });
+        return;
+      }
+
+      // Click su trigger (CITE +)
+      const trigger = target.closest<HTMLButtonElement>('[data-cita-trigger]');
+      if (trigger) {
+        const cita = trigger.closest<HTMLElement>('[data-cita]');
+        if (!cita) return;
+        const eAperto = cita.getAttribute('data-open') === 'true';
+        if (eAperto) {
+          cita.removeAttribute('data-open');
+          trigger.setAttribute('aria-expanded', 'false');
+        } else {
+          chiudiTuttiTranne(cita);
+          cita.setAttribute('data-open', 'true');
+          trigger.setAttribute('aria-expanded', 'true');
+        }
+        return;
+      }
+
+      // Click fuori: chiude qualsiasi capsula aperta
+      if (!target.closest('[data-cita]')) {
+        chiudiTuttiTranne(null);
+      }
+    };
+
+    const alKeyDown = (evento: KeyboardEvent) => {
+      if (evento.key === 'Escape') {
+        chiudiTuttiTranne(null);
+      }
+    };
+
+    document.addEventListener('click', alClick);
+    document.addEventListener('keydown', alKeyDown);
+
+    staccaGlobali = () => {
+      document.removeEventListener('click', alClick);
+      document.removeEventListener('keydown', alKeyDown);
+    };
+  }
+
+  document.addEventListener('DOMContentLoaded', iniziaCitazioni);
+  document.addEventListener('astro:page-load', iniziaCitazioni);
+</script>

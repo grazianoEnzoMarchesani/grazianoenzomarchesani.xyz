@@ -1,0 +1,240 @@
+---
+import type { FieldMarker } from '../data/fields';
+
+interface Props {
+	currentId: string;
+	next?: FieldMarker;
+	prev?: FieldMarker;
+}
+
+const { currentId, next } = Astro.props;
+---
+
+<div id="overscroll-root" data-current-id={currentId} data-next-url={next ? `/fields/${next.id}` : ''} data-next-title={next?.title ?? ''}>
+	<!-- Pull to return top indicator -->
+	<div
+		id="pull-top-indicator"
+		class="pointer-events-none fixed top-16 inset-x-0 z-30 flex justify-center opacity-0 transition-all duration-150 transform -translate-y-2"
+		aria-hidden="true"
+	>
+		<span class="rounded-full border border-ink/20 bg-paper/95 px-4 py-1.5 text-xs uppercase tracking-widest text-ink shadow-sm backdrop-blur-sm">
+			↑ Release to return to Fields
+		</span>
+	</div>
+
+	<!-- Bottom manual link / info -->
+	<div class="mt-14 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-t border-ink/10 pt-6">
+		<button
+			id="back-to-fields-btn"
+			type="button"
+			class="inline-block text-left text-sm uppercase tracking-widest underline hover:opacity-60"
+		>
+			← Back to Fields
+		</button>
+
+		{next && (
+			<a
+				id="next-article-link"
+				href={`/fields/${next.id}`}
+				class="inline-block text-left sm:text-right text-sm tracking-wide opacity-80 hover:opacity-100 group"
+			>
+				<span class="block text-xs uppercase tracking-widest opacity-60">Next Field Article ↓</span>
+				<span class="underline group-hover:opacity-70">{next.title}</span>
+			</a>
+		)}
+	</div>
+
+	<!-- Pull to next bottom indicator -->
+	{next && (
+		<div
+			id="pull-bottom-indicator"
+			class="pointer-events-none fixed bottom-10 inset-x-0 z-30 flex justify-center opacity-0 transition-all duration-150 transform translate-y-2"
+			aria-hidden="true"
+		>
+			<span class="rounded-full border border-ink/20 bg-paper/95 px-4 py-1.5 text-xs uppercase tracking-widest text-ink shadow-sm backdrop-blur-sm">
+				↓ Release for next: {next.title}
+			</span>
+		</div>
+	)}
+</div>
+
+<script>
+	import { gsap } from 'gsap';
+	import { navigate } from 'astro:transitions/client';
+
+	function setup() {
+		const root = document.getElementById('overscroll-root');
+		if (!root) return;
+
+		const currentId = root.getAttribute('data-current-id') ?? '';
+		const nextUrl = root.getAttribute('data-next-url') ?? '';
+		const backBtn = document.getElementById('back-to-fields-btn');
+		const nextLink = document.getElementById('next-article-link');
+		const topIndicator = document.getElementById('pull-top-indicator');
+		const bottomIndicator = document.getElementById('pull-bottom-indicator');
+
+		let isNavigating = false;
+
+		async function goBackToFields() {
+			if (isNavigating) return;
+			isNavigating = true;
+			if (currentId) {
+				sessionStorage.setItem('fields-target-marker', currentId);
+			}
+			const overlay = document.getElementById('field-transition-overlay');
+			if (overlay) {
+				await gsap.to(overlay, { opacity: 1, duration: 0.3, ease: 'power1.in' });
+			}
+			navigate('/fields');
+		}
+
+		async function goToNext() {
+			if (isNavigating || !nextUrl) return;
+			isNavigating = true;
+			// Slide transition: animate main upward
+			const main = document.querySelector('main');
+			if (main) {
+				await gsap.to(main, {
+					y: -80,
+					opacity: 0,
+					duration: 0.35,
+					ease: 'power2.in',
+				});
+			}
+			navigate(nextUrl);
+		}
+
+		backBtn?.addEventListener('click', goBackToFields);
+		nextLink?.addEventListener('click', (e) => {
+			e.preventDefault();
+			goToNext();
+		});
+
+		// Overscroll thresholds
+		const THRESHOLD = 80;
+		let pullTopDistance = 0;
+		let pullBottomDistance = 0;
+		let touchStartY = 0;
+		let isTouching = false;
+
+		function updateIndicators() {
+			if (topIndicator) {
+				if (pullTopDistance > 10) {
+					const progress = Math.min(pullTopDistance / THRESHOLD, 1);
+					topIndicator.style.opacity = `${progress}`;
+					topIndicator.style.transform = `translateY(${progress * 8}px)`;
+				} else {
+					topIndicator.style.opacity = '0';
+					topIndicator.style.transform = '-translateY(8px)';
+				}
+			}
+
+			if (bottomIndicator) {
+				if (pullBottomDistance > 10) {
+					const progress = Math.min(pullBottomDistance / THRESHOLD, 1);
+					bottomIndicator.style.opacity = `${progress}`;
+					bottomIndicator.style.transform = `translateY(${-progress * 8}px)`;
+				} else {
+					bottomIndicator.style.opacity = '0';
+					bottomIndicator.style.transform = 'translateY(8px)';
+				}
+			}
+		}
+
+		// Wheel / Trackpad overscroll
+		let wheelTimer: number | undefined;
+
+		function onWheel(e: WheelEvent) {
+			if (isNavigating) return;
+
+			const scrollTop = window.scrollY || document.documentElement.scrollTop;
+			const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+			const atTop = scrollTop <= 2;
+			const atBottom = scrollTop >= maxScroll - 2;
+
+			if (atTop && e.deltaY < 0) {
+				pullTopDistance += -e.deltaY;
+				updateIndicators();
+				if (pullTopDistance >= THRESHOLD) {
+					pullTopDistance = 0;
+					updateIndicators();
+					goBackToFields();
+					return;
+				}
+			} else if (atBottom && e.deltaY > 0 && nextUrl) {
+				pullBottomDistance += e.deltaY;
+				updateIndicators();
+				if (pullBottomDistance >= THRESHOLD) {
+					pullBottomDistance = 0;
+					updateIndicators();
+					goToNext();
+					return;
+				}
+			} else {
+				pullTopDistance = Math.max(0, pullTopDistance - 15);
+				pullBottomDistance = Math.max(0, pullBottomDistance - 15);
+				updateIndicators();
+			}
+
+			window.clearTimeout(wheelTimer);
+			wheelTimer = window.setTimeout(() => {
+				pullTopDistance = 0;
+				pullBottomDistance = 0;
+				updateIndicators();
+			}, 250);
+		}
+
+		// Touch swipe / pull
+		function onTouchStart(e: TouchEvent) {
+			if (e.touches.length === 1) {
+				touchStartY = e.touches[0].clientY;
+				isTouching = true;
+			}
+		}
+
+		function onTouchMove(e: TouchEvent) {
+			if (!isTouching || isNavigating) return;
+			const currentY = e.touches[0].clientY;
+			const diff = currentY - touchStartY;
+
+			const scrollTop = window.scrollY || document.documentElement.scrollTop;
+			const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+			const atTop = scrollTop <= 2;
+			const atBottom = scrollTop >= maxScroll - 2;
+
+			if (atTop && diff > 0) {
+				pullTopDistance = diff * 0.6;
+				updateIndicators();
+			} else if (atBottom && diff < 0 && nextUrl) {
+				pullBottomDistance = -diff * 0.6;
+				updateIndicators();
+			}
+		}
+
+		function onTouchEnd() {
+			if (!isTouching) return;
+			isTouching = false;
+
+			if (pullTopDistance >= THRESHOLD) {
+				pullTopDistance = 0;
+				updateIndicators();
+				goBackToFields();
+			} else if (pullBottomDistance >= THRESHOLD && nextUrl) {
+				pullBottomDistance = 0;
+				updateIndicators();
+				goToNext();
+			} else {
+				pullTopDistance = 0;
+				pullBottomDistance = 0;
+				updateIndicators();
+			}
+		}
+
+		window.addEventListener('wheel', onWheel, { passive: true });
+		window.addEventListener('touchstart', onTouchStart, { passive: true });
+		window.addEventListener('touchmove', onTouchMove, { passive: true });
+		window.addEventListener('touchend', onTouchEnd, { passive: true });
+	}
+
+	document.addEventListener('astro:page-load', setup);
+</script>

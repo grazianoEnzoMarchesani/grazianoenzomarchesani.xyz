@@ -54,15 +54,25 @@ asse, non un dolly di camera — la camera resta fissa).
 - **Stile**: wireframe/line art per il filo dell'elica, marker a sagoma
   piena (vedi sopra) — coerente con la palette a due soli colori
   (`--color-ink`/`--color-paper`, niente accento, niente dark mode: sfondo
-  scena color paper, tratti/sagome in ink). Fog che sfuma le spire più
-  lontane per rinforzare la profondità (vedi anche "Fog in primo piano"
-  sotto, simmetrico ma ancorato allo schermo invece che alla distanza).
-- **Marker sempre billboard** verso la camera (mai di taglio durante la
-  rotazione), per restare leggibili/cliccabili.
-- **Preview al hover/tap**: pannello fisso 2D (non etichetta 3D
-  fluttuante) con categoria + titolo. Nessuna navigazione reale
-  implementata ancora — i contenuti placeholder non hanno una
-  destinazione (articoli non ancora migrati).
+  scena color paper, tratti/sagome in ink).
+- **Prospettiva grandangolare esasperata**: camera grandangolare (`FOV = 76°`,
+  `CAMERA_Z = 4.2`) che accentua l'effetto tunnel e l'avvolgimento spaziale:
+  le spire in primo piano si aprono ampiamente verso l'esterno del cono visivo,
+  mentre quelle sullo sfondo convergono verso il punto di fuga centrale.
+  Fog di sfondo (`THREE.Fog` a `PITCH * 1.8`) tarato per dissolvere morbidamente
+  la profondità della spirale nel bianco/paper. Fog di primissimo piano
+  (`NEAR_FADE_START = 4.2`, `NEAR_FADE_CLOSE = 1.6`) che accompagna gli elementi
+  in uscita prima del piano della camera evitando tagli netti sui bordi.
+- **Titoli dinamici fluttuanti a destra e ingrandimento del marker**: etichette 2D proiettate in tempo reale
+  subito a destra di ciascun marker sul canvas con offset generoso (+38px) e calcolo dinamico di max-width per evitare overflow a bordo schermo. Quando un marker raggiunge la zona
+  focale a destra (ore 3 / primo piano della spira), il suo titolo compare con opacità
+  100% nello stile tipografico coerente con la home (`text-xs uppercase tracking-widest text-ink`,
+  wrap fluido) e la sua sagoma geometrica 3D si ingrandisce fluidamente di circa il +50% (scala 1.5×).
+  I marker immediatamente precedenti e successivi se vicini lungo la spirale sono visibili contemporaneamente con opacità subordinata (~30-35%) e un leggero ingrandimento scalare proporzionale (fino a +18%).
+- **Interazione a due fasi per i marker 3D**:
+  - Un click o tap su un marker **fuori focus** attiva una rotazione/scroll fluida (`0.7s`, `power2.out`, interrotta al tocco/scroll manuale) che porta il marker selezionato esattamente a ore 3 (punto focale in primo piano), rivelando il suo titolo al 100% di opacità.
+  - Un click o tap su un marker **già in focus** (o un secondo click dopo la rotazione) avvia la transizione di apertura zoom-to-fill verso la pagina dell'articolo.
+  - Un click o tap diretto sull'**etichetta testuale del titolo** apre immediatamente la pagina.
 - **Limiti di scroll**: resistenza elastica; uno scroll deciso vince e fa
   avanzare/tornare all'inizio, uno scroll delicato dà solo un piccolo
   rimbalzo. Implementato con `pin`+`scrub` di GSAP `ScrollTrigger`
@@ -143,27 +153,12 @@ come unico esito del click/tap.
   mai usato finora nel sito) per il caricamento/swap di pagina;
   l'animazione della forma si innesta come transizione custom sopra il
   meccanismo nativo, non un fetch/prefetch scritto a mano.
-- **Trigger**: desktop, click sul marker già in hover avvia la
-  transizione (l'hover mostra comunque la preview come oggi). Touch: il
-  primo tap mostra la preview come oggi; serve un **secondo tap sullo
-  stesso marker** (non sul pannello di preview) per avviare la
-  transizione — nessuna vincolo di tempo tra i due tap. Esplicitamente
-  non un problema di "schermo piccolo": quando in futuro arriverà una
-  visualizzazione dedicata per mobile/verticale (vedi "Rimandato" sotto),
-  questa logica touch-su-spirale non si intreccerà con quella, sono due
-  esperienze distinte.
-- **Ritorno** (indietro dalla pagina di dettaglio a Fields): implementato
-  come fade-in dell'overlay ink (0.3s) prima di navigare via
-  `navigate('/fields')`, poi fade-out automatico a pagina caricata —
-  stesso overlay persistito (vedi sotto), non un rientro animato del
-  marker specifico nella sua posizione esatta nell'elica (semplificazione
-  consapevole: tracciare "quale marker esatto" attraverso una
-  navigazione via ClientRouter avrebbe richiesto molto più stato da
-  portarsi dietro, per un guadagno visivo marginale). Il pulsante
-  "Torna a Fields" nella pagina di prova attiva questa sequenza; il
-  tasto indietro nativo del browser passa comunque dall'overlay (fade-out
-  automatico su `astro:page-load`) ma senza il fade-in preventivo, che
-  richiede un gesto intercettabile via click.
+- **Trigger**: sia su desktop che su touch, il primo click/tap su un marker **fuori focus** attiva la rotazione/scroll fluida (`0.7s`, `power2.out`, interrompibile manualmente) che porta il marker a ore 3 e mostra il titolo al 100% di opacità. Se il marker è **già in focus** (o al secondo click/tap dopo la rotazione), avvia direttamente la transizione zoom-to-fill. Il click/tap diretto su una qualsiasi **etichetta testuale del titolo** avvia immediatamente la transizione senza attendere ulteriori rotazioni.
+- **Ritorno e Overscroll** (dalle pagine di dettaglio):
+  - **Overscroll in alto (Pull-to-return)**: superando il bordo superiore della pagina (touch o wheel/trackpad), compare un indicatore e, al superamento della soglia, viene attivata la transizione verso `/fields`. Lo stato dell'ultimo articolo visualizzato viene salvato in `sessionStorage` (`fields-target-marker`) e la spirale 3D in `/fields` si riapre ripristinando l'angolo, il progresso e lo scroll esatto (`ScrollTrigger`) del marker corrispondente, senza dover rigenerare l'animazione di intro da capo.
+  - **Overscroll in basso (Pull-to-next)**: superando il fondo della pagina oltre il contenuto, un indicatore visivo mostra il prossimo articolo e, al rilascio/superamento soglia, anima il contenuto verso l'alto con slide verticale fluido e naviga all'articolo successivo secondo l'ordine cronologico globale della timeline di Fields.
+  - Componente condiviso: `src/components/FieldArticleNavigation.astro`.
+
 
 ## Fog in primo piano
 
@@ -260,14 +255,20 @@ getta da sostituire quando arrivano le pagine di dettaglio vere.
   `playZoom()`; a entrambi completati chiama
   `navigate()` (da `astro:transitions/client`) verso la destinazione.
 
+## Navigazione reale dai marker (sessione 2026-08-18)
+
+Le pagine di dettaglio per le singole voci ora esistono (vedi
+[content-plan.md](content-plan.md)): `onOpenMarker` in `fields.astro`
+naviga a `/fields/${marker.id}` (`marker.id` è già `<categoria>/<slug>`)
+invece della route di prova. `src/pages/fields/prova.astro` è stata
+rimossa. La transizione (zoom-to-fill + overlay ink) descritta sopra in
+"Transizione di apertura" resta invariata, ora punta a destinazioni
+reali.
+
 ## Rimandato
 
 - Filtri/facet per anno e tag (menzionati come tipologie previste, non
   ancora progettati).
-- Navigazione reale dai marker ai contenuti: i dati sono reali (vedi
-  sopra) ma non esistono ancora pagine/route per le singole voci
-  (`/fields/research/<slug>` ecc.) — il click/hover sul marker mostra
-  solo il pannello di preview, non porta da nessuna parte.
 - Comportamento mobile/tablet dedicato: idea iniziale dell'utente è una
   linea ondulata verticale (anni più vecchi in alto, più recenti in
   basso) invece della spirale in prospettiva, ma non ancora progettata né

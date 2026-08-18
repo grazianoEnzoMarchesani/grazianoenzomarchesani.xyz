@@ -1,0 +1,35 @@
+---
+/**
+ * Pulsante "torna a Fields" condiviso dalle quattro pagine di dettaglio
+ * (research/tools/teaching/projects) — stessa sequenza overlay+navigate
+ * della transizione di apertura (vedi docs/brain/fields-spiral.md).
+ */
+---
+
+<button
+	id="back-to-fields"
+	type="button"
+	class="mt-8 inline-block text-sm uppercase tracking-widest underline hover:opacity-60"
+>
+	← Back to Fields
+</button>
+
+<script>
+	import { gsap } from 'gsap';
+	import { navigate } from 'astro:transitions/client';
+
+	// Con ClientRouter lo script del modulo non si ri-esegue da solo a ogni
+	// navigazione: va riagganciato su ogni astro:page-load.
+	function setup() {
+		const button = document.getElementById('back-to-fields');
+		button?.addEventListener('click', async () => {
+			const overlay = document.getElementById('field-transition-overlay');
+			if (overlay) {
+				await gsap.to(overlay, { opacity: 1, duration: 0.3, ease: 'power1.in' });
+			}
+			navigate('/fields');
+		});
+	}
+
+	document.addEventListener('astro:page-load', setup);
+</script>
