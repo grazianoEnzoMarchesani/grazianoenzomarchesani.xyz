@@ -24,27 +24,35 @@ import Footer from '../components/Footer.astro';
 		>
 			<span class="flex items-center gap-1 rounded-full bg-paper/80 px-3 py-1 tabular-nums backdrop-blur-sm">
 				<span id="section-counter-mask" class="relative inline-block h-[1em] w-[2ch] overflow-hidden align-middle">
-					<span class="section-counter-digit absolute inset-0 flex items-center justify-center">01</span>
+					<span class="section-counter-digit absolute inset-0 flex items-center justify-center tracking-normal">01</span>
 				</span>
 				<span>/ {String(sezioni.length).padStart(2, '0')}</span>
 			</span>
 		</div>
 
+		<div id="title-overlay" class="pointer-events-none fixed inset-0 z-10 flex items-center justify-center px-6 text-center" aria-hidden="true">
+			<div id="title-overlay-inner" class="font-display leading-[0.95] flex flex-wrap items-center justify-center text-[12vw] sm:text-[8vw]"></div>
+		</div>
+
 		<main id="scroll-container" class="h-dvh snap-y snap-mandatory overflow-y-scroll scroll-smooth">
 			<section class="relative flex h-dvh snap-start flex-col items-center justify-center px-6 text-center">
 				<p class="mb-4 text-xs uppercase tracking-widest opacity-60 sm:text-sm">{identita.ruolo}</p>
-				<h1 class="font-display text-[12vw] leading-[0.95] sm:text-[8vw]">{identita.nome}</h1>
+				<h1 class="font-display text-[12vw] leading-[0.95] opacity-0 sm:text-[8vw]">{identita.nome}</h1>
 				<p class="mt-4 text-xs uppercase tracking-widest opacity-60 sm:text-sm">{identita.affiliazione}</p>
 			</section>
 
-			{sezioni.map((s) => (
+			{sezioni.map((s, i) => (
 				<a
 					href={s.href}
 					class="group relative flex h-dvh snap-start flex-col items-center justify-center gap-6 px-6 text-center"
 					aria-label={`Vai a ${s.titolo}`}
 				>
-					<h2 class="font-display text-[14vw] leading-[0.95] sm:text-[9vw]">{s.titolo}</h2>
-					<span class="text-2xl opacity-0 transition-opacity duration-200 group-hover:opacity-60 group-focus-visible:opacity-60" aria-hidden="true">↓</span>
+					<h2 class="font-display text-[14vw] leading-[0.95] opacity-0 sm:text-[9vw]">{s.titolo}</h2>
+					<span
+						id={`scroll-arrow-${i + 1}`}
+						class="scroll-arrow pointer-events-none fixed inset-x-0 top-[calc(50dvh+7vw+2rem)] z-10 text-center text-2xl opacity-0 transition-opacity duration-200 group-hover:opacity-60 group-focus-visible:opacity-60 sm:top-[calc(50dvh+4.5vw+2rem)]"
+						aria-hidden="true"
+					>↓</span>
 				</a>
 			))}
 		</main>
@@ -84,7 +92,7 @@ import Footer from '../components/Footer.astro';
 			}
 
 			const incoming = document.createElement('span');
-			incoming.className = 'section-counter-digit absolute inset-0 flex items-center justify-center';
+			incoming.className = 'section-counter-digit absolute inset-0 flex items-center justify-center tracking-normal';
 			incoming.textContent = value;
 			gsap.set(incoming, { yPercent: direction === 1 ? 100 : -100 });
 			mask.appendChild(incoming);
@@ -129,5 +137,202 @@ import Footer from '../components/Footer.astro';
 				onEnterBack: () => setDigit(value, -1),
 			});
 		});
+	}
+
+	const overlayInner = document.getElementById('title-overlay-inner');
+
+	if (scroller && overlayInner) {
+		type Fragment = { text: string; role: 'up' | 'down' };
+		type Step = { fragments: Fragment[]; spaced: boolean; hero: boolean };
+
+		const HERO_SIZE = ['text-[12vw]', 'sm:text-[8vw]'];
+		const SECTION_SIZE = ['text-[14vw]', 'sm:text-[9vw]'];
+		const GAP = 'gap-x-[0.2em]';
+
+		const splitStep = (title: string, hero: boolean): Step => {
+			const words = title.trim().split(/\s+/);
+			const parts = words.length > 1 ? words : (() => {
+				const mid = Math.floor(title.length / 2);
+				return [title.slice(0, mid), title.slice(mid)];
+			})();
+			return {
+				hero,
+				spaced: words.length > 1,
+				fragments: parts.map((text, i) => ({ text, role: i % 2 === 0 ? 'up' : 'down' })),
+			};
+		};
+
+		const sectionsForTitle = Array.from(scroller.children) as HTMLElement[];
+		const steps: Step[] = sectionsForTitle.map((el, i) =>
+			splitStep(el.querySelector('h1, h2')?.textContent?.trim() ?? '', i === 0)
+		);
+
+		const applyChrome = (step: Step) => {
+			overlayInner.classList.remove(...HERO_SIZE, ...SECTION_SIZE, GAP);
+			overlayInner.classList.add(...(step.hero ? HERO_SIZE : SECTION_SIZE));
+			if (step.spaced) overlayInner.classList.add(GAP);
+		};
+
+		const buildFragmentEls = (step: Step) => {
+			overlayInner.innerHTML = '';
+			return step.fragments.map(({ text }) => {
+				const span = document.createElement('span');
+				span.className = 'inline-block';
+				span.textContent = text;
+				overlayInner.appendChild(span);
+				return span;
+			});
+		};
+
+		// direction===1: forward (down) scroll. A fragment's own up/down role
+		// flips this into the counter's enter/exit convention (see setDigit above).
+		const effDirection = (role: Fragment['role'], direction: 1 | -1) =>
+			(role === 'up' ? direction : -direction) as 1 | -1;
+
+		const renderInstant = (index: number) => {
+			const step = steps[index];
+			applyChrome(step);
+			buildFragmentEls(step);
+		};
+
+		let currentTitleIndex = 0;
+		renderInstant(0);
+
+		const enterStep = (index: number, direction: 1 | -1) => {
+			const step = steps[index];
+			applyChrome(step);
+			const els = buildFragmentEls(step);
+			els.forEach((el, i) => {
+				const eff = effDirection(step.fragments[i].role, direction);
+				gsap.fromTo(
+					el,
+					{ yPercent: eff === 1 ? 120 : -120, opacity: 0 },
+					{ yPercent: 0, opacity: 1, duration: 0.45, ease: 'power3.out' }
+				);
+			});
+		};
+
+		const goToTitleStep = (index: number, direction: 1 | -1) => {
+			if (index === currentTitleIndex) return;
+			const fromIndex = currentTitleIndex;
+			currentTitleIndex = index;
+
+			if (prefersReducedMotion) {
+				renderInstant(index);
+				return;
+			}
+
+			const fromStep = steps[fromIndex];
+			const outgoing = Array.from(overlayInner.children) as HTMLElement[];
+			const tl = gsap.timeline({
+				defaults: { duration: 0.45, ease: 'power3.in' },
+				onComplete: () => enterStep(index, direction),
+			});
+			outgoing.forEach((el, i) => {
+				const eff = effDirection(fromStep.fragments[i].role, direction);
+				tl.to(el, { yPercent: eff === 1 ? -120 : 120, opacity: 0 }, 0);
+			});
+		};
+
+		sectionsForTitle.forEach((el, i) => {
+			if (i === 0) {
+				ScrollTrigger.create({
+					trigger: el,
+					scroller,
+					start: 'top top',
+					end: 'bottom top',
+					onEnterBack: () => goToTitleStep(0, -1),
+				});
+				return;
+			}
+
+			ScrollTrigger.create({
+				trigger: el,
+				scroller,
+				start: 'top center',
+				end: 'bottom center',
+				onEnter: () => goToTitleStep(i, 1),
+				onEnterBack: () => goToTitleStep(i, -1),
+			});
+		});
+	}
+
+	const arrows = Array.from(document.querySelectorAll<HTMLElement>('.scroll-arrow'));
+
+	if (scroller && arrows.length > 0) {
+		let activeArrow: HTMLElement | null = null;
+		let pendingArrow: HTMLElement | null = null;
+		let arrowResting = true;
+		let offsetY = 0;
+		const MAX_TRAVEL_DOWN = () => window.innerHeight * 0.22;
+		const MAX_TRAVEL_UP = () => window.innerHeight * 0.22 + 60;
+
+		const arrowSections = Array.from(scroller.children) as HTMLElement[];
+		arrowSections.forEach((el, i) => {
+			if (i === 0) return;
+			const arrow = document.getElementById(`scroll-arrow-${i}`);
+			if (!arrow) return;
+			const setActiveArrow = () => {
+				if (activeArrow === arrow) return;
+				if (arrowResting) {
+					activeArrow = arrow;
+					pendingArrow = null;
+				} else {
+					pendingArrow = arrow;
+				}
+			};
+			ScrollTrigger.create({
+				trigger: el,
+				scroller,
+				start: 'top center',
+				end: 'bottom center',
+				onEnter: setActiveArrow,
+				onEnterBack: setActiveArrow,
+			});
+		});
+
+		if (!prefersReducedMotion) {
+			const moveY = gsap.quickTo(arrows, 'y', { duration: 0.35, ease: 'power3.out' });
+			const rotate = gsap.quickTo(arrows, 'rotation', { duration: 0.35, ease: 'power3.out' });
+			let lastScrollTop = scroller.scrollTop;
+			let settleTimeout: ReturnType<typeof setTimeout>;
+
+			scroller.addEventListener('scroll', () => {
+				if (!activeArrow) return;
+
+				const scrollTop = scroller.scrollTop;
+				const delta = scrollTop - lastScrollTop;
+				lastScrollTop = scrollTop;
+
+				offsetY = gsap.utils.clamp(-MAX_TRAVEL_UP(), MAX_TRAVEL_DOWN(), offsetY + delta);
+				moveY(offsetY);
+				const ROTATE_THRESHOLD = 4;
+				if (offsetY > ROTATE_THRESHOLD) rotate(0);
+				else if (offsetY < -ROTATE_THRESHOLD) rotate(180);
+				arrowResting = false;
+				gsap.to(activeArrow, { opacity: 0.6, duration: 0.2, overwrite: 'auto' });
+
+				clearTimeout(settleTimeout);
+				settleTimeout = setTimeout(() => {
+					offsetY = 0;
+					moveY(0);
+					rotate(0);
+					const restingArrow = activeArrow;
+					gsap.to(restingArrow, {
+						opacity: 0,
+						duration: 0.3,
+						overwrite: 'auto',
+						onComplete: () => {
+							if (restingArrow) gsap.set(restingArrow, { clearProps: 'opacity' });
+							arrowResting = true;
+							if (pendingArrow) {
+								activeArrow = pendingArrow;
+								pendingArrow = null;
+							}
+						},
+					});
+				}, 150);
+			});
+		}
 	}
 </script>

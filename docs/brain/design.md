@@ -68,7 +68,7 @@ una sessione dedicata — non ancora fatto.
   sofisticazione dell'interfaccia sta nella pagina interna.
 - Ogni link ha un elemento minimo visibile (freccia) per accessibilità e
   focus da tastiera.
-- Nav fissa in alto con le stesse 7 voci, restyle minimale.
+- Nav fissa in alto con le stesse voci e tasto home con logo vettoriale geometrico del monogramma (`h-12`, `fill-current` su palette `--color-ink`, transizione `hover:opacity-60`, `aria-label="Graziano Enzo Marchesani - Home"`) che sostituisce la sigla testuale `GM`. Anche `public/favicon.svg` adotta lo stesso logo vettoriale geometrico.
 - Footer minimo persistente (`position: fixed`), solo email di contatto —
   niente form integrato nelle schermate.
 - Dati reali (non segnaposto): identità e sezioni prese da
@@ -99,15 +99,83 @@ solo il pattern di reveal mascherato, non la tecnologia:
   pagina) torna vicino al titolo invece che in alto isolato, con un
   piccolo gap sopra (offset calcolato in `vw`/`rem`, tarato a vista con
   screenshot Playwright — non è una misura dinamica via JS).
-- Stesso pattern di reveal mascherato **da riusare per il titolo grande**
-  (es. "Tools") in una sessione futura — stesso stile, ma timing/trigger
-  indipendente dal contatore (non sincronizzati), non ancora
-  implementato.
-
 **Deliberatamente esclusi finora**: effetto "stage" sticky (titolo
 coperto/scoperto), pin dell'intera sezione stile cubo Codrops, Lenis. La
 scelta resta "il più semplice possibile per ogni incremento" — si
 valuta se e cosa aggiungere in seguito.
+
+### Titolo grande a overlay fisso, scroll-driven (implementato)
+
+Sessione del 2026-08-19 (`/grill-me` + `/ponytail`), a partire
+dall'analisi di una GIF di riferimento (`Area.gif`, portfolio
+fashion-editoriale) di cui si è ripresa solo la meccanica del testo, non
+lo sfondo/le immagini. Riusa il pattern di reveal mascherato del
+contatore, ma come istanza **indipendente** (trigger e timing separati,
+non sincronizzati con esso):
+
+- Il titolo reale (`h1`/`h2` dentro ogni sezione/link) resta nel flusso
+  per semantica, SEO e click/focus, ma è reso invisibile
+  (`opacity-0`, mantiene lo spazio di layout). Il testo visibile è un
+  overlay fisso e decorativo (`#title-overlay`, `aria-hidden`, centrato
+  nel viewport) — stessa logica "reale invisibile in-flow + overlay
+  decorativo" già usata per il contatore.
+- Ogni titolo è spezzato in **frammenti che si alternano su/giù**: per
+  un titolo multiparola (es. l'Hero "GRAZIANO ENZO MARCHESANI") ogni
+  parola è un frammento — la prima sale, la seconda scende, un'eventuale
+  terza (dispari) segue la prima (sale). Per una parola singola (Fields,
+  Publications, Skills, About) la parola stessa è spaccata in due metà
+  per numero di caratteri, arrotondando per difetto la prima metà (es.
+  "ABOUT" → "AB" + "OUT", non "ABO" + "UT"); a riposo le due metà
+  combaciano senza spazio visibile, il frammento si nota solo durante il
+  movimento.
+- **Coreografia sequenziale**, diversa dal crossfade simultaneo del
+  contatore: l'uscita del frammento continua nella stessa direzione da
+  cui era entrato (chi saliva continua a salire fuori schermo, chi
+  scendeva continua a scendere) e solo **a uscita completata** parte
+  l'entrata dei frammenti della sezione successiva.
+- Trigger identico al contatore (`ScrollTrigger` `onEnter`/`onEnterBack`
+  allo snap di sezione, non scrub continuo), ma istanza GSAP separata.
+- L'Hero è incluso nello stesso ciclo (non è più un semplice `h1`
+  statico): entra da solo al caricamento della pagina, poi esce con lo
+  stesso meccanismo quando si scrolla verso Fields.
+- Rispetta `prefers-reduced-motion`: nessuna animazione, swap testuale
+  istantaneo.
+
+### Freccia di invito allo scroll (implementato)
+
+Sessione del 2026-08-19. La freccina "↓" sotto ogni titolo di sezione
+(sempre `aria-hidden`, puramente decorativa — l'affordance reale resta
+`aria-label` sull'`<a>`) non è più statica in-flow (visibile solo in
+hover/focus): è un elemento `fixed`, sganciato dal layout per potersi
+muovere liberamente senza essere trascinata passivamente dallo scroll
+della pagina (comportamento esplicitamente giudicato controintuitivo).
+
+- Si muove **proporzionalmente al gesto di scroll reale** (non un loop
+  continuo/bounce a riposo): scrollando verso il basso si sposta verso
+  il basso, scrollando verso l'alto si sposta verso l'alto e **ruota di
+  180°** (torna a 0°, puntando in giù, tornando a riposo).
+- Corsa massima **asimmetrica**: ~22% dell'altezza del viewport verso il
+  basso, ~22% + 60px verso l'alto (su richiesta esplicita di una corsa
+  più lunga in quella direzione).
+- A scroll fermo (debounce 150ms) torna elasticamente alla posizione di
+  riposo con ease-out (GSAP `quickTo`); visibile sia in hover sia
+  durante lo scroll attivo (altrimenti l'animazione risulterebbe quasi
+  sempre invisibile, dato che il mouse raramente resta fermo sul link
+  mentre si scrolla).
+- Rispetta `prefers-reduced-motion`: nessuna animazione, resta il solo
+  comportamento hover/focus-only precedente.
+- **Una sola freccia visibile alla volta** (fix bug del 2026-08-19: le
+  frecce di sezioni diverse, essendo tutte `fixed` sovrapposte nello
+  stesso punto, potevano restare visibili insieme durante il cambio
+  sezione e sommarsi otticamente, apparendo sempre più scure). La
+  freccia "attiva" cambia sezione solo quando quella corrente è
+  **tornata a riposo** (opacità 0, dopo il proprio fade-out); se il
+  cambio sezione avviene mentre la freccia è ancora in movimento, il
+  passaggio alla successiva resta in coda e si applica al completamento
+  del fade-out. Il movimento condiviso (y/rotazione, `quickTo` su tutto
+  l'array di frecce) non va mai interrotto a forza: uccidere le tween
+  del target sbagliato spezza l'animazione per tutte le frecce, non solo
+  per quella da resettare.
 
 ## Publications page (v1, implementata)
 
