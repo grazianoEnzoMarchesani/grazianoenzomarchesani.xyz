@@ -11,10 +11,11 @@
  *
  * Quindi: pubblicazioni.json non si modifica mai a mano. Per correggere
  * qualcosa si scrive in src/content/publications/pubblicazioni.regole.json:
- *   - "escludi"  → questo record IRIS non deve comparire (tesi, tool
- *                  software che vivono già in /tools)
+ *   - "escludi"  → questo record IRIS non deve comparire (es. la tesi
+ *                  di dottorato)
  *   - "tipo"     → come classificare un @misc, categoria ambigua per
- *                  definizione (default: "attivita")
+ *                  definizione (default: "attivita"; i tool software
+ *                  rilasciati su Zenodo vanno a "software")
  *   - "riviste"  → la forma corretta di un nome di rivista (IRIS esporta
  *                  tutto maiuscolo, e non tutte le riviste sono acronimi)
  *   - "campi"    → override puntuale di un campo per una voce (titolo,
@@ -312,7 +313,7 @@ export function generaPubblicazioni({ log = true } = {}) {
   const idEsistenti = new Set();
   const nuoviAutori = [];
   const scartate = [];
-  const risultato = { voci: [], dataset: [], attivita: [] };
+  const risultato = { voci: [], dataset: [], attivita: [], software: [] };
 
   for (const voceBib of vociBib) {
     const { tipo, key, campi } = voceBib;
@@ -362,6 +363,7 @@ export function generaPubblicazioni({ log = true } = {}) {
   risultato.voci.sort((a, b) => RANGO_TIPO[a.tipo] - RANGO_TIPO[b.tipo] || b.anno - a.anno);
   risultato.dataset.sort((a, b) => b.anno - a.anno);
   risultato.attivita.sort((a, b) => b.anno - a.anno);
+  risultato.software.sort((a, b) => b.anno - a.anno);
 
   function costruisci(dataAggiornamento) {
     return {
@@ -372,6 +374,8 @@ export function generaPubblicazioni({ log = true } = {}) {
       voci: risultato.voci,
       _notaDataset: manuale._notaDataset,
       dataset: risultato.dataset,
+      _notaSoftware: manuale._notaSoftware,
+      software: risultato.software,
       _notaAttivita: manuale._notaAttivita,
       attivita: risultato.attivita,
     };
@@ -388,7 +392,7 @@ export function generaPubblicazioni({ log = true } = {}) {
 
   if (log) {
     if (datiCambiati) {
-      console.log(`[pubblicazioni] ricostruito: ${finale.voci.length} voci, ${finale.dataset.length} dataset, ${finale.attivita.length} attività.`);
+      console.log(`[pubblicazioni] ricostruito: ${finale.voci.length} voci, ${finale.dataset.length} dataset, ${finale.software.length} software, ${finale.attivita.length} attività.`);
     } else {
       console.log("[pubblicazioni] nessuna novità in references.bib.");
     }

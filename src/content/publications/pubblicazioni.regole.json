@@ -1,19 +1,20 @@
 {
-  "_nota": "Le decisioni che il .bib da solo non può prendere. «escludi» = record IRIS che non devono comparire su /publications (tesi, tool software che vivono già in /tools). «tipo» = per i record @misc — categoria ambigua per definizione — dice se vanno in 'dataset' invece che nel default 'attivita'. Ogni voce nuova non elencata qui prende il default (vedi genera-pubblicazioni.mjs): i @misc finiscono in 'attivita' finché non li sposti qui.",
+  "_nota": "Le decisioni che il .bib da solo non può prendere. «escludi» = record IRIS che non devono comparire su /publications (es. la tesi di dottorato). «tipo» = per i record @misc — categoria ambigua per definizione — dice se vanno in 'dataset' o 'software' invece che nel default 'attivita'. Ogni voce nuova non elencata qui prende il default (vedi genera-pubblicazioni.mjs): i @misc finiscono in 'attivita' finché non li sposti qui.",
   "escludi": {
-    "11581_481330": "Tesi di dottorato (cartOut) — non è fra le pubblicazioni del sito. Per includerla: togli questa riga e aggiungi una riga in \"tipo\" con valore \"monografia\".",
-    "11581_488063": "Tool software (A_GreeNET Explorer) — ha una pagina propria in /tools, non entra qui.",
-    "11581_492904": "Tool software (Cityrhythm, il rilascio Zenodo) — /tools. Diverso dall'articolo su City Rhythm, che resta fra le pubblicazioni.",
-    "11581_488048": "Tool software (Envi-Met automation Protocol) — /tools.",
-    "11581_488023": "Tool software (EnviReader) — /tools.",
-    "11581_488047": "Tool software (orient-3Pt) — /tools.",
-    "11581_488046": "Tool software (semanticGeometry) — /tools.",
-    "11581_488043": "Tool software (spotMapper) — /tools.",
-    "11581_488044": "Tool software (streetVision) — /tools.",
-    "11581_488045": "Tool software (UnicamTools) — /tools.",
-    "11581_497744": "Tool software (Warmish) — /tools."
+    "11581_481330": "Tesi di dottorato (cartOut) — non è fra le pubblicazioni del sito. Per includerla: togli questa riga e aggiungi una riga in \"tipo\" con valore \"monografia\"."
   },
   "tipo": {
+    "11581_488063": "software",
+    "11581_492904": "software",
+    "11581_488048": "software",
+    "11581_488023": "software",
+    "11581_488047": "software",
+    "11581_488046": "software",
+    "11581_488043": "software",
+    "11581_488044": "software",
+    "11581_488045": "software",
+    "11581_497744": "software",
+
     "11581_478367": "dataset",
     "11581_478369": "dataset",
     "11581_488049": "dataset",
@@ -49,6 +50,12 @@
   },
   "_notaCampi": "Override puntuali per una singola voce, applicati sopra al risultato calcolato — ad ogni rigenerazione, non solo la prima volta (DEC-76: pubblicazioni.json si ricostruisce sempre da zero). Chiave = citation key del .bib, valore = i campi da forzare (titolo, autori, sede, anno), es. { \"11581_XXXXXX\": { \"sede\": \"testo scelto a mano\" } }. La maggior parte di queste voci è stata seminata automaticamente al passaggio dal meccanismo additivo (DEC-75) a quello di ricostruzione (DEC-76), per non cambiare il testo di ciò che era già pubblicato.",
   "campi": {
+    "11581_488045": {
+      "autori": "Marchesani G. E., Cocci Grifoni R."
+    },
+    "11581_492904": {
+      "titolo": "Cityrhythm (software release)"
+    },
     "11581_502344": {
       "autori": "Brownlee T. D., Camaioni C., Di Giovanni C. F., Ilardo G., Kyprianou I., Marchesani G. E., Jovanović P., Shatarat O."
     },

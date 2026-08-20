@@ -30,23 +30,27 @@ import Footer from '../components/Footer.astro';
 			</span>
 		</div>
 
-		<div id="title-overlay" class="pointer-events-none fixed inset-0 z-10 flex items-center justify-center px-6 text-center" aria-hidden="true">
+		<div id="title-overlay" class="pointer-events-none fixed inset-0 z-10 flex flex-col items-center justify-center px-6 text-center" aria-hidden="true">
+			<p id="title-overlay-role" class="mb-4 text-xs uppercase tracking-widest transition-opacity duration-300 sm:text-sm" style="opacity: 0">{identita.ruolo}</p>
 			<div id="title-overlay-inner" class="font-display leading-[0.95] flex flex-wrap items-center justify-center text-[12vw] sm:text-[8vw]"></div>
+			<p id="title-overlay-affiliazione" class="mt-4 text-xs uppercase tracking-widest transition-opacity duration-300 sm:text-sm" style="opacity: 0">{identita.affiliazione}</p>
 		</div>
 
 		<main id="scroll-container" class="h-dvh snap-y snap-mandatory overflow-y-scroll scroll-smooth">
-			<section class="relative flex h-dvh snap-start flex-col items-center justify-center px-6 text-center">
-				<p class="mb-4 text-xs uppercase tracking-widest opacity-60 sm:text-sm">{identita.ruolo}</p>
+			<section class="relative z-0 flex h-dvh snap-start flex-col items-center justify-center px-6 text-center">
+				<svg data-pattern-bg class="pointer-events-none absolute inset-0 -z-10 h-full w-full opacity-0" aria-hidden="true"></svg>
+				<p class="mb-4 text-xs uppercase tracking-widest opacity-0 sm:text-sm">{identita.ruolo}</p>
 				<h1 class="font-display text-[12vw] leading-[0.95] opacity-0 sm:text-[8vw]">{identita.nome}</h1>
-				<p class="mt-4 text-xs uppercase tracking-widest opacity-60 sm:text-sm">{identita.affiliazione}</p>
+				<p class="mt-4 text-xs uppercase tracking-widest opacity-0 sm:text-sm">{identita.affiliazione}</p>
 			</section>
 
 			{sezioni.map((s, i) => (
 				<a
 					href={s.href}
-					class="group relative flex h-dvh snap-start flex-col items-center justify-center gap-6 px-6 text-center"
+					class="group relative z-0 flex h-dvh snap-start flex-col items-center justify-center gap-6 px-6 text-center"
 					aria-label={`Vai a ${s.titolo}`}
 				>
+					<svg data-pattern-bg class="pointer-events-none absolute inset-0 -z-10 h-full w-full opacity-0" aria-hidden="true"></svg>
 					<h2 class="font-display text-[14vw] leading-[0.95] opacity-0 sm:text-[9vw]">{s.titolo}</h2>
 					<span
 						id={`scroll-arrow-${i + 1}`}
@@ -70,8 +74,30 @@ import Footer from '../components/Footer.astro';
 <script>
 	import { gsap } from 'gsap';
 	import { ScrollTrigger } from 'gsap/ScrollTrigger';
+	import { initSectionPatterns } from '../scripts/section-patterns';
+	import { initSectionMorph } from '../scripts/section-morph';
 
 	gsap.registerPlugin(ScrollTrigger);
+
+	// Non bloccante: titolo/nav sono già interattivi, gli sfondi-pattern
+	// si calcolano ora e compaiono in dissolvenza quando pronti (vedi
+	// sessione /grill-me in docs/brain/design.md). Il morphing tra
+	// sezioni ha bisogno delle icone già piazzate per leggerne la
+	// posizione reale, quindi parte solo a fetch/parse completato.
+	initSectionPatterns().then(() => initSectionMorph());
+
+	// Bucket/viewBox degli sfondi e trasformazioni px del morph sono
+	// calcolati una volta sulle dimensioni della finestra al setup: un
+	// resize li lascia stale (icone che atterrano nel punto sbagliato).
+	// Reinizializzazione completa, con debounce per non rifare il fetch
+	// a ogni pixel durante il trascinamento del bordo finestra.
+	let resizeTimeout: ReturnType<typeof setTimeout>;
+	window.addEventListener('resize', () => {
+		clearTimeout(resizeTimeout);
+		resizeTimeout = setTimeout(() => {
+			initSectionPatterns().then(() => initSectionMorph());
+		}, 200);
+	});
 
 	const scroller = document.getElementById('scroll-container');
 	const badge = document.getElementById('section-counter');
@@ -140,6 +166,8 @@ import Footer from '../components/Footer.astro';
 	}
 
 	const overlayInner = document.getElementById('title-overlay-inner');
+	const overlayRole = document.getElementById('title-overlay-role');
+	const overlayAffiliazione = document.getElementById('title-overlay-affiliazione');
 
 	if (scroller && overlayInner) {
 		type Fragment = { text: string; role: 'up' | 'down' };
@@ -171,6 +199,8 @@ import Footer from '../components/Footer.astro';
 			overlayInner.classList.remove(...HERO_SIZE, ...SECTION_SIZE, GAP);
 			overlayInner.classList.add(...(step.hero ? HERO_SIZE : SECTION_SIZE));
 			if (step.spaced) overlayInner.classList.add(GAP);
+			if (overlayRole) overlayRole.style.opacity = step.hero ? '0.6' : '0';
+			if (overlayAffiliazione) overlayAffiliazione.style.opacity = step.hero ? '0.6' : '0';
 		};
 
 		const buildFragmentEls = (step: Step) => {

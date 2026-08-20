@@ -65,6 +65,12 @@ const teaching = defineCollection({
   schema: z.object({
     tipo: z.enum(["corso", "master", "seminario", "lecture", "workshop"]),
     anni: z.string(),
+    /** Data puntuale dentro l'anno, opzionale: `anni` dà solo l'anno (o
+     *  un intervallo) e non basta a collocare il contenuto lungo la
+     *  corda/spirale di Fields. Dove manca, la posizione dentro l'anno
+     *  viene generata in modo deterministico dall'id — vedi
+     *  `markerYearFraction` in src/data/fields-content.ts. */
+    data: z.coerce.date().optional(),
     attivo: z.boolean().default(false),
     istituzione: z.string(),
     luogo: z.string(),
@@ -81,6 +87,8 @@ const projects = defineCollection({
   schema: z.object({
     titolo: z.string(),
     anni: z.string(),
+    /** Vedi la nota omonima su `teaching`. */
+    data: z.coerce.date().optional(),
     luogo: z.string(),
     ruolo: z.string(),
     tipo: z.enum(["concorso", "workshop", "ricerca", "installazione"]),

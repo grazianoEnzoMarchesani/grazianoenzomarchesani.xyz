@@ -1,6 +1,6 @@
 {
   "_nota": "La bibliografia. È un DATASET e non una collezione .md perché decine di voci sono decine di righe di metadati senza prosa: file col corpo vuoto sarebbero solo attrito. Stesso ragionamento di competenze.json. src/data/pubblicazioni.json è generato da references.bib (scripts/genera-pubblicazioni.mjs, DEC-75/76): non modificarlo a mano, si perderebbe al prossimo giro. Per correggere una voce, usa pubblicazioni.regole.json — «campi» per forzare un valore, «escludi»/«tipo» per le decisioni che il .bib da solo non può prendere. Gli autori sono normalizzati a «Cognome N. N.»: il nome di Graziano viene evidenziato a schermo cercando la stringa in `io`.",
-  "aggiornato": "2026-08-18",
+  "aggiornato": "2026-08-20",
   "io": "Marchesani G. E.",
   "profili": {
     "orcid": "https://orcid.org/0000-0002-4723-5099",
@@ -440,6 +440,78 @@
       "anno": 2021,
       "titolo": "VAU.TE.RE.CO. area studio Regione Marche. Analisi degli spazi aperti urbani",
       "autori": "Sargolini M., Ottone M. F., Cocci Grifoni R., Porfiri S., Marchesani G. E."
+    }
+  ],
+  "_notaSoftware": "Tool software rilasciati con DOI (Zenodo): non sono pubblicazioni con revisione, ma sono output citabili a pieno titolo, con il proprio pulsante Cite. Diversi da /tools, che presenta gli stessi strumenti come prodotti da usare, non come referenze bibliografiche.",
+  "software": [
+    {
+      "id": "cityrhythm-software-release",
+      "anno": 2025,
+      "titolo": "Cityrhythm (software release)",
+      "autori": "Marchesani G. E., Cocci Grifoni R., Bernabei M. S., Malavolta S., Riera D., Khodaparast M., D'Onofrio R.",
+      "doi": "10.5281/zenodo.15641271"
+    },
+    {
+      "id": "warmish",
+      "anno": 2025,
+      "titolo": "Warmish",
+      "autori": "Marchesani G. E.",
+      "doi": "10.5281/zenodo.16887040"
+    },
+    {
+      "id": "a-greenet-explorer",
+      "anno": 2024,
+      "titolo": "A_GreeNET Explorer",
+      "autori": "Marchesani G. E., Malavolta S., Casoni F., Valeri F."
+    },
+    {
+      "id": "envi-met-automation-protocol",
+      "anno": 2024,
+      "titolo": "Envi-Met automation Protocol",
+      "autori": "Marchesani G. E.",
+      "doi": "10.5281/zenodo.14548215"
+    },
+    {
+      "id": "envireader",
+      "anno": 2024,
+      "titolo": "EnviReader",
+      "autori": "Marchesani G. E., Cocci Grifoni R., Khodaparast M.",
+      "doi": "10.5281/zenodo.14500979"
+    },
+    {
+      "id": "spotmapper",
+      "anno": 2024,
+      "titolo": "spotMapper",
+      "autori": "Marchesani G. E., Cocci Grifoni R., Malavolta S., Vagias A.",
+      "doi": "10.5281/zenodo.14547472"
+    },
+    {
+      "id": "streetvision",
+      "anno": 2024,
+      "titolo": "streetVision",
+      "autori": "Marchesani G. E., Cocci Grifoni R., Malavolta S., Vagias A.",
+      "doi": "10.5281/zenodo.14547541"
+    },
+    {
+      "id": "unicamtools",
+      "anno": 2023,
+      "titolo": "UnicamTools",
+      "autori": "Marchesani G. E., Cocci Grifoni R.",
+      "doi": "10.5281/zenodo.14547823"
+    },
+    {
+      "id": "orient-3pt",
+      "anno": 2022,
+      "titolo": "orient-3Pt",
+      "autori": "Marchesani G. E.",
+      "doi": "10.5281/zenodo.14547969"
+    },
+    {
+      "id": "semanticgeometry",
+      "anno": 2022,
+      "titolo": "semanticGeometry",
+      "autori": "Marchesani G. E.",
+      "doi": "10.5281/zenodo.14547904"
     }
   ],
   "_notaAttivita": "Attività e disseminazione: seminari, workshop, mostre, meeting di progetto. Non sono output di ricerca né dati tecnici — sono la parte pubblica e organizzativa del lavoro, utile a chi vuole vedere il contesto oltre alla bibliografia.",

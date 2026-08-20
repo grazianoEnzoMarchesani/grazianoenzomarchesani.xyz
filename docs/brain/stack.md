@@ -40,6 +40,12 @@ Vedi [constraints.md](constraints.md) per i vincoli che hanno guidato queste sce
   display/titoli) + **Inter Variable** (`@fontsource-variable/inter`,
   UI/testo).
 
+## Build tooling
+
+- **Puppeteer** (devDependency, aggiunta 2026-08-19) — usato solo a build/dev time per pregenerare gli sfondi decorativi della home (Chromium headless che esegue l'algoritmo di nesting una volta per bucket/variante, vedi [design.md](design.md)) e, dalla stessa sessione, per rasterizzare `src/assets/logo.svg` in `public/favicon.ico` (`scripts/generate-favicon.mjs`); mai spedito al client. Aggancio al ciclo di vita Astro (`astro:config:setup`, no-op se l'hash sorgente non è cambiato) sullo stesso modello già in uso per `pubblicazioni.json` (vedi `scripts/integrazione-pubblicazioni.mjs`).
+- **png-to-ico** (devDependency, aggiunta 2026-08-19) — pacchetto puro JS (nessun binario nativo) per impacchettare i PNG rasterizzati da Puppeteer in `public/favicon.ico`. Usato solo da `scripts/generate-favicon.mjs`.
+- **Favicon generata a build time da `logo.svg`** (2026-08-19): `scripts/generate-favicon.mjs` + `scripts/integrazione-favicon.mjs` (stesso pattern hash-manifest/no-op di `generate-patterns.mjs`) producono `public/favicon.svg` (copia 1:1 di `src/assets/logo.svg`) e `public/favicon.ico` (16/32/48px) ad ogni `astro dev`/`astro build`. `logo.svg` è quindi l'unica fonte di verità sia per il logo in nav sia per la favicon — vedi [design.md](design.md).
+
 ## Grafici
 
 - **Bklit UI** — registry shadcn/ui specializzato in chart. Installazione via CLI: `npx shadcn@latest add @bklit/<nome-componente>`. Richiede React (vedi sopra).

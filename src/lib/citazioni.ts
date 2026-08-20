@@ -12,7 +12,7 @@ export const etichettaStile: Record<StileCitazione, string> = {
   bibtex: "BibTeX",
 };
 
-export type TipoCitabile = TipoPubblicazione | "dataset";
+export type TipoCitabile = TipoPubblicazione | "dataset" | "software";
 
 export interface VoceCitabile {
   id: string;
@@ -115,12 +115,15 @@ function pulisci(s: string): string {
     .trim();
 }
 
-const ETICHETTA_DATASET = " [Dataset]";
+const ETICHETTA_TIPO: Partial<Record<TipoCitabile, string>> = {
+  dataset: " [Dataset]",
+  software: " [Software]",
+};
 
 function citazioneApa(v: VoceCitabile, tipo: TipoCitabile): string {
   const autori = autoriApa(partiAutori(v.autori));
   const sede = costruisciSede(tipo, v.fonte, v.sede, "apa");
-  const etichetta = tipo === "dataset" ? ETICHETTA_DATASET : "";
+  const etichetta = ETICHETTA_TIPO[tipo] ?? "";
   const doi = v.doi ? ` https://doi.org/${v.doi}` : "";
   return pulisci(`${autori} (${v.anno}). ${v.titolo}${etichetta}. ${sede ? sede + "." : ""}${doi}`);
 }
@@ -128,7 +131,7 @@ function citazioneApa(v: VoceCitabile, tipo: TipoCitabile): string {
 function citazioneMla(v: VoceCitabile, tipo: TipoCitabile): string {
   const autori = autoriMla(partiAutori(v.autori));
   const sede = costruisciSede(tipo, v.fonte, v.sede, "mla");
-  const etichetta = tipo === "dataset" ? ETICHETTA_DATASET : "";
+  const etichetta = ETICHETTA_TIPO[tipo] ?? "";
   const doi = v.doi ? `, doi.org/${v.doi}` : "";
   return pulisci(`${autori}. "${v.titolo}${etichetta}." ${sede ? sede + ", " : ""}${v.anno}${doi}.`);
 }
@@ -136,7 +139,7 @@ function citazioneMla(v: VoceCitabile, tipo: TipoCitabile): string {
 function citazioneHarvard(v: VoceCitabile, tipo: TipoCitabile): string {
   const autori = autoriHarvard(partiAutori(v.autori));
   const sede = costruisciSede(tipo, v.fonte, v.sede, "harvard");
-  const etichetta = tipo === "dataset" ? ETICHETTA_DATASET : "";
+  const etichetta = ETICHETTA_TIPO[tipo] ?? "";
   const doi = v.doi ? `. doi: ${v.doi}` : "";
   return pulisci(`${autori} (${v.anno}) '${v.titolo}${etichetta}'.${sede ? " " + sede + "." : ""}${doi}`);
 }
@@ -144,7 +147,7 @@ function citazioneHarvard(v: VoceCitabile, tipo: TipoCitabile): string {
 function citazioneChicago(v: VoceCitabile, tipo: TipoCitabile): string {
   const autori = autoriChicago(partiAutori(v.autori));
   const sede = costruisciSede(tipo, v.fonte, v.sede, "chicago");
-  const etichetta = tipo === "dataset" ? ETICHETTA_DATASET : "";
+  const etichetta = ETICHETTA_TIPO[tipo] ?? "";
   const doi = v.doi ? ` https://doi.org/${v.doi}` : "";
   return pulisci(`${autori}. ${v.anno}. "${v.titolo}${etichetta}." ${sede ? sede + "." : ""}${doi}`);
 }
@@ -155,6 +158,7 @@ const TIPO_BIBTEX: Record<TipoCitabile, string> = {
   atti: "inproceedings",
   monografia: "book",
   dataset: "misc",
+  software: "software",
 };
 
 function citazioneBibtex(v: VoceCitabile, tipo: TipoCitabile): string {

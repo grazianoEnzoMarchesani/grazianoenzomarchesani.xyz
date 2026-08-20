@@ -32,6 +32,14 @@ export interface VoceDataset {
   doi?: string;
 }
 
+export interface VoceSoftware {
+  id: string;
+  anno: number;
+  titolo: string;
+  autori: string;
+  doi?: string;
+}
+
 export interface VoceAttivita {
   id: string;
   anno: number;
@@ -61,6 +69,7 @@ export const collegamentiProfili = [
 export const voci = [...(dati.voci as Pubblicazione[])].sort((a, b) => b.anno - a.anno);
 
 export const dataset = dati.dataset as VoceDataset[];
+export const software = dati.software as VoceSoftware[];
 export const attivita = dati.attivita as VoceAttivita[];
 
 export const revisioni = manuale.revisioni as VoceRevisione[];
@@ -86,10 +95,10 @@ export function spezzaAutori(autori: string): { testo: string; io: boolean }[] {
   return risultato;
 }
 
-/** Le voci raggruppate per anno: per la timeline. */
-export function perAnno(): { anno: number; voci: Pubblicazione[] }[] {
-  const gruppi = new Map<number, Pubblicazione[]>();
-  for (const voce of voci) {
+/** Raggruppa un elenco di voci per anno, dal più recente al più vecchio. */
+function raggruppaPerAnno<T extends { anno: number }>(elenco: T[]): { anno: number; voci: T[] }[] {
+  const gruppi = new Map<number, T[]>();
+  for (const voce of elenco) {
     const gruppo = gruppi.get(voce.anno) ?? [];
     gruppo.push(voce);
     gruppi.set(voce.anno, gruppo);
@@ -97,6 +106,31 @@ export function perAnno(): { anno: number; voci: Pubblicazione[] }[] {
   return [...gruppi.entries()]
     .sort((a, b) => b[0] - a[0])
     .map(([anno, voci]) => ({ anno, voci }));
+}
+
+/** Le voci raggruppate per anno: per la timeline. */
+export function perAnno(): { anno: number; voci: Pubblicazione[] }[] {
+  return raggruppaPerAnno(voci);
+}
+
+/** Le revisioni raggruppate per anno: per la timeline. */
+export function revisioniPerAnno(): { anno: number; voci: VoceRevisione[] }[] {
+  return raggruppaPerAnno(revisioni);
+}
+
+/** Il software raggruppato per anno: per la timeline. */
+export function softwarePerAnno(): { anno: number; voci: VoceSoftware[] }[] {
+  return raggruppaPerAnno(software);
+}
+
+/** I dataset raggruppati per anno: per la timeline. */
+export function datasetPerAnno(): { anno: number; voci: VoceDataset[] }[] {
+  return raggruppaPerAnno(dataset);
+}
+
+/** Le attività raggruppate per anno: per la timeline. */
+export function attivitaPerAnno(): { anno: number; voci: VoceAttivita[] }[] {
+  return raggruppaPerAnno(attivita);
 }
 
 const anni = voci.map((v) => v.anno);
@@ -110,5 +144,6 @@ export const quante = {
   atti: voci.filter((v) => v.tipo === "atti").length,
   monografie: voci.filter((v) => v.tipo === "monografia").length,
   dataset: dati.dataset.length,
+  software: dati.software.length,
   attivita: dati.attivita.length,
 };

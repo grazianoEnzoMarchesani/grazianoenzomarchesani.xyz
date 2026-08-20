@@ -32,19 +32,60 @@ asse, non un dolly di camera — la camera resta fissa).
 - **Direzione cronologica**: l'anno corrente (2026) è la spira più
   vicina/prima visibile; scrollando in avanti ci si allontana verso il
   passato (2025, 2024, ...).
-- **Marker sulla spira**: cerchio, quadrato, X, triangolo, mappati 1:1
-  sulle quattro categorie fuse in Fields (Research, Tools, Teaching,
-  Projects). **Sagome piene** (colore ink), non più solo contorno —
-  cambiato in sessione di `/grill-me` del 2026-08-18 insieme al design
-  della transizione di apertura (vedi sotto): il filo dell'elica resta
-  invece wireframe/linea sottile, nessun cambiamento lì.
-  **Geometria vettoriale vera** (`THREE.CircleGeometry`/`PlaneGeometry`/
-  `ShapeGeometry`, non più una texture canvas su sprite): l'utente ha
-  segnalato che una texture raster ingrandita ~60× nello zoom-to-fill si
-  sarebbe sgranata, come qualunque bitmap zoomata — cambiato prima di
-  implementare la transizione per questo motivo. Il billboard verso
-  camera, gratuito con `THREE.Sprite`, va ora fatto a mano (quaternion
-  copiato dalla camera ogni frame in `animate()`).
+- **Marker sulla spira**: icone vettoriali vere importate da SVG di
+  categoria (`src/assets/research.svg`, `teaching.svg`, `projects.svg`,
+  `tools.svg` — freccia `>`, X, diamante forato, barra diagonale `/`),
+  non più forme procedurali (cerchio/quadrato/X/triangolo). Cambiato in
+  sessione di `/grill-me` + `/ponytail` del 2026-08-19, quando l'utente
+  ha fornito il set di simboli reali del brand. **Sagome piene** (colore
+  ink), il filo dell'elica resta wireframe/linea sottile, nessun
+  cambiamento lì. **Geometria vettoriale vera** (`THREE.SVGLoader` →
+  `THREE.ShapeGeometry`, non una texture canvas su sprite): stessa
+  ragione già decisa il giorno prima (18/08) per le forme procedurali —
+  una texture raster ingrandita ~60× nello zoom-to-fill si sgranerebbe.
+  Il billboard verso camera, gratuito con `THREE.Sprite`, resta fatto a
+  mano in `animate()`. **Orientamento fisso, mai ruotante** (deciso
+  2026-08-19 su richiesta esplicita dell'utente, con riferimento
+  all'immagine del pattern brand: le X restano sempre X, le barre `/`
+  restano sempre `/`, indipendentemente dalla rotazione della spirale).
+  Bug corretto nella stessa sessione: impostare il quaternion locale del
+  marker al solo quaternion camera non basta, perché i marker sono figli
+  di `group` (l'oggetto ruotato per animare l'avvitamento in
+  `applyProgress`) — l'orientamento nel mondo si compone come
+  `group.quaternion * local.quaternion`, quindi i simboli ruotavano
+  visivamente insieme alla spira. Fix: quaternion locale calcolato come
+  `inverse(group.quaternion) * camera.quaternion` (premoltiplicazione
+  per l'inversa del gruppo, ricalcolata ogni frame), così l'orientamento
+  risultante nel mondo resta sempre quello fisso della camera.
+  - **Normalizzazione per ingombro visivo**: le 4 icone hanno proporzioni
+    molto diverse (freccia stretta, X quadrata, diamante, barra
+    diagonale) — ogni icona è centrata sulla propria bounding box e
+    scalata per **area** (non per bounding box assoluta) così pesano
+    uguale lungo la spirale invece di sembrare più grandi/piccole a
+    seconda della forma. Geometrie cachate per categoria
+    (`iconGeometryCache`), parsing fatto una sola volta.
+  - **Preprocessing degli SVG sorgente**: i `<clipPath>` (frame di
+    ritaglio del tool di export, es. Illustrator/Figma) vengono rimossi
+    dalla stringa SVG prima del parsing — `SVGLoader` non ha nozione di
+    `clipPath` e altrimenti disegna anche il suo rettangolo come forma
+    piena sopra il glifo vero. I path con `style.fill === 'none'`
+    (rettangolo decorativo di bounding, sempre presente negli export)
+    vengono scartati allo stesso modo.
+  - **Bug risolto — culling**: il flip su Y necessario per convertire le
+    coordinate SVG (Y-down) in three.js (Y-up) (`geometry.scale(scale,
+    -scale, 1)`) inverte il *winding order* dei triangoli, scartati dal
+    backface culling di default con `MeshBasicMaterial` — le icone
+    esistevano ed erano dimensionate correttamente ma risultavano
+    invisibili. Fix: `material.side = THREE.DoubleSide`, stessa
+    convenzione degli esempi ufficiali `SVGLoader` di three.js.
+  - **Nomi file = id di categoria**: per sostituire un'icona in futuro
+    basta sovrascrivere il file SVG corrispondente in `src/assets/`
+    (stesso nome, path fissi negli `import ... ?raw` di
+    `fields-spiral.ts`) — nessun intervento sul codice, purché il nuovo
+    SVG sia un path pieno (`fill`, non solo `stroke`). Serve invece
+    toccare il codice per aggiungere/rinominare una categoria (vedi
+    `FieldCategory` in `src/data/fields.ts` + mapping `ICON_SVG` in
+    `fields-spiral.ts`).
 - **Disposizione**: i marker di uno stesso anno sono raggruppati per
   quadrante di categoria (90° ciascuna), non distribuiti cronologicamente
   lungo il giro.
@@ -85,6 +126,26 @@ asse, non un dolly di camera — la camera resta fissa).
   eccezione full-immersive.
 
 ## Dati
+
+**Data puntuale per ogni contenuto** (sessione 2026-08-20): la corda
+posiziona i marker sulla data, ma solo `research` e `tools` avevano un
+campo `data`; `teaching` e `projects` hanno `anni` (spesso un intervallo,
+es. `"2025 – 2026"`), che dà solo l'anno. Aggiunto `data` **opzionale**
+allo schema di `teaching` e `projects` (`src/content.config.ts`);
+`anni` resta la fonte dell'anno, `data` serve solo a collocare il
+contenuto *dentro* quell'anno.
+
+Le date mancanti sono state **scritte davvero nei file `.mdx`** (30
+voci) e le 11 date segnaposto `YYYY-01-01` di `research`/`tools`
+sostituite — su richiesta esplicita dell'utente, che le considera tutte
+placeholder da rimpiazzare con quelle vere. Generate in modo
+deterministico dall'id (niente `Math.random()`: i marker devono cadere
+sempre nello stesso punto), mese di settembre–dicembre per i corsi con
+`anni` a intervallo (anno accademico). **Sono valori finti da
+correggere**: vanno sostituiti con le date reali contenuto per
+contenuto. `markerYearFraction()` in `fields-content.ts` conserva un
+fallback deterministico per un eventuale contenuto senza `data`, ma oggi
+non è usato da nessuno.
 
 **Reali, non più placeholder** (sessione 2026-08-18): `src/data/fields-content.ts`
 (server-only, usa `astro:content`) costruisce la timeline leggendo le
@@ -269,9 +330,229 @@ reali.
 
 - Filtri/facet per anno e tag (menzionati come tipologie previste, non
   ancora progettati).
-- Comportamento mobile/tablet dedicato: idea iniziale dell'utente è una
-  linea ondulata verticale (anni più vecchi in alto, più recenti in
-  basso) invece della spirale in prospettiva, ma non ancora progettata né
-  costruita — al momento la scena desktop si limita a scalare via
-  `resize()`, senza un layout alternativo per schermi stretti.
+
+## Variante mobile — la "corda" (sessione 2026-08-20)
+
+Sotto `MOBILE_BREAKPOINT = 640px` (viewport width, allineato al `sm:` di
+Tailwind) la spirale diventa una **corda**: una linea verticale continua
+con un'ansa a S per anno, invece del tunnel in prospettiva. Decisa in
+sessione di `/grill-me` (multipli round) + `/ponytail`, dopo che l'utente
+ha scartato diverse proposte (linea ondulata generica, pozzo verticale,
+arco, card impilate, e 20 idee "alto design"/"fuori dagli schemi") a
+favore di un proprio disegno.
+
+- **Perché**: la spirale desktop oggi si limita a scalare via `resize()`
+  senza un layout alternativo — su schermi stretti/alti i marker
+  risultano troppo piccoli/fitti (nessun bug, semplicemente mai
+  riadattata).
+- **Forma — serpentina su punti di controllo ortogonali** (v3, sessione
+  2026-08-20 terza parte; le v1/v2 sono state respinte, vedi "Stato").
+  Il modello non è una formula di curva dedotta a occhio ma quello
+  esplicitato dall'utente sul proprio disegno: una **polilinea di
+  controllo fatta di soli tratti orizzontali e verticali che si
+  incontrano ad angolo retto**, i cui spigoli vengono poi **raccordati
+  (fillet) con archi di cerchio tangenti**. Prima la geometria rigida,
+  poi l'ammorbidimento — non il contrario.
+  - Un anno = **un tratto orizzontale dritto** (dove vivono i marker) +
+    **un'inversione a U** che scende alla riga successiva e riparte in
+    direzione opposta. Il lato si alterna per anno pari/dispari; non
+    codifica la categoria (quella resta affidata alle icone SVG), è puro
+    ritmo visivo.
+  - **Percorso continuo**: l'anno successivo comincia esattamente dove
+    il precedente ha girato (`a[i+1] = b[i]`), mai un ritorno artificiale
+    al centro — è la differenza sostanziale rispetto alla v2, dove ogni
+    anno era un'ansa isolata che tornava a x=0. Le x dei capi
+    "camminano" a destra e a sinistra a seconda di quanto è lungo
+    ciascun anno, esattamente come nel disegno. L'insieme viene
+    ricentrato una volta sola sulla bounding box complessiva
+    (`ropeCenterX`).
+  - **L'ansa si allunga in verticale e il raggio del raccordo è sempre al massimo**
+    (richiesta esplicita dell'utente nell'ultima iterazione, per non avere mai
+    segmenti verticali dritti ma solo orizzontali): i punti di controllo
+    che chiudono l'inversione si allontanano verticalmente quando l'anno è pieno
+    (`ropeDrop[i] = clamp(ROPE_DROP_MIN + count · ROPE_DROP_STEP, …)`), e il
+    **raggio del raccordo è sempre pari a metà dell'altezza dell'ansa** (`ropeTurnRadius(drop) = drop / 2`).
+    In questo modo i due quarti di cerchio si toccano sempre tangenti al centro
+    dell'inversione a U, formando un **semicerchio puro** per ogni anno (senza mai
+    tratti verticali dritti intermedi). Le righe non sono equidistanti: `ropeRowY[]`
+    è la somma cumulata dei dislivelli, e `applyProgress` segue quella y cumulata
+    riga per riga invece di una proporzione lineare su una lunghezza totale.
+  - **Un solo codice per rigido e raccordato**: `ropeYearPoint()`
+    percorre tratto dritto → quarto di cerchio → eventuale verticale
+    dritto → quarto di cerchio, parametrizzato per **lunghezza d'arco**
+    (campionamento uniforme del filo). Con `ropeTurnRadius = drop / 2`
+    (il caso normale) il verticale ha lunghezza zero e i due quarti formano un semicerchio;
+    con `ROPE_RIGID = true` (raggio 0) restano gli spigoli vivi della polilinea
+    di controllo a scopo di verifica visiva. La costante `ROPE_RIGID` (default
+    `false`) serve proprio a visualizzare a schermo la polilinea di
+    controllo e verificare dove cadono i punti di controllo effettivi.
+- **Lunghezza del tratto dritto per anno**: **passo fisso per marker**
+  (`ROPE_MARKER_STEP`), non una scala astratta sul massimo — è il punto
+  del disegno di riferimento ("questo spazio si potrebbe estendere alla
+  bisogna"): distanziare i due punti di controllo fa spazio agli
+  elementi di un anno più pieno. Clamp `ROPE_RUN_MIN`–`ROPE_RUN_MAX`:
+  il massimo esiste solo perché la corda **non scorre in orizzontale**
+  (quello che esce dai bordi non è più raggiungibile), oltre quella
+  soglia i marker si stringono tra loro invece di allargare ancora la
+  riga.
+- **Marker distribuiti sulla data reale, lungo tutto il percorso
+  dell'anno** (deciso 2026-08-20 con l'utente, terza parte della
+  sessione). Lo spazio a disposizione è **l'intero pezzo di corda che
+  distingue un anno dall'altro** — tratto dritto *e* ansa — non il solo
+  tratto: da quando l'ansa si allunga in verticale coi contenuti c'è
+  spazio vero anche lì. La posizione dentro l'anno è la **frazione
+  d'anno della data del contenuto** (`FieldMarker.yearFraction`),
+  riportata sulla lunghezza d'arco del percorso: un contenuto di giugno
+  cade a metà del pezzo di corda del suo anno.
+  - **Mai sovrapposizioni** (vincolo esplicito dell'utente): le date
+    reali possono cadere a pochi giorni l'una dall'altra, le sagome no.
+    Dopo il posizionamento per data, `yearPlacements()` fa due passate
+    (avanti: spingi chi è più vicino di `ROPE_MARKER_GAP` al precedente;
+    indietro: rimetti dentro il bordo chi è stato spinto oltre) — uno
+    spostamento minimo che conserva ordine cronologico e distanze
+    relative. Perché le due passate convergano sempre, la lunghezza del
+    tratto dritto ha il clamp estetico `ROPE_RUN_MIN`–`MAX` come
+    *base* ma viene allungata quanto serve se il percorso dell'anno non
+    basta: la non-sovrapposizione ha l'ultima parola sulla taratura, e
+    la camera si allontana di conseguenza.
+  - **`t` è mode-dependent**: le due forme ordinano i marker dentro
+    l'anno in modo diverso (settori di categoria sulla spirale, data
+    reale sulla corda) e il focus deve seguire l'ordine con cui i marker
+    si incontrano *davvero* lungo la forma attiva, altrimenti scrollando
+    il fuoco salterebbe avanti e indietro lungo la corda. Ogni
+    `MarkerObject` porta quindi `spiralT` e `ropeT`; `t` è quello attivo
+    e viene riallineato da `rebuildPositions()` a ogni cambio modalità.
+    Tutto il resto (focus, scala, etichette, scroll, zoom-to-fill)
+    continua a leggere solo `t` e non sa nulla della differenza.
+  - Sulla **spirale desktop non cambia nulla**: resta il raggruppamento
+    per quadrante di categoria.
+- **Ordine cronologico**: identico alla spirale, `t=0` (anno corrente)
+  in alto/vicino, `t` crescente verso il passato — nessuna inversione
+  rispetto al desktop.
+- **Moto e camera**: nessuna rotazione (a differenza dell'avvitamento
+  della spirale). La camera è posizionata in **inquadratura ravvicinata**
+  (`ROPE_CAMERA_TARGET_WIDTH = 2.4`, `ROPE_CAMERA_MIN_Z = 3.2`, `ROPE_CAMERA_MAX_Z = 4.8`)
+  e centrata a `(0, 0, z)` guardando l'origine `(0, 0, 0)`. Durante lo scroll,
+  `applyProgress` **segue attivamente il tracciato curvilineo della corda in X e Y**
+  (`group.position.set(-p.x, -p.y, 0)` ricavato da `ropePoint(t)`): la corda scorre
+  orizzontalmente attraverso lo schermo lungo i tratti dritti, curva attorno alle anse
+  a semicerchio e riparte nella direzione opposta per l'anno successivo, mantenendo il
+  marker in focus al centro dell'attenzione in modo nitido e immersivo. Il pin
+  `ScrollTrigger` resta identico e attivo anche su mobile (nessuno
+  scroll nativo alternativo).
+- **Near fade isolato per modalità**: per consentire alla camera di avvicinarsi
+  senza sbiadire la corda a riposo, le uniform `uNearFadeStart` e `uNearFadeClose`
+  vengono aggiornate dinamicamente (`4.2`/`1.6` per la spirale desktop, `1.0`/`0.3`
+  per la corda mobile, dove la dissolvenza agisce solo durante la transizione zoom-to-fill).
+- **Fade in/out ai bordi**: nessun fog dedicato per la corda (il fog di
+  profondità esistente dipende dalla distanza in Z, quasi costante in
+  modalità corda). Da v3 il fog di sfondo viene **spostato oltre la
+  corda** nel ramo rope di `applyCameraForMode()` invece di restare
+  tarato sulla spirale, dove sbiadiva la corda tutta in blocco senza
+  darle profondità; non azzerato (`scene.fog = null` toglierebbe il
+  chunk `<fog_fragment>` su cui si innesta la dissolvenza in primo
+  piano). Gli elementi entrano/escono per clipping naturale
+  del frustum quando superano il bordo alto/basso dello schermo. Taglio
+  deliberato di scope (`/ponytail`): costruire un fade equivalente
+  avrebbe richiesto rendere mode-aware anche lo shader di fog condiviso
+  con la spirale, rischiando regressioni su una parte già rifinita e
+  debuggata a fondo.
+- **Cambio modalità (resize live)**: nessun morph geometrico
+  vertice-per-vertice tra le due forme — i due sistemi di moto
+  (avvitamento Z+rotazione vs traslazione Y) e i relativi fog sono
+  troppo diversi per una fusione continua senza rischio di regressione
+  sulla spirale desktop. Al superamento della soglia, `switchShapeMode()`
+  fa un cross-fade sull'opacità del `<canvas>` (DOM, ~300ms totali):
+  fade-out, ricalcolo posizioni/camera per la nuova modalità, fade-in.
+  Percepito come fluido ma non è un'interpolazione di forma — taglio di
+  scope esplicitamente concordato con l'utente in sessione di
+  `/ponytail`. Al caricamento pagina (non resize live) si parte
+  direttamente nella modalità corretta per la larghezza iniziale, senza
+  alcun cross-fade né animazione d'ingresso "avvitamento" (quella resta
+  solo per la spirale — v1 della corda parte già alla posizione di
+  scroll corretta).
+- **Etichette dinamiche (allineate tra spirale e corda)**:
+  - Sulla spirale: il marker al punto focale (ore 3) ha titolo a opacità 100% posizionato a destra (+52px), i marker vicini lungo la spira mostrano il proprio titolo con opacità subordinata (~30-35%) e schiarimento progressivo.
+  - Sulla corda: applicato lo stesso principio della spirale con gerarchia a due livelli e posizionamento adattivo basato sulla normale geometrica:
+    - **Tratti orizzontali**: alternanza stabile e permanente per indice marker (`markerIndex % 2 === 0` sopra a -60px, `markerIndex % 2 === 1` sotto a +68px). La posizione del titolo di ciascun marker rimane fissa sul proprio lato dall'apparizione come vicino fino al focus e alla successiva dissolvenza, eliminando totalmente scatti o inversioni brusche sopra/sotto durante lo scroll.
+    - **Curve e anse a U**: il vettore normale analitico orienta automaticamente il titolo verso l'interno dell'ansa nel grande spazio laterale aperto con distanza radiale maggiorata (78px, garantendo totale respiro anche rispetto alle punte estese di simboli grandi come la X a 45°), con ancoraggio rigoroso al lato interno (a sinistra se l'ansa è a destra, con `textAlign: right`, o a destra se l'ansa è a sinistra, con `textAlign: left`), evitando qualsiasi collisione con i simboli che si snodano lungo la curva.
+  - **Anti-collisione e contenimento**: le etichette attive sulla corda vengono ordinate per priorità (focus prima, poi vicini per distanza dal fuoco) e sottoposte a risoluzione collisioni 2D AABB con buffer di sicurezza di 14px: se due etichette vicine si sovrappongono, viene mostrata quella più vicina al focus senza ammassamenti. Le dimensioni del campo di testo (`maxWidth` fisso a 200px sui tratti orizzontali e 190px sulle curve) e la distanza dal marker rimangono **rigorosamente costanti e invarianti** sia da vicino che in focus, garantendo che il testo mantenga sempre lo stesso a-capo e non subisca mai riallineamenti durante lo scroll.
+- **Riuso invariato**: hit-test/raycasting, focus/scala dinamica,
+  proiezione DOM delle etichette, transizione di apertura zoom-to-fill (stesso
+  pattern, target locale sull'asse "attivo" della modalità — Z per la
+  spirale, Y per la corda, la scala ×60 domina comunque la percezione
+  quindi non serve centratura pixel-perfect), overlay ink, navigazione
+  reale, `prefers-reduced-motion`. Zero modifiche a questi percorsi.
+- **Verificato**: `astro check` (0 errori), screenshot Puppeteer
+  headless a più quote di scroll su viewport 390×844 (forma raccordata e
+  polilinea di controllo con `ROPE_RIGID`), spirale desktop 1400×900 e
+  resize live desktop→mobile — nessun errore console, nessuna
+  regressione sulla spirale.
+
+## Stato della forma della corda (sessione 2026-08-20)
+
+Tre iterazioni. Le prime due **respinte dall'utente dopo ispezione
+visiva diretta**, confrontando con il proprio disegno di riferimento:
+
+1. Sinusoide `sin(π·localT)` (ampiezza = marker count): respinta, le
+   curve erano l'elemento dominante e i tratti dritti quasi invisibili.
+2. Curva stretta di Bézier + tratto dritto dominante, un'ansa isolata
+   per anno che tornava a x=0: proporzioni corrette ma giudicata
+   comunque un fallimento.
+3. **Versione attuale** (serpentina su punti di controllo ortogonali +
+   fillet, descritta sopra), rifatta da zero partendo dal concetto
+   dichiarato dall'utente invece che da una formula di curva dedotta:
+   polilinea rigida ad angoli retti prima, raccordo dopo; percorso
+   continuo che riparte dove ha girato; passo dei marker fisso, con la
+   riga che si allunga quanto serve. Verificata visivamente su viewport
+   390×844 (screenshot Puppeteer a più quote di scroll, modalità
+   raccordata e modalità `ROPE_RIGID`), più spirale desktop 1400×900 e
+   resize live desktop→mobile: nessuna regressione, nessun errore
+   console.
+
+**Lezione operativa** (vale per il prossimo ritocco): quando l'utente
+fornisce un disegno con punti di controllo, il disegno descrive **il
+modello geometrico**, non solo la silhouette da imitare — ricostruire i
+punti di controllo e l'operazione di raccordo, non inseguire la forma
+con una curva parametrica inventata.
+
+**Non ancora affrontato**: fade ai bordi per la corda (vedi sopra),
+morph geometrico continuo tra spirale e corda (oggi è un cross-fade di
+opacità), animazione d'ingresso dedicata alla corda.
+
+## Fix resize (sessione 2026-08-20)
+
+Segnalato dall'utente: dopo un resize della finestra, la spirale
+restava rotta finché non si ricaricava la pagina. Due bug distinti,
+trovati con verifica diretta (script Puppeteer headless, non solo
+lettura del codice):
+
+- **`ScrollTrigger.end` congelato**: era una stringa `"+=${window.innerHeight * turns * 1.2}"`,
+  che fissa la distanza di scroll necessaria a `window.innerHeight` del
+  momento del setup — il refresh automatico di GSAP su resize ricalcola
+  `start`/`end`, ma non può "riaprire" un valore già risolto dentro una
+  stringa. Fix: `end` reso una funzione (`() => ...`), rivalutata a ogni
+  refresh.
+- **Canvas distorto dopo resize (bug più subdolo)**: il `resize()`
+  interno (che chiama `renderer.setSize`/aggiorna `camera.aspect`) era
+  agganciato al raw evento `window.resize`. Ma GSAP pinna `pinSection` a
+  dimensioni fisse (`position:fixed`) e le sblocca solo al proprio
+  refresh interno, ~0.2s *dopo* l'evento di resize — leggere
+  `pinSection.clientWidth/Height` dentro il resize event stesso
+  restituiva quindi ancora le dimensioni vecchie, lasciando il drawing
+  buffer del canvas WebGL stirato/distorto sulle nuove dimensioni CSS
+  finché non si ricaricava la pagina. Confermato con uno script
+  Puppeteer che leggeva `canvas.width/height` (drawing buffer) vs
+  `getBoundingClientRect()` (dimensioni CSS) prima/dopo un resize
+  simulato: dopo il resize restavano disallineati. Fix: sostituito
+  `window.addEventListener('resize', resize)` con
+  `ScrollTrigger.addEventListener('refresh', resize)` — stesso pattern
+  usato internamente da GSAP per il proprio `Observer` (vedi
+  `ScrollTrigger.js`, `vars.onEnable`), garantisce che `pinSection` abbia
+  già le dimensioni nuove quando `resize()` legge.
+- Verificato con script Puppeteer headless dedicato: dopo resize,
+  `canvas.width/height` (drawing buffer) ora combacia sempre con
+  `getBoundingClientRect()` (dimensioni CSS), e l'altezza dello
+  spacer di pin (`ScrollTrigger`) scala proporzionalmente alla nuova
+  `window.innerHeight`. `astro check` pulito.
 - Cap/culling di performance sui marker.

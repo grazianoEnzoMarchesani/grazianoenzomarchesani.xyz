@@ -14,6 +14,10 @@ export type FieldMarker = {
   id: string;
   category: FieldCategory;
   title: string;
+  /** Posizione dentro l'anno, 0 = 1 gennaio, 1 = 31 dicembre. Governa
+   *  dove cade il marker lungo il pezzo di corda del suo anno nella
+   *  variante mobile di Fields (vedi `src/scripts/fields-spiral.ts`). */
+  yearFraction: number;
 };
 
 export type FieldYear = {

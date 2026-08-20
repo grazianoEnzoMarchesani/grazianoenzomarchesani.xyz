@@ -1,23 +1,16 @@
 ---
 import { sezioni } from '../data/home';
+import rawLogo from '../assets/logo.svg?raw';
+
+const logoMarkup = rawLogo
+	.replace(/<\?xml[^>]*\?>\s*/, '')
+	.replace(/<!DOCTYPE[^>]*>\s*/, '')
+	.replace('<svg ', '<svg class="h-12 w-auto" ')
+	.replace(' width="100%" height="100%"', '');
 ---
 
 <nav class="fixed inset-x-0 top-0 z-20 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-6 py-4 text-xs uppercase tracking-widest sm:px-10">
-	<a href="/" aria-label="Graziano Enzo Marchesani - Home" class="hover:opacity-60 transition-opacity flex items-center">
-		<svg class="h-12 w-auto text-ink fill-current" viewBox="0 0 630 727" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-			<g transform="matrix(1,0,0,1,-26558,-1192)">
-				<g transform="matrix(1,0,0,1,-0.215334,-0.913386)">
-					<rect x="26558.215" y="1192.913" width="629.273" height="726.378" fill="none"/>
-					<g transform="matrix(1,0,0,1,6130.677772,-2427.055118)">
-						<path d="M21025.167,3738.992C21045.289,3773.746 21056.81,3814.089 21056.81,3857.102C21056.81,3987.476 20950.963,4093.323 20820.59,4093.323C20690.216,4093.323 20584.369,3987.476 20584.369,3857.102C20584.369,3726.729 20690.216,3620.882 20820.59,3620.882C20820.59,3652.207 20833.033,3682.249 20855.183,3704.399C20877.333,3726.548 20907.375,3738.992 20938.7,3738.992L21025.167,3738.992Z" fill="currentColor"/>
-					</g>
-					<g transform="matrix(-0,-1,0.63473,-0,26318.317311,9879.732283)">
-						<path d="M7960.441,1062.323L7960.441,564.032C7960.441,514.681 7972.885,467.351 7995.035,432.454C8017.184,397.557 8047.226,377.953 8078.551,377.953C8109.876,377.953 8139.918,397.557 8162.068,432.454C8184.218,467.351 8196.661,514.681 8196.661,564.032L8196.661,1062.323C8196.661,959.623 8143.738,876.244 8078.551,876.244C8013.364,876.244 7960.441,959.623 7960.441,1062.323ZM8196.661,1062.323L8196.661,1136.756C8196.661,1186.107 8184.218,1233.437 8162.068,1268.333C8139.918,1303.23 8109.876,1322.835 8078.551,1322.835C8047.226,1322.835 8017.184,1303.23 7995.035,1268.333C7972.885,1233.437 7960.441,1186.107 7960.441,1136.756L7960.441,1062.323C7960.441,1165.023 8013.364,1248.403 8078.551,1248.403C8143.738,1248.403 8196.661,1165.023 8196.661,1062.323Z" fill="currentColor"/>
-					</g>
-				</g>
-			</g>
-		</svg>
-	</a>
+	<a href="/" aria-label="Graziano Enzo Marchesani - Home" class="hover:opacity-60 transition-opacity flex items-center" set:html={logoMarkup} />
 	<ul class="flex flex-wrap items-center gap-x-5 gap-y-1">
 		{sezioni.map((s) => (
 			<li><a href={s.href} class="hover:opacity-60 transition-opacity">{s.titolo}</a></li>

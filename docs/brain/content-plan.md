@@ -107,9 +107,17 @@ raw a contenuto reale nelle pagine:
   (agganciato a `astro.config.mjs` su build/dev/watcher), `scripts/pubblicazioni.id.json`
   (per stabilità degli ID). Creati `src/lib/pubblicazioni.ts`, `src/lib/citazioni.ts`
   (5 stili: APA, MLA, Harvard, Chicago, BibTeX), `src/components/TastoCitazione.astro`
-  e `src/pages/publications.astro` con 4 sezioni (Timeline per anno con filtri interattivi
-  e sticky year, Datasets & Reports, Dissemination & Outreach, Peer Review). Testi
-  direttamente in inglese (infrastruttura bilingue rimandata come da piano).
+  e `src/pages/publications.astro` con 5 sezioni, in ordine: Timeline per anno con filtri
+  interattivi e sticky year, **Software**, Datasets & Reports, Dissemination & Outreach,
+  Peer Review. Testi direttamente in inglese (infrastruttura bilingue rimandata come da piano).
+  **Software come sezione propria** (sessione 2026-08-20, decisione dell'utente): i tool
+  software rilasciati su Zenodo (con DOI) *non* sono più esclusi dalla bibliografia — hanno
+  un pulsante Cite proprio (`tipo="software"` in `citazioni.ts`, etichetta `[Software]`),
+  perché lo scopo di `/publications` è dare la citazione dell'output, mentre `/tools` mostra
+  gli stessi strumenti come prodotti da usare: sono pagine con funzioni diverse, non uno
+  scarto del contenuto dell'altra. Resta escluso solo ciò che non è un output pubblicabile
+  (es. la tesi di dottorato). Classificazione via `pubblicazioni.regole.json` → `tipo`
+  (non più `escludi`) per i 10 record `@misc` di tipo software.
 - **About**: completata (sessione 2026-08-19). Creato `src/lib/identita.ts` (accesso tipizzato a `src/content/about/percorso.json`, 5 paragrafi bio in inglese, collegamenti di ricerca ORCID/IRIS/GitHub e social LinkedIn/Instagram, stato CV) e `src/pages/about.astro` con layout editoriale a 2 colonne (ritratto via `astro:assets`, bio, tasto CV; record strutturati per Posizioni con indicatore `Current`, Formazione con tesi ed esito, Riconoscimenti e concorsi).
 - **Skills**: completata (sessione 2026-08-19). Creato `src/lib/competenze.ts` (accesso tipizzato a `src/content/skills/competenze.json`, 32 competenze arricchite con le relazioni di collegamento, raggruppamento per 3 famiglie e 11 categorie per il glossario, statistiche `quante` e sintesi nodo 0), `src/components/MazzoCompetenze.astro` (mazzo 3D animato GSAP in stile monocromatico paper/ink con modalità stack scroll-driven senza scroll-trapping e modalità ventaglio a raggiera ellittica con campionamento d'arco uniforme) e `src/pages/skills.astro` (struttura a 2 sezioni: hero + palco interattivo in alto, glossario editoriale strutturato in basso).
 

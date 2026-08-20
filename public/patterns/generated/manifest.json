@@ -1,0 +1,146 @@
+{
+  "sourceHash": "c642fd67eaf3f0115224134f227192f330fe4dfcf30a5105f210e30248017579",
+  "variantsPerBucket": 4,
+  "entries": [
+    {
+      "bucket": "phone-portrait",
+      "w": 390,
+      "h": 844,
+      "variant": 1,
+      "file": "phone-portrait-1.svg"
+    },
+    {
+      "bucket": "phone-portrait",
+      "w": 390,
+      "h": 844,
+      "variant": 2,
+      "file": "phone-portrait-2.svg"
+    },
+    {
+      "bucket": "phone-portrait",
+      "w": 390,
+      "h": 844,
+      "variant": 3,
+      "file": "phone-portrait-3.svg"
+    },
+    {
+      "bucket": "phone-portrait",
+      "w": 390,
+      "h": 844,
+      "variant": 4,
+      "file": "phone-portrait-4.svg"
+    },
+    {
+      "bucket": "tablet-portrait",
+      "w": 820,
+      "h": 1180,
+      "variant": 1,
+      "file": "tablet-portrait-1.svg"
+    },
+    {
+      "bucket": "tablet-portrait",
+      "w": 820,
+      "h": 1180,
+      "variant": 2,
+      "file": "tablet-portrait-2.svg"
+    },
+    {
+      "bucket": "tablet-portrait",
+      "w": 820,
+      "h": 1180,
+      "variant": 3,
+      "file": "tablet-portrait-3.svg"
+    },
+    {
+      "bucket": "tablet-portrait",
+      "w": 820,
+      "h": 1180,
+      "variant": 4,
+      "file": "tablet-portrait-4.svg"
+    },
+    {
+      "bucket": "laptop",
+      "w": 1440,
+      "h": 900,
+      "variant": 1,
+      "file": "laptop-1.svg"
+    },
+    {
+      "bucket": "laptop",
+      "w": 1440,
+      "h": 900,
+      "variant": 2,
+      "file": "laptop-2.svg"
+    },
+    {
+      "bucket": "laptop",
+      "w": 1440,
+      "h": 900,
+      "variant": 3,
+      "file": "laptop-3.svg"
+    },
+    {
+      "bucket": "laptop",
+      "w": 1440,
+      "h": 900,
+      "variant": 4,
+      "file": "laptop-4.svg"
+    },
+    {
+      "bucket": "desktop",
+      "w": 1920,
+      "h": 1080,
+      "variant": 1,
+      "file": "desktop-1.svg"
+    },
+    {
+      "bucket": "desktop",
+      "w": 1920,
+      "h": 1080,
+      "variant": 2,
+      "file": "desktop-2.svg"
+    },
+    {
+      "bucket": "desktop",
+      "w": 1920,
+      "h": 1080,
+      "variant": 3,
+      "file": "desktop-3.svg"
+    },
+    {
+      "bucket": "desktop",
+      "w": 1920,
+      "h": 1080,
+      "variant": 4,
+      "file": "desktop-4.svg"
+    },
+    {
+      "bucket": "ultrawide",
+      "w": 2560,
+      "h": 1080,
+      "variant": 1,
+      "file": "ultrawide-1.svg"
+    },
+    {
+      "bucket": "ultrawide",
+      "w": 2560,
+      "h": 1080,
+      "variant": 2,
+      "file": "ultrawide-2.svg"
+    },
+    {
+      "bucket": "ultrawide",
+      "w": 2560,
+      "h": 1080,
+      "variant": 3,
+      "file": "ultrawide-3.svg"
+    },
+    {
+      "bucket": "ultrawide",
+      "w": 2560,
+      "h": 1080,
+      "variant": 4,
+      "file": "ultrawide-4.svg"
+    }
+  ]
+}

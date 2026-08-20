@@ -227,5 +227,45 @@
   "11581_478468": {
     "sezione": "attivita",
     "id": "revisioni-del-progetto-vitality-pnrr-ecosistema-dell"
+  },
+  "11581_488063": {
+    "sezione": "software",
+    "id": "a-greenet-explorer"
+  },
+  "11581_492904": {
+    "sezione": "software",
+    "id": "cityrhythm-software-release"
+  },
+  "11581_488048": {
+    "sezione": "software",
+    "id": "envi-met-automation-protocol"
+  },
+  "11581_488023": {
+    "sezione": "software",
+    "id": "envireader"
+  },
+  "11581_488047": {
+    "sezione": "software",
+    "id": "orient-3pt"
+  },
+  "11581_488046": {
+    "sezione": "software",
+    "id": "semanticgeometry"
+  },
+  "11581_488043": {
+    "sezione": "software",
+    "id": "spotmapper"
+  },
+  "11581_488044": {
+    "sezione": "software",
+    "id": "streetvision"
+  },
+  "11581_488045": {
+    "sezione": "software",
+    "id": "unicamtools"
+  },
+  "11581_497744": {
+    "sezione": "software",
+    "id": "warmish"
   }
 }

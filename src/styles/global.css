@@ -4,8 +4,9 @@
 
 @theme {
   /* Due soli colori: quasi-nero verso il grigio, quasi-bianco verso il panna. Nessun accento. */
+  /* Tenere allineato a scripts/colors.mjs (letto da build script Node e dal bundle browser, non può importare da qui). */
   --color-ink: #1a1a19;
-  --color-paper: #f4f1ea;
+  --color-paper: #ebf3ee;
 
   --font-display: "Anton", sans-serif;
   --font-sans: "Inter Variable", "Inter", sans-serif;
