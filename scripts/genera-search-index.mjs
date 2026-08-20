@@ -197,34 +197,44 @@ export async function generaSearchIndex({ forza = false } = {}) {
     }
   }
 
-  // 2. Pubblicazioni
+  // 2. Pubblicazioni (Voci, Software, Dataset, Attività)
   const filePubblicazioni = join(dataDir, 'pubblicazioni.json');
   if (existsSync(filePubblicazioni)) {
     try {
       const datiPub = JSON.parse(await fs.readFile(filePubblicazioni, 'utf-8'));
-      const listaPub = datiPub.voci || [];
-      for (const pub of listaPub) {
-        for (const lingua of ['en', 'it']) {
-          const titolo = pub.titolo || '';
-          const anno = pub.anno ? String(pub.anno) : '';
-          const sede = pub.sede || pub.fonte?.rivista || pub.fonte?.libro || '';
-          const autori = typeof pub.autori === 'string' ? pub.autori : Array.isArray(pub.autori) ? pub.autori.join(', ') : '';
+      const sezioniPub = [
+        { lista: datiPub.voci || [], catEn: 'Publications', catIt: 'Pubblicazioni' },
+        { lista: datiPub.software || [], catEn: 'Software', catIt: 'Software' },
+        { lista: datiPub.dataset || [], catEn: 'Datasets & Reports', catIt: 'Dataset e Report' },
+        { lista: datiPub.attivita || [], catEn: 'Dissemination', catIt: 'Divulgazione' },
+      ];
 
-          const url = lingua === 'it' ? '/it/publications' : '/publications';
-          const testoPerEmbedding = `${titolo}. ${lingua === 'it' ? 'Pubblicazione' : 'Publication'} ${anno}. ${sede}. ${autori}.`;
+      for (const sez of sezioniPub) {
+        for (const pub of sez.lista) {
+          if (!pub.id) continue;
+          for (const lingua of ['en', 'it']) {
+            const titolo = pub.titolo || '';
+            const anno = pub.anno ? String(pub.anno) : '';
+            const sede = pub.sede || pub.fonte?.rivista || pub.fonte?.libro || '';
+            const autori = typeof pub.autori === 'string' ? pub.autori : Array.isArray(pub.autori) ? pub.autori.join(', ') : '';
 
-          documenti.push({
-            id: `pubblicazioni/${pub.id}/${lingua}`,
-            collezione: 'publications',
-            categoria: lingua === 'it' ? 'Pubblicazioni' : 'Publications',
-            slug: pub.id,
-            lingua,
-            titolo,
-            sommario: `${sede} (${anno}) — ${autori}`,
-            tag: pub.tipo ? [pub.tipo] : [],
-            url,
-            testoPerEmbedding,
-          });
+            const url = lingua === 'it' ? `/it/publications#${pub.id}` : `/publications#${pub.id}`;
+            const catNome = lingua === 'it' ? sez.catIt : sez.catEn;
+            const testoPerEmbedding = `${titolo}. ${catNome} ${anno}. ${sede}. ${autori}.`;
+
+            documenti.push({
+              id: `pubblicazioni/${pub.id}/${lingua}`,
+              collezione: 'publications',
+              categoria: catNome,
+              slug: pub.id,
+              lingua,
+              titolo,
+              sommario: `${sede ? sede + ' ' : ''}(${anno}) — ${autori}`,
+              tag: pub.tipo ? [pub.tipo] : [catNome],
+              url,
+              testoPerEmbedding,
+            });
+          }
         }
       }
     } catch (e) {
@@ -246,7 +256,7 @@ export async function generaSearchIndex({ forza = false } = {}) {
           const descr = skill.descrizione?.[lingua] || skill.descrizione?.en || '';
           const catNome = catObj?.nome?.[lingua] || catObj?.nome?.en || 'Skills';
 
-          const url = lingua === 'it' ? '/it/skills' : '/skills';
+          const url = lingua === 'it' ? `/it/skills#skill-${skill.id}` : `/skills#skill-${skill.id}`;
           const testoPerEmbedding = `${nome}. ${catNome}. ${descr}`;
 
           documenti.push({

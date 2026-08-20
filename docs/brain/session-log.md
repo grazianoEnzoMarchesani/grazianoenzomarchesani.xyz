@@ -206,3 +206,16 @@ Log cronologico, append-only: una voce breve per sessione. Per lo stato attuale 
       - Aggiornate tutte le 9 pagine e dettagli del sito ad utilizzare `<BaseHead />`.
       - Aggiornato [PaginaHome.astro](file:///Users/grazianoenzomarchesani/Documents/GitHub/grazianoenzomarchesani.xyz/src/components/PaginaHome.astro) con il ciclo di vita `astro:page-load` e pulizia (`cleanup`) di ScrollTrigger e event listener durante le transizioni client.
       - Verificato con `npx astro check` (0 errori, 0 warning) e `npm run build` (102 pagine statiche generate correttamente).
+  - **Scroll Automatico e Selezione Interattiva dei Risultati di Ricerca (`scripts/genera-search-index.mjs`, `PaginaPublications.astro`, `PaginaSkills.astro`, `MazzoCompetenze.astro`, `SearchModal.astro`)**:
+    - **Pubblicazioni**:
+      - Aggiunti ID univoci a tutte le voci di pubblicazioni scientifiche, software, dataset e attività di divulgazione in `PaginaPublications.astro`.
+      - Aggiornati gli URL generati nell'indice di ricerca con ancore hash (`/publications#<id>` e `/it/publications#<id>`).
+      - All'atterraggio o alla selezione da modale, la pagina esegue uno smooth scroll centrato sull'elemento, ripristina automaticamente eventuali filtri anno/tipo se l'elemento era nascosto e applica un'animazione di evidenziazione pulsante monocromatica per 2.5s (`@keyframes evidenziaPubblicazione`).
+    - **Competenze (Mazzo Skills)**:
+      - Aggiornati gli URL delle competenze nell'indice con ancore `#skill-<id>`.
+      - In `MazzoCompetenze.astro`, implementata la funzione `selezionaCartaPerId` che scorre in modo animato e continuo la pila delle carte (`gsap.to` su `indiceCorrente`) fino a portare in cima la carta esatta cercata, aprendo poi il ventaglio delle interconnessioni (`apri(skillId)`).
+      - Allineamento viewport e supporto per modalità con e senza motion ridotto.
+      - Aggiunti ID alle righe del glossario editoriale in `PaginaSkills.astro`.
+    - **SearchModal**:
+      - Integrata gestione di navigazione seamless (`eseguiNavigazione`): alla selezione di un risultato con hash sulla stessa pagina, la modale si chiude istantaneamente e attiva gli eventi di scroll/animazione senza ricaricare la pagina.
+    - Rigenerato l'indice `public/search-index.json` (300 voci) e verificata la build con `npm run build` (102 pagine generate senza errori).

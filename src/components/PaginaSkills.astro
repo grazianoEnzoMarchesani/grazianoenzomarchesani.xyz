@@ -95,7 +95,10 @@ const descrizioneSintesi = inLingua(sintesi.descrizione, lingua);
                       </h4>
                       <div class="divide-y divide-ink/10 border-t border-ink/10">
                         {categoria.competenze.map((competenza) => (
-                          <div class="grid gap-x-8 gap-y-1.5 py-4 sm:grid-cols-[16rem_1fr] sm:items-baseline">
+                          <div
+                            id={`skill-${competenza.id}`}
+                            class="competenza-riga grid gap-x-8 gap-y-1.5 py-4 sm:grid-cols-[16rem_1fr] sm:items-baseline transition-colors duration-500"
+                          >
                             <p class="font-medium leading-snug text-ink text-[0.95rem]">
                               {competenza.nome}
                             </p>

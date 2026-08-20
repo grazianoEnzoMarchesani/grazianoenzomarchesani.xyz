@@ -670,12 +670,91 @@ const competenze = mazzoCompetenze(lingua);
       },
       { passive: false, signal },
     );
+
+    /* ---------------------------------------------------- Selezione programmata da Ricerca / Hash */
+    function selezionaCartaPerId(id: number) {
+      const targetIndex = carte.findIndex((c) => Number(c.dataset.id) === id);
+      if (targetIndex === -1) return;
+
+      if (modo === 'fan') {
+        chiudi(false);
+      }
+
+      // Allinea lo scroll della finestra al mazzo se necessario
+      const rect = palco!.getBoundingClientRect();
+      if (rect.top < 60 || rect.bottom > window.innerHeight + 100) {
+        palco!.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      const dist = Math.abs(targetIndex - indiceCorrente);
+      const durata = Math.min(1.2, 0.45 + dist * 0.035);
+
+      gsap.killTweensOf(bersaglio);
+      gsap.to(bersaglio, {
+        valore: targetIndex,
+        duration: durata,
+        ease: 'power2.inOut',
+        overwrite: 'auto',
+        onUpdate: () => {
+          indiceCorrente = bersaglio.valore;
+          if (modo === 'stack') disegnaStack(false);
+        },
+        onComplete: () => {
+          indiceCorrente = targetIndex;
+          disegnaStack(false);
+          setTimeout(() => {
+            apri(id);
+          }, 120);
+        },
+      });
+    }
+
+    function controllaHash() {
+      const hash = window.location.hash.replace(/^#/, '');
+      const match = hash.match(/^skill-(\d+)$/);
+      if (match) {
+        const id = Number(match[1]);
+        setTimeout(() => selezionaCartaPerId(id), 250);
+      }
+    }
+
+    window.addEventListener('hashchange', controllaHash, { signal });
+    window.addEventListener(
+      'seleziona-skill',
+      ((e: CustomEvent) => {
+        if (e.detail?.id) {
+          selezionaCartaPerId(Number(e.detail.id));
+        }
+      }) as EventListener,
+      { signal },
+    );
+
+    controllaHash();
   }
 
   /* ---------------------------------------------------- Ripiego senza animazioni */
   function avviaRipiego(contenitoreCarte: HTMLElement, signal: AbortSignal) {
     const carte = Array.from(contenitoreCarte.querySelectorAll<HTMLButtonElement>('.carta'));
     let attiva: HTMLButtonElement | null = null;
+
+    function selezionaRipiego(id: number) {
+      const carta = carte.find((c) => Number(c.dataset.id) === id);
+      if (carta) {
+        carta.click();
+        carta.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+
+    function controllaHashRipiego() {
+      const hash = window.location.hash.replace(/^#/, '');
+      const match = hash.match(/^skill-(\d+)$/);
+      if (match) {
+        setTimeout(() => selezionaRipiego(Number(match[1])), 150);
+      }
+    }
+
+    window.addEventListener('hashchange', controllaHashRipiego, { signal });
+    controllaHashRipiego();
 
     contenitoreCarte.addEventListener(
       'click',

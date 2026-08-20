@@ -210,8 +210,38 @@ const { lingua = 'en' } = Astro.props;
     }
   }
 
+  function eseguiNavigazione(url: string) {
+    closeSearch();
+    const currentPath = window.location.pathname.replace(/\/$/, '') || '/';
+    const [targetPathWithLang, targetHash] = url.split('#');
+    const normalizedTargetPath = targetPathWithLang.replace(/\/$/, '') || '/';
+
+    if (currentPath === normalizedTargetPath && targetHash) {
+      window.location.hash = targetHash;
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+      document.dispatchEvent(new CustomEvent('evidenzia-pubblicazione'));
+      const matchSkill = targetHash.match(/^skill-(\d+)$/);
+      if (matchSkill) {
+        window.dispatchEvent(new CustomEvent('seleziona-skill', { detail: { id: Number(matchSkill[1]) } }));
+      }
+    } else {
+      window.location.href = url;
+    }
+  }
+
   function bindInputListeners() {
-    const { input, backdrop, closeBtn } = getElements();
+    const { input, backdrop, closeBtn, resultsContainer } = getElements();
+
+    if (resultsContainer && !resultsContainer.dataset.searchBound) {
+      resultsContainer.dataset.searchBound = 'true';
+      resultsContainer.addEventListener('click', (e) => {
+        const link = (e.target as HTMLElement).closest<HTMLAnchorElement>('.search-item');
+        if (link && link.href) {
+          e.preventDefault();
+          eseguiNavigazione(link.getAttribute('href') || link.href);
+        }
+      });
+    }
 
     if (input && !input.dataset.searchBound) {
       input.dataset.searchBound = 'true';
@@ -236,9 +266,9 @@ const { lingua = 'en' } = Astro.props;
         } else if (e.key === 'Enter') {
           e.preventDefault();
           if (activeIndex >= 0 && currentResults[activeIndex]) {
-            window.location.href = currentResults[activeIndex].url;
+            eseguiNavigazione(currentResults[activeIndex].url);
           } else if (currentResults.length > 0) {
-            window.location.href = currentResults[0].url;
+            eseguiNavigazione(currentResults[0].url);
           }
         }
       });

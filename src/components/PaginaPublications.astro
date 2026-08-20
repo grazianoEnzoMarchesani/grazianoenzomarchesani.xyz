@@ -143,7 +143,7 @@ const titolo = t('publications.titolo', lingua);
                 {gruppo.voci.map((voce) => {
                   const url = collegamento(voce);
                   return (
-                    <li class="voce py-6 first:pt-0 last:pb-0" data-tipo={voce.tipo}>
+                    <li id={voce.id} class="voce py-6 first:pt-0 last:pb-0" data-tipo={voce.tipo}>
                       <p class="font-mono text-[11px] uppercase tracking-widest text-ink/50 mb-2">
                         {etichetteTipo[voce.tipo]}
                       </p>
@@ -219,7 +219,7 @@ const titolo = t('publications.titolo', lingua);
                 {gruppo.voci.map((voce) => {
                   const url = voce.doi ? `https://doi.org/${voce.doi}` : undefined;
                   return (
-                    <li class="py-6">
+                    <li id={voce.id} class="py-6">
                       <h3 class="text-base font-normal leading-snug text-ink sm:text-lg max-w-[65ch]">
                         {url ? (
                           <a
@@ -285,7 +285,7 @@ const titolo = t('publications.titolo', lingua);
                 {gruppo.voci.map((voce) => {
                   const url = voce.doi ? `https://doi.org/${voce.doi}` : undefined;
                   return (
-                    <li class="py-6">
+                    <li id={voce.id} class="py-6">
                       <h3 class="text-base font-normal leading-snug text-ink sm:text-lg max-w-[65ch]">
                         {url ? (
                           <a
@@ -351,7 +351,7 @@ const titolo = t('publications.titolo', lingua);
                 {gruppo.voci.map((voce) => {
                   const url = voce.doi ? `https://doi.org/${voce.doi}` : undefined;
                   return (
-                    <li class="py-6">
+                    <li id={voce.id} class="py-6">
                       <h3 class="text-base font-normal leading-snug text-ink sm:text-lg max-w-[65ch]">
                         {url ? (
                           <a
@@ -506,6 +506,28 @@ const titolo = t('publications.titolo', lingua);
       opacity: 0;
       transform: translateY(6px);
     }
+  }
+
+  @keyframes evidenziaPubblicazione {
+    0% {
+      background-color: color-mix(in srgb, var(--color-ink) 12%, transparent);
+      box-shadow: 0 0 0 10px color-mix(in srgb, var(--color-ink) 12%, transparent);
+      border-radius: 0.5rem;
+    }
+    65% {
+      background-color: color-mix(in srgb, var(--color-ink) 12%, transparent);
+      box-shadow: 0 0 0 10px color-mix(in srgb, var(--color-ink) 12%, transparent);
+      border-radius: 0.5rem;
+    }
+    100% {
+      background-color: transparent;
+      box-shadow: 0 0 0 0 transparent;
+      border-radius: 0.5rem;
+    }
+  }
+
+  .pubblicazione--evidenziata {
+    animation: evidenziaPubblicazione 2.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 </style>
 
@@ -845,6 +867,39 @@ const titolo = t('publications.titolo', lingua);
     };
   }
 
-  document.addEventListener('DOMContentLoaded', iniziaFiltroAnno);
-  document.addEventListener('astro:page-load', iniziaFiltroAnno);
+  function evidenziaVoceDaHash() {
+    const rawHash = window.location.hash.replace(/^#/, '');
+    if (!rawHash) return;
+    const target = document.getElementById(rawHash);
+    if (!target) return;
+
+    // Se l'elemento è nascosto da filtro anno o tipo, ripristina la visualizzazione completa
+    if (document.body.dataset.filtroAnno) {
+      impostaFiltroAnno(null);
+    }
+    if (target.hidden) {
+      const barra = document.querySelector<HTMLElement>('[data-filtri]');
+      const tastoTutti = barra?.querySelector<HTMLButtonElement>('[data-filtro="tutti"]');
+      tastoTutti?.click();
+    }
+
+    // Scroll morbido e animazione di evidenziazione
+    setTimeout(() => {
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      target.classList.remove('pubblicazione--evidenziata');
+      void target.offsetWidth;
+      target.classList.add('pubblicazione--evidenziata');
+    }, 120);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    iniziaFiltroAnno();
+    evidenziaVoceDaHash();
+  });
+  document.addEventListener('astro:page-load', () => {
+    iniziaFiltroAnno();
+    evidenziaVoceDaHash();
+  });
+  window.addEventListener('hashchange', evidenziaVoceDaHash);
+  document.addEventListener('evidenzia-pubblicazione', evidenziaVoceDaHash);
 </script>
