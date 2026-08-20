@@ -105,6 +105,7 @@ const timeline = await getFieldsTimeline();
 					labelsContainer: labelsContainer ?? undefined,
 					timeline,
 					onOpenMarker: async (marker, playZoom) => {
+						sessionStorage.setItem('fields-target-marker', marker.id);
 						const overlay = document.getElementById('field-transition-overlay');
 						const fadeIn = overlay
 							? gsap.to(overlay, {

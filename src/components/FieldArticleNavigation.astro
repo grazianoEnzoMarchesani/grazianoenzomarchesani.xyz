@@ -73,6 +73,10 @@ const { currentId, next } = Astro.props;
 		const topIndicator = document.getElementById('pull-top-indicator');
 		const bottomIndicator = document.getElementById('pull-bottom-indicator');
 
+		if (currentId) {
+			sessionStorage.setItem('fields-target-marker', currentId);
+		}
+
 		let isNavigating = false;
 
 		async function goBackToFields() {

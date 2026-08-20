@@ -86,9 +86,7 @@ asse, non un dolly di camera — la camera resta fissa).
     toccare il codice per aggiungere/rinominare una categoria (vedi
     `FieldCategory` in `src/data/fields.ts` + mapping `ICON_SVG` in
     `fields-spiral.ts`).
-- **Disposizione**: i marker di uno stesso anno sono raggruppati per
-  quadrante di categoria (90° ciascuna), non distribuiti cronologicamente
-  lungo il giro.
+- **Disposizione**: i marker sono distribuiti in **ordine puramente cronologico per data reale** (`yearFraction`) lungo ciascun giro/spira (un giro = un anno), con algoritmo anti-sovrapposizione a due passate. L'ordine dei contenuti è perfettamente identico e speculare tra la spirale e la corda.
 - **Anni senza contenuti**: saltati del tutto, nessuna spira vuota
   costruita. Un anno con anche un solo contenuto ottiene comunque una
   spira intera.
@@ -120,8 +118,10 @@ asse, non un dolly di camera — la camera resta fissa).
   (nessun sistema di rubber-band custom aggiuntivo — il pin nativo più il
   limite naturale di scroll della pagina bastano per questa prima
   iterazione).
-- **Animazione d'ingresso**: parte automatica al caricamento della
-  pagina, una sola volta per sessione (flag in `sessionStorage`).
+- **Animazione d'ingresso (permanente per spirale e corda)**: parte automatica ad ogni apertura o ricaricamento della pagina `/fields` (nessun blocco da `sessionStorage`). Viene saltata solo in caso di ritorno da un articolo di dettaglio (`fields-target-marker`) per ripristinare all'istante la posizione del marker target.
+  - **Spirale desktop**: parte da una posizione arretrata ($-0.45 \times \text{totalLength}$) e angolarmente ruotata ($+\pi \times 0.75$), avvitandosi ed emergendo dalla nebbia verso la camera fissa ($1.6\text{s}$, `power2.out`), mentre i simboli SVG compaiono con un fade-in fluido (`uSymbolOpacity: 0 \to 1`) e al completamento l'etichetta del marker a ore 3 si rivela dolcemente.
+  - **Corda mobile**: la telecamera esegue un **flythrough a velocità costante e morbida** lungo il tracciato curvilineo fino a fermarsi esattamente sul **primo marker in assoluto in cima al capo iniziale della corda** (`ropeT` minima, anno 2026). Per non eccedere nel tempo di attesa quando l'archivio conterrà molti anni di progetti e garantire una visione chiara e rilassata, il **punto di partenza è limitato al massimo a 3 anni precedenti** ($\text{startU} \le 3 / \text{turns}$), con una durata proporzionale di $\sim 1.35\text{s}$ per anno ($\min 3.2\text{s}$, totale $\sim 4.0\text{s}$) ed easing morbido e uniforme `power1.inOut`. I simboli SVG compaiono in dissolvenza morbida (`uSymbolOpacity: 0 \to 1`, $1.0\text{s}$) in contemporanea all'avvio della risalita, popolando visivamente il filo; all'arrivo, il primo elemento in assoluto si trova esattamente al centro in pieno focus (ingrandimento +50%) e la sua etichetta testuale si accende al 100% di opacità.
+  - **Interattività immediata**: se l'utente tocca o scrolla prima della fine dell'animazione, l'intro cede istantaneamente il passo e sincronizza lo scroll senza alcun blocco.
 - **Nav fissa e footer** del sito restano visibili sopra la scena, nessuna
   eccezione full-immersive.
 
@@ -415,17 +415,8 @@ favore di un proprio disegno.
     *base* ma viene allungata quanto serve se il percorso dell'anno non
     basta: la non-sovrapposizione ha l'ultima parola sulla taratura, e
     la camera si allontana di conseguenza.
-  - **`t` è mode-dependent**: le due forme ordinano i marker dentro
-    l'anno in modo diverso (settori di categoria sulla spirale, data
-    reale sulla corda) e il focus deve seguire l'ordine con cui i marker
-    si incontrano *davvero* lungo la forma attiva, altrimenti scrollando
-    il fuoco salterebbe avanti e indietro lungo la corda. Ogni
-    `MarkerObject` porta quindi `spiralT` e `ropeT`; `t` è quello attivo
-    e viene riallineato da `rebuildPositions()` a ogni cambio modalità.
-    Tutto il resto (focus, scala, etichette, scroll, zoom-to-fill)
-    continua a leggere solo `t` e non sa nulla della differenza.
-  - Sulla **spirale desktop non cambia nulla**: resta il raggruppamento
-    per quadrante di categoria.
+  - **`t` unificato cronologicamente**: entrambe le modalità ordinano i marker dentro l'anno secondo la **stessa sequenza cronologica per data reale** (`yearFraction`). Ogni `MarkerObject` calcola `spiralT` (distribuito lungo la spira con `SPIRAL_MARKER_GAP`) e `ropeT` (distribuito lungo l'arco della corda con `ROPE_MARKER_GAP`), garantendo che il primo elemento a $t=0$ e tutti i successivi coincidano al 100% tra le due visualizzazioni.
+  - Sulla **spirale desktop**: i marker si susseguono lungo i 360° del giro secondo l'ordine di calendario dei contenuti dell'anno.
 - **Ordine cronologico**: identico alla spirale, `t=0` (anno corrente)
   in alto/vicino, `t` crescente verso il passato — nessuna inversione
   rispetto al desktop.
@@ -457,20 +448,15 @@ favore di un proprio disegno.
   avrebbe richiesto rendere mode-aware anche lo shader di fog condiviso
   con la spirale, rischiando regressioni su una parte già rifinita e
   debuggata a fondo.
-- **Cambio modalità (resize live)**: nessun morph geometrico
-  vertice-per-vertice tra le due forme — i due sistemi di moto
-  (avvitamento Z+rotazione vs traslazione Y) e i relativi fog sono
-  troppo diversi per una fusione continua senza rischio di regressione
-  sulla spirale desktop. Al superamento della soglia, `switchShapeMode()`
-  fa un cross-fade sull'opacità del `<canvas>` (DOM, ~300ms totali):
-  fade-out, ricalcolo posizioni/camera per la nuova modalità, fade-in.
-  Percepito come fluido ma non è un'interpolazione di forma — taglio di
-  scope esplicitamente concordato con l'utente in sessione di
-  `/ponytail`. Al caricamento pagina (non resize live) si parte
-  direttamente nella modalità corretta per la larghezza iniziale, senza
-  alcun cross-fade né animazione d'ingresso "avvitamento" (quella resta
-  solo per la spirale — v1 della corda parte già alla posizione di
-  scroll corretta).
+- **Estensioni orizzontali infinite agli estremi del filo**: la polilinea grafica della corda (`ropeWirePoint`) prosegue orizzontalmente oltre lo schermo sia in cima (anno 2026, entra da oltre il bordo opposto alla prima ansa a quota $Y=0$) sia in fondo (esce orizzontalmente oltre il bordo con la tangente naturale dell'ultima ansa). La modifica riguarda unicamente la visualizzazione del filo, lasciando inalterati il dominio dei marker, la camera e i limiti di scroll, per una perfetta illusione di corda infinita senza possibilità di raggiungere la fine.
+- **Cambio modalità (resize live) — transizione e morphing a 4 fasi** (sessione 2026-08-20):
+  Al superamento della soglia `MOBILE_BREAKPOINT = 640px` durante il ridimensionamento della finestra,
+  `switchShapeMode()` esegue una coreografia continua e morbida:
+  1. **Fade out di simboli e testi** (~0.25s): i simboli 3D sfumano verso il colore di sfondo `PAPER` tramite la uniform `uSymbolOpacity` nello shader, mentre le etichette testuali DOM in `labelsContainer` si dissolvono a opacità 0.
+  2. **Morphing continuo della linea 3D e della camera** (~0.65s, `power2.inOut`): la polilinea 3D `helixLine` interpola vertice-per-vertice le coordinate tra spirale ed elica (`linePoints[i].lerpVectors(...)`), mentre la camera adatta fluidamente il FOV (76° ↔ 64°), la distanza $Z$, il fog e i parametri di near-fade.
+  3. **Fade in di simboli e testi** (~0.25s): i marker riappaiono nella nuova collocazione geometrica lungo il tracciato.
+  4. **Spostamento fluido del fuoco sull'elemento di riferimento** (~0.6s, `power2.out`): la camera / scroll trigger viaggia dolcemente lungo la nuova forma fino a centrare e mettere a fuoco lo **stesso elemento** che era in focus prima del ridimensionamento.
+  Al caricamento pagina iniziale (non resize) si parte direttamente nella modalità corretta per la larghezza iniziale senza transizioni superflue.
 - **Etichette dinamiche (allineate tra spirale e corda)**:
   - Sulla spirale: il marker al punto focale (ore 3) ha titolo a opacità 100% posizionato a destra (+52px), i marker vicini lungo la spira mostrano il proprio titolo con opacità subordinata (~30-35%) e schiarimento progressivo.
   - Sulla corda: applicato lo stesso principio della spirale con gerarchia a due livelli e posizionamento adattivo basato sulla normale geometrica:
@@ -516,43 +502,53 @@ modello geometrico**, non solo la silhouette da imitare — ricostruire i
 punti di controllo e l'operazione di raccordo, non inseguire la forma
 con una curva parametrica inventata.
 
-**Non ancora affrontato**: fade ai bordi per la corda (vedi sopra),
-morph geometrico continuo tra spirale e corda (oggi è un cross-fade di
-opacità), animazione d'ingresso dedicata alla corda.
+## Transizione Morbida e Morphing Spirale ↔ Corda con Sincronizzazione Focus (sessione 2026-08-20)
 
-## Fix resize (sessione 2026-08-20)
+Al ridimensionamento della finestra tra desktop e mobile (soglia `MOBILE_BREAKPOINT = 640px`), il passaggio avviene con coreografia continua a 3 fasi sincronizzata con precisione millimetrica sul marker in focus:
+1. **Fade-out simultaneo** (`0.25s`, `power2.out`): Simboli 3D (sfumano nel colore di fondo paper tramite l'uniform custom shader `uSymbolOpacity` applicata a `applyNearFogFade(material, true)`) e testi DOM (`opacity: 0`).
+2. **Morphing continuo per-vertice e posizionamento focale** (`0.65s`, `power2.inOut`): La `BufferGeometry` della linea 3D interpola vertice per vertice (`lerpVectors`) tra le coordinate di `helixPoint(t)` e `ropeWirePoint(t)`. Contestualmente la telecamera interpola FOV (76° ↔ 64°), quota Z, parametri di fog e near-fade, mentre l'assetto del gruppo Three.js interpola posizione e rotazione direttamente verso le coordinate `targetGroupPos` e `targetGroupRotZ` calcolate sul `targetU` del marker di riferimento (`refMarker.spiralT` o `refMarker.ropeT`). Al termine del morphing, camera e gruppo si trovano già esattamente centrate sull'elemento di riferimento nella nuova geometria.
+3. **Fade-in di simboli e testi centrati sul focus** (`0.3s`, `power2.in`): Ricomparsa dei simboli e delle etichette, con il marker di riferimento già perfettamente a fuoco e la relativa etichetta attiva al 100%. `ScrollTrigger` e `window.scrollTo` vengono sincronizzati istantaneamente a `targetU * (st.end - st.start)`. In caso di resize entro la stessa modalità, `scrollState.u` viene preservato come sorgente di verità aggiornando lo scroll della pagina senza salti di livello.
 
-Segnalato dall'utente: dopo un resize della finestra, la spirale
-restava rotta finché non si ricaricava la pagina. Due bug distinti,
-trovati con verifica diretta (script Puppeteer headless, non solo
-lettura del codice):
+## Posizionamento Etichette su Corda Mobile
+- **Tratti orizzontali**: Alternanza permanente sopra/sotto determinata da `markerIndex % 2` (sopra a -60px, sotto a +68px), mantenendo fissa la posizione per eliminare scatti quando il focus si sposta.
+- **Curve / Anse a U**: Il vettore normale analitico proietta il testo verso l'interno dell'ansa nel grande spazio libero con offset radiale maggiorato (+78px), garantendo leggibilità e respiro senza collisioni con le icone.
 
-- **`ScrollTrigger.end` congelato**: era una stringa `"+=${window.innerHeight * turns * 1.2}"`,
-  che fissa la distanza di scroll necessaria a `window.innerHeight` del
-  momento del setup — il refresh automatico di GSAP su resize ricalcola
-  `start`/`end`, ma non può "riaprire" un valore già risolto dentro una
-  stringa. Fix: `end` reso una funzione (`() => ...`), rivalutata a ogni
-  refresh.
-- **Canvas distorto dopo resize (bug più subdolo)**: il `resize()`
-  interno (che chiama `renderer.setSize`/aggiorna `camera.aspect`) era
-  agganciato al raw evento `window.resize`. Ma GSAP pinna `pinSection` a
-  dimensioni fisse (`position:fixed`) e le sblocca solo al proprio
-  refresh interno, ~0.2s *dopo* l'evento di resize — leggere
-  `pinSection.clientWidth/Height` dentro il resize event stesso
-  restituiva quindi ancora le dimensioni vecchie, lasciando il drawing
-  buffer del canvas WebGL stirato/distorto sulle nuove dimensioni CSS
-  finché non si ricaricava la pagina. Confermato con uno script
-  Puppeteer che leggeva `canvas.width/height` (drawing buffer) vs
-  `getBoundingClientRect()` (dimensioni CSS) prima/dopo un resize
-  simulato: dopo il resize restavano disallineati. Fix: sostituito
-  `window.addEventListener('resize', resize)` con
-  `ScrollTrigger.addEventListener('refresh', resize)` — stesso pattern
-  usato internamente da GSAP per il proprio `Observer` (vedi
-  `ScrollTrigger.js`, `vars.onEnable`), garantisce che `pinSection` abbia
-  già le dimensioni nuove quando `resize()` legge.
-- Verificato con script Puppeteer headless dedicato: dopo resize,
-  `canvas.width/height` (drawing buffer) ora combacia sempre con
-  `getBoundingClientRect()` (dimensioni CSS), e l'altezza dello
-  spacer di pin (`ScrollTrigger`) scala proporzionalmente alla nuova
-  `window.innerHeight`. `astro check` pulito.
-- Cap/culling di performance sui marker.
+## Perfezionamento Resize, Distorsioni e Inizializzazione
+- **Eliminazione schiacciamento / ellisse ai poli**: Durante espansioni repentine della finestra o passaggio a tutto schermo, `updateCanvasSize()` aggiorna istantaneamente il buffer WebGL (`renderer.setSize`) e il rapporto d'aspetto (`camera.aspect` e `updateProjectionMatrix()`) sull'evento `window.resize` nativo (con fallback a `window.innerWidth/innerHeight`), evitando che il browser stiri un buffer obsoleto prima del debounce di `ScrollTrigger`.
+- **Inizializzazione robusta**: Dichiarazione anticipata di `renderer`, `width`, `height`, `scrollState` e `applyProgress` per prevenire errori di Temporal Dead Zone all'avvio.
+
+## Animazioni d'Avvio Permanenti (Spirale Desktop e Corda Mobile) (sessione 2026-08-20)
+- **Permanenza e affidabilità al boot**: Rimosso il vincolo `sessionStorage` (`fields-intro-played`), l'animazione d'entrata parte sempre ad ogni apertura e reload (tranne quando si torna da un articolo con `fields-target-marker`, che ripristina istantaneamente la posizione). Risolto l'azzeramento prematuro su `ScrollTrigger.onUpdate` proteggendo l'avvio con `isIntroPlaying`.
+- **Spirale Desktop**: La spirale avanza da $-0.45 \times \text{totalLength}$ con rotazione angolare $+\pi \times 0.75$ avvitandosi verso la camera fissa ($1.6\text{s}$, `power2.out`), mentre i simboli emergono in dissolvenza (`uSymbolOpacity: 0 \to 1`) e l'etichetta del marker focale a ore 3 si illumina all'arrivo.
+- **Corda Mobile (Flythrough con pacing fisico costante e disteso)**:
+  - Partenza a ritroso limitata al massimo al **3° anno precedente** ($\text{startU} \le 3 / \text{turns}$) per mantenere la visione sempre focalizzata e chiara senza fretta.
+  - Velocità fisica uniforme e distesa ($\sim 1.35\text{s}$ per anno, totale $\sim 4.0\text{s}$) ed easing morbido `power1.inOut` che evita picchi bruschi di accelerazione al centro.
+  - Dissolvenza contemporanea dei simboli 3D (`uSymbolOpacity: 0 \to 1` in $1.0\text{s}$) all'avvio del movimento, così che i simboli popolino visivamente la corda durante tutta la risalita.
+  - **Allineamento a $t=0$ e $u=0$**: il primo marker sul capo della corda (2026) è collocato esattamente a $t=0$, coincidendo con la quota $u=0$ dello `ScrollTrigger` e dell'atterraggio dell'intro. Quando l'utente inizia a scrollare, il progresso riparte fluidamente da zero senza alcun salto o scatto di riallineamento.
+
+## Unfold Terminale Orizzontale a Fine Spirale (sessione 2026-08-20)
+- **Concetto e scopo visivo**: Nel passato più remoto a fine scroll desktop (`u \to 1.0`), appena l'ultimo marker entra nella zona di near-fade e inizia a sfumare, il tratto terminale della spirale (dall'ultimo marker in poi) non si interrompe bruscamente e non continua a girare all'infinito: esegue un **unfold fluido e dinamico** legato allo scroll, raddrizzandosi gradualmente fino a diventare una linea **perfettamente orizzontale** sullo schermo dell'utente ($Y = \text{costante}$, tangente $+X$).
+- **Decelerazione e ancoraggio all'atterraggio**: Durante la fase di unfold finale oltre l'ultimo elemento, il movimento globale di avanzamento $Z$ e rotazione $Z$ del gruppo WebGL decelera morbidamente (ease-out quadratico) e si stabilizza all'assetto di atterraggio (`uAnchor`), evitando che l'estremità orizzontale continui a ruotare salendo verso l'alto dello schermo o tagliandosi nel near-fade prima della fine dello scroll.
+- **Modello geometrico (Spline cubica di Hermite in coordinate World/Screen)**:
+  - Continuità $C^1$ rigorosa: a $t = t_{\text{last}}$, posizione e tangente coincidono al 100% con l'elica per qualsiasi valore di scroll ($0 \le k \le 1$), senza alcun gomito o spigolo.
+  - Raddrizzamento su schermo: a $s = 1$ (punta terminale), la derivata verticale $\frac{dY}{ds} = 0$ e la derivata di profondità $\frac{dZ}{ds} = 0$ garantiscono una linea di arrivo perfettamente orizzontale in piano visivo.
+  - La trasformazione è calcolata dinamicamente nello spazio WORLD e riconvertita in coordinate locali del gruppo compensando la rotazione effettiva $\phi$ e la quota $Z$.
+  - Disattivazione del frustum culling prematuro (`helixLine.frustumCulled = false`) per garantire il rendering fluido e continuo del filo durante tutta l'escursione in profondità dello scroll.
+## Sincronizzazione e Ripristino Focus Scroll al Ritorno dagli Articoli (sessione 2026-08-20)
+- **Persistenza continua dello stato**: All'apertura di qualunque articolo in `/fields/*`, `FieldArticleNavigation.astro` memorizza immediatamente l'ID del marker corrente in `sessionStorage` (`fields-target-marker`). Durante la navigazione tra articoli (avanzamento al successivo tramite link o pull-to-next), la memoria viene aggiornata all'articolo attivo.
+- **Ritorno a Fields (Spirale o Corda)**: Che l'utente torni indietro tramite il tasto "Back to Fields", l'overscroll pull-to-return, il link nella navbar o il tasto indietro del browser, la pagina `/fields` legge il target salvato:
+  - Calcola $\text{targetU} = \text{targetObj.spiralT} / \text{turns}$ (spirale desktop, ore 3 a Z=0) o $\text{targetObj.ropeT} / \text{turns}$ (corda mobile, centrata a (0,0)).
+  - In `startScrollDriver()`, sincronizza istantaneamente la quota di pixel `scrollPos`, `window.scrollTo(0, scrollPos)` e `scrollTrigger.scroll(scrollPos)`, impostando `scrollState.u = targetU` e `applyProgress(targetU)`.
+  - Il marker target appare immediatamente centrato in pieno focus (+50% di scala, etichetta attiva al 100% di opacità) senza animazioni superflue o ripartenze da zero.
+- **Verifica**: Verificato con test automatico Puppeteer (desktop 1200×800 e mobile 390×844) e `npm run build` (51 pagine statiche).
+
+## Estensioni Orizzontali Infinite agli Estremi della Corda (sessione 2026-08-20)
+- **Concetto e resa visiva**: Nella visualizzazione a corda (mobile), la linea del tracciato non si interrompe bruscamente sul primo o sull'ultimo elemento. Agli estremi, la corda prosegue orizzontalmente oltre i bordi dello schermo verso l'infinito:
+  - **Inizio (capo superiore, anno 2026)**: il filo giunge orizzontalmente da oltre il bordo opposto alla prima ansa (se l'ansa è a destra, la corda entra orizzontalmente dal bordo sinistro dello schermo a quota $Y = 0$), attraversa il primo marker e prosegue verso la prima curva.
+  - **Fine (capo inferiore, passato remoto)**: al termine dell'ultima ansa a U in basso, il filo esce orizzontalmente con la propria tangente naturale proseguendo ben oltre il bordo dello schermo.
+- **Isolamento della sola visualizzazione del filo**:
+  - L'estensione orizzontale agisce **esclusivamente sulla polilinea grafica della corda** (`ropeWirePoint`), prolungata di una distanza generosa (`ROPE_EXTENSION_LENGTH = 15` world units, ampiamente eccedente i limiti del viewport di camera).
+  - Il dominio dei marker (`m.ropeT`), il tracciamento focale della camera (`ropePoint(t)` con $t \in [0, turns]$) e il range dello `ScrollTrigger` ($u \in [0, 1]$) rimangono rigorosamente invariati e ancorati ai contenuti reali. Con qualsiasi scroll l'utente non potrà mai visualizzare la fine del filo, ottenendo una perfetta sensazione di continuità e corda infinita.
+- **Verifica**: `astro check` (0 errori), `npm run build` (51 pagine statiche).
+
+

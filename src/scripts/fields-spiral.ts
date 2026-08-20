@@ -3,7 +3,6 @@ import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
-  FIELD_CATEGORY_ORDER,
   type FieldCategory,
   type FieldMarker,
   type FieldYear,
@@ -195,8 +194,9 @@ const NEAR_FADE_START = 4.2; // profondità (world units) da cui inizia la disso
 const NEAR_FADE_CLOSE = 1.6; // profondità da cui è completa prima del piano camera
 
 const nearFadeUniformsList: { start: THREE.IUniform<number>; close: THREE.IUniform<number> }[] = [];
+const symbolOpacityUniform = { value: 1.0 };
 
-function applyNearFogFade(material: THREE.Material) {
+function applyNearFogFade(material: THREE.Material, isSymbol = false) {
   const startUniform = { value: NEAR_FADE_START };
   const closeUniform = { value: NEAR_FADE_CLOSE };
   nearFadeUniformsList.push({ start: startUniform, close: closeUniform });
@@ -205,6 +205,9 @@ function applyNearFogFade(material: THREE.Material) {
     shader.uniforms.uPaperColor = { value: new THREE.Color(PAPER) };
     shader.uniforms.uNearFadeStart = startUniform;
     shader.uniforms.uNearFadeClose = closeUniform;
+    if (isSymbol) {
+      shader.uniforms.uSymbolOpacity = symbolOpacityUniform;
+    }
 
     shader.vertexShader = shader.vertexShader
       .replace(
@@ -217,10 +220,18 @@ function applyNearFogFade(material: THREE.Material) {
       );
 
     shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', '#include <common>\nvarying float vNearFade;\nuniform vec3 uPaperColor;')
+      .replace(
+        '#include <common>',
+        '#include <common>\nvarying float vNearFade;\nuniform vec3 uPaperColor;' +
+          (isSymbol ? '\nuniform float uSymbolOpacity;' : ''),
+      )
       .replace(
         '#include <fog_fragment>',
-        '#include <fog_fragment>\ngl_FragColor.rgb = mix( gl_FragColor.rgb, uPaperColor, vNearFade );',
+        '#include <fog_fragment>\n' +
+          (isSymbol
+            ? 'if (uSymbolOpacity <= 0.001) discard;\ngl_FragColor.rgb = mix( uPaperColor, gl_FragColor.rgb, uSymbolOpacity );\n'
+            : '') +
+          'gl_FragColor.rgb = mix( gl_FragColor.rgb, uPaperColor, vNearFade );',
       );
   };
   material.needsUpdate = true;
@@ -232,7 +243,7 @@ function buildShapeMesh(category: FieldCategory): THREE.Object3D {
   // backface culling di default — stessa convenzione degli esempi
   // ufficiali SVGLoader di three.js.
   const material = new THREE.MeshBasicMaterial({ color: INK, fog: true, side: THREE.DoubleSide });
-  applyNearFogFade(material);
+  applyNearFogFade(material, true);
 
   const group = new THREE.Group();
   for (const geometry of getIconGeometries(category)) {
@@ -292,6 +303,8 @@ export function initFieldsSpiral(options: {
   onOpenMarker: (marker: FieldMarker, playZoom: () => Promise<void>) => void;
 }): FieldsSpiralHandle {
   const { canvas, pinSection, labelsContainer, timeline, onHoverMarker, onOpenMarker } = options;
+  nearFadeUniformsList.length = 0;
+  symbolOpacityUniform.value = 1.0;
   const turns = timeline.length;
   const totalLength = turns * PITCH;
 
@@ -339,52 +352,63 @@ export function initFieldsSpiral(options: {
    * Posizione dei marker di un anno lungo il proprio pezzo di forma.
    * Unica fonte sia per la creazione dei marker sia per la geometria.
    *
-   * - `localTurn` (spirale): settori di categoria, un quarto di giro
-   *   ciascuno — convenzione desktop, invariata.
-   * - `ropeLocal` (corda): la **data reale** del contenuto dentro il suo
-   *   anno (`yearFraction`), riportata sulla lunghezza d'arco di tutto
-   *   il percorso dell'anno (tratto dritto + ansa). Le date vengono poi
-   *   distanziate a forza di almeno ROPE_MARKER_GAP l'una dall'altra:
-   *   due contenuti dello stesso mese cadrebbero sullo stesso punto e i
-   *   simboli si sovrapporrebbero. È uno spostamento minimo — l'ordine
-   *   cronologico e le distanze relative restano quelle vere.
+   * - Sia per la spirale che per la corda: i marker sono posizionati
+   *   in ordine puramente cronologico in base alla **data reale** del
+   *   contenuto dentro il suo anno (`yearFraction`).
+   * - Anti-sovrapposizione a due passate con spaziatura minima garantita:
+   *   `ROPE_MARKER_GAP` lungo la corda e `SPIRAL_MARKER_GAP` lungo la spira.
+   *   Il primo elemento in assoluto (anno 2026) cade esattamente a t = 0
+   *   sia sulla spirale che sulla corda.
    */
   function yearPlacements(yearData: FieldYear, yearIndex: number) {
-    const byCategory = new Map<FieldCategory, FieldMarker[]>();
-    for (const marker of yearData.markers) {
-      if (!byCategory.has(marker.category)) byCategory.set(marker.category, []);
-      byCategory.get(marker.category)!.push(marker);
-    }
-    const placements: { marker: FieldMarker; category: FieldCategory; localTurn: number; ropeLocal: number }[] = [];
-    FIELD_CATEGORY_ORDER.forEach((category, catIndex) => {
-      const markers = byCategory.get(category) ?? [];
-      const sectorStart = catIndex / FIELD_CATEGORY_ORDER.length;
-      const sectorSize = 1 / FIELD_CATEGORY_ORDER.length;
-      markers.forEach((marker, i) => {
-        const localTurn = sectorStart + ((i + 0.5) / Math.max(markers.length, 1)) * sectorSize;
-        placements.push({ marker, category, localTurn, ropeLocal: marker.yearFraction });
-      });
-    });
+    const placements = yearData.markers.map((marker) => ({
+      marker,
+      category: marker.category,
+      localTurn: marker.yearFraction,
+      ropeLocal: marker.yearFraction,
+    }));
 
-    // Anti-sovrapposizione, in unità di lunghezza d'arco: una passata in
-    // avanti spinge in là chi è troppo vicino al precedente, una
-    // all'indietro rimette dentro il bordo chi è stato spinto oltre. Il
-    // percorso dell'anno è dimensionato (vedi ropeRunStraight) perché lo
-    // spazio basti sempre, quindi le due passate convergono.
+    // Ordine cronologico per data reale
+    const sorted = [...placements].sort((a, b) => a.marker.yearFraction - b.marker.yearFraction);
+
+    // 1. Anti-sovrapposizione lungo la CORDA (lunghezza d'arco):
     const length = ropeYearLength(yearIndex);
-    const sorted = [...placements].sort((a, b) => a.ropeLocal - b.ropeLocal);
-    const usable = Math.max(0, length - 2 * ROPE_MARKER_EDGE);
-    const at = sorted.map((p) => ROPE_MARKER_EDGE + THREE.MathUtils.clamp(p.ropeLocal, 0, 1) * usable);
-    for (let i = 1; i < at.length; i++) at[i] = Math.max(at[i], at[i - 1] + ROPE_MARKER_GAP);
-    for (let i = at.length - 1; i >= 0; i--) {
-      const limit = i === at.length - 1 ? length - ROPE_MARKER_EDGE : at[i + 1] - ROPE_MARKER_GAP;
-      at[i] = Math.min(at[i], limit);
+    const startEdge = yearIndex === 0 ? 0 : ROPE_MARKER_EDGE;
+    const usable = Math.max(0, length - startEdge - ROPE_MARKER_EDGE);
+    const atRope = sorted.map((p) =>
+      sorted.length === 1 && yearIndex === 0
+        ? 0
+        : startEdge + THREE.MathUtils.clamp(p.ropeLocal, 0, 1) * usable,
+    );
+    for (let i = 1; i < atRope.length; i++) atRope[i] = Math.max(atRope[i], atRope[i - 1] + ROPE_MARKER_GAP);
+    for (let i = atRope.length - 1; i >= 0; i--) {
+      const limit = i === atRope.length - 1 ? length - ROPE_MARKER_EDGE : atRope[i + 1] - ROPE_MARKER_GAP;
+      atRope[i] = Math.min(atRope[i], limit);
     }
     sorted.forEach((p, i) => {
-      p.ropeLocal = THREE.MathUtils.clamp(at[i] / length, 0, 1);
+      p.ropeLocal = THREE.MathUtils.clamp(atRope[i] / length, 0, 1);
     });
 
-    return placements;
+    // 2. Anti-sovrapposizione lungo la SPIRALE (frazione di giro [0, 1]):
+    const SPIRAL_MARKER_GAP = 0.055;
+    const spiralStartEdge = yearIndex === 0 ? 0 : 0.04;
+    const spiralEndEdge = 0.04;
+    const spiralUsable = Math.max(0, 1.0 - spiralStartEdge - spiralEndEdge);
+    const atSpiral = sorted.map((p) =>
+      sorted.length === 1 && yearIndex === 0
+        ? 0
+        : spiralStartEdge + THREE.MathUtils.clamp(p.marker.yearFraction, 0, 1) * spiralUsable,
+    );
+    for (let i = 1; i < atSpiral.length; i++) atSpiral[i] = Math.max(atSpiral[i], atSpiral[i - 1] + SPIRAL_MARKER_GAP);
+    for (let i = atSpiral.length - 1; i >= 0; i--) {
+      const limit = i === atSpiral.length - 1 ? 1.0 - spiralEndEdge : atSpiral[i + 1] - SPIRAL_MARKER_GAP;
+      atSpiral[i] = Math.min(atSpiral[i], limit);
+    }
+    sorted.forEach((p, i) => {
+      p.localTurn = THREE.MathUtils.clamp(atSpiral[i], 0, 0.98);
+    });
+
+    return sorted;
   }
 
   const ropePlacements = timeline.map(yearPlacements);
@@ -475,32 +499,105 @@ export function initFieldsSpiral(options: {
     return ropeYearPoint(yearIndex, Math.min(1, t - yearIndex), out);
   }
 
-  // Filo: percorre l'intero anno (tratto + inversione), per disegnare la
-  // forma reale del percorso.
-  function ropeWirePoint(t: number, out = new THREE.Vector3()) {
-    const yearIndex = Math.min(turns - 1, Math.floor(t));
-    return ropeYearPoint(yearIndex, Math.min(1, t - yearIndex), out);
+  let ropeBodyLength = 0;
+  for (let i = 0; i < turns; i++) {
+    ropeBodyLength += ropeYearLength(i);
   }
 
-  let shapeMode: ShapeMode = pinSection.clientWidth < MOBILE_BREAKPOINT ? 'rope' : 'spiral';
+  /**
+   * Estensione orizzontale infinita agli estremi della corda:
+   * sia all'inizio (anno 0, in alto) che alla fine (ultimo anno, in basso),
+   * il filo prosegue orizzontalmente oltre lo schermo nella direzione naturale
+   * (opposta alla prima ansa in entrata, e concorde all'uscita dell'ultima ansa),
+   * dando l'illusione di una corda infinita senza influire sui marker o sullo scroll.
+   */
+  const ROPE_EXTENSION_LENGTH = 15;
+  const ropeTotalWireLength = ROPE_EXTENSION_LENGTH * 2 + ropeBodyLength;
+
+  // Filo: percorre l'intero tracciato compresi i prolungamenti orizzontali agli estremi
+  function ropeWirePoint(tau: number, out = new THREE.Vector3()) {
+    const clampedTau = THREE.MathUtils.clamp(tau, 0, 1);
+    const D = clampedTau * ropeTotalWireLength;
+
+    // 1. Estensione orizzontale iniziale (prima dell'anno 0)
+    if (D < ROPE_EXTENSION_LENGTH) {
+      const d = D; // da 0 a ROPE_EXTENSION_LENGTH
+      const startX = ropeRunStartX(0);
+      const dir0 = ropeDir(0);
+      // Prolunga orizzontalmente verso l'esterno (opposto alla prima ansa) a quota Y = ropeRowY[0] = 0
+      const x = startX - dir0 * (ROPE_EXTENSION_LENGTH - d);
+      return out.set(x, ropeRowY[0] ?? 0, 0);
+    }
+
+    // 2. Tracciato principale della serpentina (anni da 0 a turns - 1)
+    let dBody = D - ROPE_EXTENSION_LENGTH;
+    for (let i = 0; i < turns; i++) {
+      const len = ropeYearLength(i);
+      if (dBody <= len || (i === turns - 1 && D <= ROPE_EXTENSION_LENGTH + ropeBodyLength)) {
+        const s = len > 0 ? THREE.MathUtils.clamp(dBody / len, 0, 1) : 0;
+        return ropeYearPoint(i, s, out);
+      }
+      dBody -= len;
+    }
+
+    // 3. Estensione orizzontale terminale (dopo l'ultimo anno)
+    const dEnd = D - (ROPE_EXTENSION_LENGTH + ropeBodyLength);
+    const lastYear = Math.max(0, turns - 1);
+    const dirLast = ropeDir(lastYear);
+    const lastStraight = ropeRunDrawn[lastYear] ?? ROPE_RUN_MIN;
+    const lastDrop = ropeDrop[lastYear] ?? ROPE_DROP_MIN;
+    const endX = ropeRunStartX(lastYear) + dirLast * lastStraight;
+    const endY = (ropeRowY[lastYear] ?? 0) - lastDrop;
+
+    // L'inversione dell'ultimo anno esce con tangente orizzontale in direzione -dirLast
+    const x = endX - dirLast * dEnd;
+    return out.set(x, endY, 0);
+  }
+
+  let width = pinSection.clientWidth || window.innerWidth || 800;
+  let height = pinSection.clientHeight || window.innerHeight || 600;
+  let isTransitioning = false;
+  let isOpening = false;
+  let isIntroPlaying = false;
+  let introTimeline: gsap.core.Timeline | null = null;
+
+  let shapeMode: ShapeMode = width < MOBILE_BREAKPOINT ? 'rope' : 'spiral';
 
   function shapePoint(t: number, out = new THREE.Vector3()) {
     return shapeMode === 'spiral' ? helixPoint(t, out) : ropePoint(t, out);
-  }
-
-  function linePoint(t: number, out = new THREE.Vector3()) {
-    return shapeMode === 'spiral' ? helixPoint(t, out) : ropeWirePoint(t, out);
   }
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.Fog(PAPER, PITCH * 1.8, totalLength * 0.85);
 
-  const camera = new THREE.PerspectiveCamera(shapeMode === 'spiral' ? CAMERA_FOV : ROPE_CAMERA_FOV, 1, 0.1, 100);
+  const camera = new THREE.PerspectiveCamera(
+    shapeMode === 'spiral' ? CAMERA_FOV : ROPE_CAMERA_FOV,
+    width / height,
+    0.1,
+    100,
+  );
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(width, height, false);
 
   const fog = scene.fog as THREE.Fog;
 
+  function updateCanvasSize() {
+    const newWidth = pinSection.clientWidth || window.innerWidth;
+    const newHeight = pinSection.clientHeight || window.innerHeight;
+    if (newWidth > 0 && newHeight > 0 && (newWidth !== width || newHeight !== height)) {
+      width = newWidth;
+      height = newHeight;
+      renderer.setSize(width, height, false);
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+    }
+  }
+
   function applyCameraForMode() {
+    updateCanvasSize();
     if (shapeMode === 'spiral') {
       camera.position.set(0, 0, CAMERA_Z);
       camera.lookAt(0, 0, 0);
@@ -536,29 +633,8 @@ export function initFieldsSpiral(options: {
   }
   applyCameraForMode();
 
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
   const group = new THREE.Group();
   scene.add(group);
-
-  // Filo dell'elica/corda: linea continua, nessuna superficie/shading.
-  const totalSegments = turns * SEGMENTS_PER_TURN;
-  const linePoints: THREE.Vector3[] = [];
-  for (let i = 0; i <= totalSegments; i++) linePoints.push(new THREE.Vector3());
-  const lineGeometry = new THREE.BufferGeometry();
-  function rebuildLinePoints() {
-    for (let i = 0; i <= totalSegments; i++) {
-      linePoint((i / totalSegments) * turns, linePoints[i]);
-    }
-    lineGeometry.setFromPoints(linePoints);
-    lineGeometry.computeBoundingSphere();
-  }
-  rebuildLinePoints();
-  const lineMaterial = new THREE.LineBasicMaterial({ color: INK, transparent: true, opacity: 0.8 });
-  applyNearFogFade(lineMaterial);
-  const helixLine = new THREE.Line(lineGeometry, lineMaterial);
-  group.add(helixLine);
 
   const hitPlaneGeometry = new THREE.PlaneGeometry(MARKER_SIZE * 1.4, MARKER_SIZE * 1.4);
   const hitPlaneMaterial = new THREE.MeshBasicMaterial({ visible: false });
@@ -613,70 +689,164 @@ export function initFieldsSpiral(options: {
     });
   });
 
-  let width = pinSection.clientWidth;
-  let height = pinSection.clientHeight;
+  // Posizione dell'ultimo marker sulla spirale (massimo spiralT)
+  let lastMarkerSpiralT = 0;
+  for (const m of markerObjects) {
+    if (m.spiralT > lastMarkerSpiralT) {
+      lastMarkerSpiralT = m.spiralT;
+    }
+  }
+  if (lastMarkerSpiralT === 0) lastMarkerSpiralT = Math.max(0, turns - 0.5);
 
-  function rebuildPositions() {
-    applyCameraForMode();
-    rebuildLinePoints();
+  // Estensione terminale della spirale oltre l'ultimo elemento per un unfold elegante
+  const spiralTotalTurns = Math.max(turns, lastMarkerSpiralT + 0.85);
+
+  /**
+   * Calcola il punto sulla spirale tenendo conto dell'unfold terminale:
+   * per t <= lastMarkerSpiralT rimane l'elica standard;
+   * per t > lastMarkerSpiralT (il terminale dopo l'ultimo elemento), man mano che
+   * unfoldFactor cresce [0 -> 1] con lo scroll, il tratto si raddrizza gradualmente
+   * diventando perfettamente orizzontale e tangente sullo schermo, comunicando la fine dello scroll.
+   */
+  function spiralPoint(t: number, unfoldFactor = 0, out = new THREE.Vector3()) {
+    if (unfoldFactor <= 0.0001 || t <= lastMarkerSpiralT) {
+      return helixPoint(t, out);
+    }
+    const hX = RADIUS * Math.cos(t * Math.PI * 2);
+    const hY = RADIUS * Math.sin(t * Math.PI * 2);
+    const hZ = -t * PITCH;
+
+    const tailLength = spiralTotalTurns - lastMarkerSpiralT;
+    if (tailLength <= 0.0001) return out.set(hX, hY, hZ);
+
+    const s = THREE.MathUtils.clamp((t - lastMarkerSpiralT) / tailLength, 0, 1);
+
+    // Angolo di rotazione e quota Z effettiva del gruppo nel mondo
+    const phi = group.rotation.z;
+    const groupZ = group.position.z;
+    const cosPhi = Math.cos(phi);
+    const sinPhi = Math.sin(phi);
+
+    // Posizione di partenza locale a t = lastMarkerSpiralT
+    const theta0 = lastMarkerSpiralT * Math.PI * 2;
+    const p0x = RADIUS * Math.cos(theta0);
+    const p0y = RADIUS * Math.sin(theta0);
+    const p0z = -lastMarkerSpiralT * PITCH;
+
+    // Tangente iniziale locale rispetto al parametro s (C^1 continuous)
+    const t0x = tailLength * (-2 * Math.PI * RADIUS * Math.sin(theta0));
+    const t0y = tailLength * (2 * Math.PI * RADIUS * Math.cos(theta0));
+    const t0z = tailLength * (-PITCH);
+
+    // Posizione e tangente in coordinate WORLD (spazio schermo)
+    const wP0x = p0x * cosPhi - p0y * sinPhi;
+    const wP0y = p0x * sinPhi + p0y * cosPhi;
+    const wP0z = p0z + groupZ;
+
+    const wT0x = t0x * cosPhi - t0y * sinPhi;
+    const wT0y = t0x * sinPhi + t0y * cosPhi;
+    const wT0z = t0z;
+
+    // Tangente finale in coordinate WORLD: perfettamente ORIZZONTALE (+X)
+    const speed = Math.max(5.0, tailLength * 2 * Math.PI * RADIUS * 1.4);
+    const wT1x = speed;
+    const wT1y = 0;
+    const wT1z = 0;
+
+    // Target finale in coordinate WORLD
+    const wP1x = wP0x + (wT0x + wT1x) * 0.55;
+    const wP1y = wP0y + wT0y * 0.22;
+    const wP1z = wP0z - 0.2 * tailLength * PITCH;
+
+    // Spline cubica di Hermite nello spazio WORLD
+    const s2 = s * s;
+    const s3 = s2 * s;
+    const h00 = 2 * s3 - 3 * s2 + 1;
+    const h10 = s3 - 2 * s2 + s;
+    const h01 = -2 * s3 + 3 * s2;
+    const h11 = s3 - s2;
+
+    const wUx = h00 * wP0x + h10 * wT0x + h01 * wP1x + h11 * wT1x;
+    const wUy = h00 * wP0y + h10 * wT0y + h01 * wP1y + h11 * wT1y;
+    const wUz = h00 * wP0z + h10 * wT0z + h01 * wP1z + h11 * wT1z;
+
+    // Riconversione delle coordinate WORLD interpolate in coordinate locali del gruppo
+    const uX = wUx * cosPhi + wUy * sinPhi;
+    const uY = -wUx * sinPhi + wUy * cosPhi;
+    const uZ = wUz - groupZ;
+
+    return out.set(
+      THREE.MathUtils.lerp(hX, uX, unfoldFactor),
+      THREE.MathUtils.lerp(hY, uY, unfoldFactor),
+      THREE.MathUtils.lerp(hZ, uZ, unfoldFactor),
+    );
+  }
+
+  // Filo dell'elica/corda: linea continua, nessuna superficie/shading.
+  const totalSegments = Math.ceil(Math.max(turns, spiralTotalTurns) * SEGMENTS_PER_TURN);
+  const linePoints: THREE.Vector3[] = [];
+  for (let i = 0; i <= totalSegments; i++) linePoints.push(new THREE.Vector3());
+  const lineGeometry = new THREE.BufferGeometry();
+  function rebuildLinePoints(unfoldFactor = 0) {
+    for (let i = 0; i <= totalSegments; i++) {
+      if (shapeMode === 'spiral') {
+        const t = (i / totalSegments) * spiralTotalTurns;
+        spiralPoint(t, unfoldFactor, linePoints[i]);
+      } else {
+        const tau = i / totalSegments;
+        ropeWirePoint(tau, linePoints[i]);
+      }
+    }
+    lineGeometry.setFromPoints(linePoints);
+    lineGeometry.computeBoundingSphere();
+  }
+  rebuildLinePoints(0);
+  const lineMaterial = new THREE.LineBasicMaterial({ color: INK, transparent: true, opacity: 0.8 });
+  applyNearFogFade(lineMaterial);
+  const helixLine = new THREE.Line(lineGeometry, lineMaterial);
+  helixLine.frustumCulled = false;
+  group.add(helixLine);
+
+  function getRopeCameraZ() {
+    const halfFov = THREE.MathUtils.degToRad(ROPE_CAMERA_FOV) / 2;
+    return THREE.MathUtils.clamp(
+      ROPE_CAMERA_TARGET_WIDTH / (2 * Math.tan(halfFov) * (camera.aspect || 0.5)),
+      ROPE_CAMERA_MIN_Z,
+      ROPE_CAMERA_MAX_Z,
+    );
+  }
+
+  function rebuildMarkerPositions() {
     for (const m of markerObjects) {
       m.t = shapeMode === 'spiral' ? m.spiralT : m.ropeT;
       shapePoint(m.t, m.visual.position);
       m.hitPlane.position.copy(m.visual.position);
     }
-    applyProgress(scrollState.u);
   }
-
-  // Cambio spirale↔corda: cross-fade sul canvas (DOM) invece di
-  // interpolare vertice-vertice tra le due geometrie — i due sistemi di
-  // moto (avvitamento in Z vs scorrimento in Y, vedi applyProgress) e il
-  // relativo fog di profondità sono troppo diversi per una fusione
-  // continua senza rischiare regressioni sulla spirale desktop già
-  // rifinita — deciso in sessione di `/ponytail` del 2026-08-20.
-  function switchShapeMode(next: ShapeMode) {
-    if (next === shapeMode) return;
-    gsap.to(canvas, {
-      opacity: 0,
-      duration: 0.15,
-      onComplete: () => {
-        shapeMode = next;
-        rebuildPositions();
-        gsap.to(canvas, { opacity: 1, duration: 0.15 });
-      },
-    });
-  }
-
-  function resize() {
-    width = pinSection.clientWidth;
-    height = pinSection.clientHeight;
-    renderer.setSize(width, height, false);
-    camera.aspect = width / height;
-    // Non solo updateProjectionMatrix: in modalità corda la distanza
-    // della camera dipende dall'aspect ratio (vedi applyCameraForMode).
-    applyCameraForMode();
-
-    const nextMode: ShapeMode = width < MOBILE_BREAKPOINT ? 'rope' : 'spiral';
-    if (nextMode !== shapeMode) switchShapeMode(nextMode);
-  }
-  resize();
-  // Non il raw evento 'resize' della finestra: GSAP pinna pinSection a
-  // dimensioni fisse (position:fixed) e le "sblocca" solo al proprio
-  // refresh interno, ~0.2s dopo il resize — leggere clientWidth/Height
-  // nel resize event stesso restituirebbe ancora le dimensioni vecchie
-  // (canvas che resta storto finché non si ricarica la pagina). L'evento
-  // 'refresh' di ScrollTrigger (stesso pattern usato internamente da
-  // GSAP per il proprio Observer, vedi ScrollTrigger.js) garantisce che
-  // pinSection abbia già le dimensioni nuove quando resize() legge.
-  ScrollTrigger.addEventListener('refresh', resize);
 
   // Spirale: avvitamento, ruota e avanza lungo il proprio asse verso la
-  // camera fissa. Corda: scorrimento ravvicinato che traccia la curva
-  // (tratto orizzontale, ansa a U e ripartenza) portando il punto attivo a (0,0).
+  // camera fissa. Durante l'unfold finale oltre l'ultimo elemento, il movimento
+  // di avanzamento e rotazione del gruppo decelera morbidamente e si arresta
+  // stabilmente all'assetto di arrivo (uAnchor), evitando che l'estremità orizzontale
+  // continui a ruotare salendo verso l'alto o tagliandosi nel near-fade.
+  // Corda: scorrimento ravvicinato che traccia la curva portando il punto attivo a (0,0).
   const tempRopePoint = new THREE.Vector3();
   function applyProgress(u: number) {
     if (shapeMode === 'spiral') {
-      group.position.set(0, 0, u * totalLength);
-      group.rotation.z = -u * turns * Math.PI * 2;
+      let groupU = u;
+      const uUnfoldStart = Math.max(0, (lastMarkerSpiralT - 0.06) / turns);
+      const uAnchor = Math.min(1.0, (lastMarkerSpiralT + 0.14) / turns);
+
+      if (u > uUnfoldStart) {
+        const rawP = (u - uUnfoldStart) / Math.max(0.001, 1.0 - uUnfoldStart);
+        const p = THREE.MathUtils.clamp(rawP, 0, 1);
+        // Decelerazione morbida (ease-out quadratico) verso l'assetto di atterraggio
+        const easeP = 1 - Math.pow(1 - p, 2);
+        groupU = uUnfoldStart + (uAnchor - uUnfoldStart) * easeP;
+      }
+
+      group.position.set(0, 0, groupU * totalLength);
+      group.rotation.z = -groupU * turns * Math.PI * 2;
     } else {
       const t = u * turns;
       ropePoint(t, tempRopePoint);
@@ -697,27 +867,27 @@ export function initFieldsSpiral(options: {
       // sull'asse attivo della modalità corrente (Z per la spirale, Y per la corda).
       const targetU =
         shapeMode === 'spiral'
-          ? THREE.MathUtils.clamp(-targetObj.visual.position.z / totalLength, 0, 1)
-          : THREE.MathUtils.clamp(targetObj.t / turns, 0, 1);
+          ? THREE.MathUtils.clamp(targetObj.spiralT / turns, 0, 1)
+          : THREE.MathUtils.clamp(targetObj.ropeT / turns, 0, 1);
       initialProgress = targetU;
     }
   }
 
-  const introPlayed = (sessionStorage.getItem('fields-intro-played') === '1') || !!savedMarkerId;
-  const startZ = -totalLength * 0.4;
-
-  applyProgress(initialProgress);
-  // Animazione d'ingresso solo per la spirale (avvitamento): sulla corda si
-  // parte già alla posizione di scroll corretta, taglio deliberato di scope
-  // (vedi sessione /ponytail) per non dover inventare un equivalente per un
-  // moto verticale.
-  if (!introPlayed && shapeMode === 'spiral') {
-    group.position.z += startZ;
-  }
+  const shouldPlayIntro = !savedMarkerId;
 
   const scrollState = { u: initialProgress };
   let scrollTrigger: ScrollTrigger | undefined;
-  let isOpening = false;
+
+  function stopIntroEarly() {
+    if (introTimeline && isIntroPlaying) {
+      introTimeline.kill();
+      introTimeline = null;
+      isIntroPlaying = false;
+      symbolOpacityUniform.value = 1.0;
+      group.scale.set(1, 1, 1);
+      applyProgress(scrollState.u);
+    }
+  }
 
   function startScrollDriver() {
     scrollTrigger = ScrollTrigger.create({
@@ -725,37 +895,32 @@ export function initFieldsSpiral(options: {
       pin: true,
       scrub: 1,
       start: 'top top',
-      // Funzione, non stringa: la stringa "+=N" avrebbe congelato N
-      // all'innerHeight del setup, e ScrollTrigger ririsolve l'`end`
-      // sul proprio refresh automatico da resize ma non il valore già
-      // fissato dentro una stringa.
       end: () => `+=${window.innerHeight * turns * 1.2}`,
       onUpdate: (self) => {
-        if (isOpening) return;
+        if (isOpening || isTransitioning) return;
+        if (isIntroPlaying) {
+          if (self.progress > 0.005) {
+            stopIntroEarly();
+          } else {
+            return;
+          }
+        }
         scrollState.u = self.progress;
         applyProgress(self.progress);
       },
     });
 
-    if (initialProgress > 0 && scrollTrigger) {
-      const scrollPos = scrollTrigger.start + initialProgress * (scrollTrigger.end - scrollTrigger.start);
+    if (savedMarkerId && scrollTrigger) {
+      ScrollTrigger.refresh();
+      const scrollDistance = scrollTrigger.end - scrollTrigger.start;
+      const scrollPos = scrollTrigger.start + initialProgress * scrollDistance;
       window.scrollTo(0, scrollPos);
+      scrollTrigger.scroll(scrollPos);
+      scrollState.u = initialProgress;
+      applyProgress(initialProgress);
+    } else if (shouldPlayIntro) {
+      window.scrollTo(0, 0);
     }
-  }
-
-  if (introPlayed || shapeMode === 'rope') {
-    applyProgress(initialProgress);
-    startScrollDriver();
-  } else {
-    gsap.to(group.position, {
-      z: 0,
-      duration: 1.8,
-      ease: 'power2.out',
-      onComplete: () => {
-        sessionStorage.setItem('fields-intro-played', '1');
-        startScrollDriver();
-      },
-    });
   }
 
   let currentFocusedMarker: MarkerObject | null = null;
@@ -766,6 +931,285 @@ export function initFieldsSpiral(options: {
       focusTween.kill();
       focusTween = null;
     }
+  }
+
+  // Transizione morbida e morphing tra spirale e corda (3 fasi):
+  // 1. Simboli 3D e testi (etichette DOM) in fade-out.
+  // 2. Morphing continuo per-vertice della linea (Three.js BufferGeometry) + camera/fog e posizionamento gruppo verso il targetU del marker attivo.
+  // 3. Simboli e testi riappaiono in fade-in nella nuova disposizione esattamente centrati sull'elemento di riferimento.
+  function switchShapeMode(next: ShapeMode) {
+    if (next === shapeMode || isTransitioning || isOpening) return;
+    isTransitioning = true;
+    stopAutoScroll();
+
+    // Identifica l'elemento attualmente in focus (o più vicino al fuoco) prima del resize
+    let refMarker = currentFocusedMarker;
+    if (!refMarker) {
+      const currentTurn = scrollState.u * turns;
+      let minD = Infinity;
+      for (const m of markerObjects) {
+        const d = Math.abs(m.t - currentTurn);
+        if (d < minD) {
+          minD = d;
+          refMarker = m;
+        }
+      }
+    }
+    if (!refMarker && markerObjects.length > 0) {
+      refMarker = markerObjects[0];
+    }
+
+    const targetRefT = refMarker ? (next === 'spiral' ? refMarker.spiralT : refMarker.ropeT) : 0;
+    const targetU = THREE.MathUtils.clamp(targetRefT / turns, 0, 1);
+
+    // Coordinate per-vertice di partenza e arrivo per il morphing della linea
+    const fromPoints: THREE.Vector3[] = [];
+    const toPoints: THREE.Vector3[] = [];
+    for (let i = 0; i <= totalSegments; i++) {
+      const pFrom = new THREE.Vector3();
+      const pTo = new THREE.Vector3();
+      const tSpiral = (i / totalSegments) * spiralTotalTurns;
+      const tauRope = i / totalSegments;
+      if (shapeMode === 'spiral') {
+        spiralPoint(tSpiral, 0, pFrom);
+        ropeWirePoint(tauRope, pTo);
+      } else {
+        ropeWirePoint(tauRope, pFrom);
+        spiralPoint(tSpiral, 0, pTo);
+      }
+      fromPoints.push(pFrom);
+      toPoints.push(pTo);
+    }
+
+    // Parametri iniziali e target di camera, fog e gruppo
+    const startFov = camera.fov;
+    const targetFov = next === 'spiral' ? CAMERA_FOV : ROPE_CAMERA_FOV;
+
+    const startCameraZ = camera.position.z;
+    const targetCameraZ = next === 'spiral' ? CAMERA_Z : getRopeCameraZ();
+
+    const startFogNear = fog.near;
+    const targetFogNear = next === 'spiral' ? PITCH * 1.8 : targetCameraZ + 10;
+    const startFogFar = fog.far;
+    const targetFogFar = next === 'spiral' ? totalLength * 0.85 : targetCameraZ + 30;
+
+    const startNearFadeStart = nearFadeUniformsList[0]?.start.value ?? (shapeMode === 'spiral' ? NEAR_FADE_START : 1.0);
+    const targetNearFadeStart = next === 'spiral' ? NEAR_FADE_START : 1.0;
+    const startNearFadeClose = nearFadeUniformsList[0]?.close.value ?? (shapeMode === 'spiral' ? NEAR_FADE_CLOSE : 0.3);
+    const targetNearFadeClose = next === 'spiral' ? NEAR_FADE_CLOSE : 0.3;
+
+    const startGroupPos = group.position.clone();
+    const startGroupRotZ = group.rotation.z;
+
+    const targetGroupPos = new THREE.Vector3();
+    let targetGroupRotZ = 0;
+    if (next === 'spiral') {
+      let groupU = targetU;
+      const uUnfoldStart = Math.max(0, (lastMarkerSpiralT - 0.06) / turns);
+      const uAnchor = Math.min(1.0, (lastMarkerSpiralT + 0.14) / turns);
+
+      if (targetU > uUnfoldStart) {
+        const rawP = (targetU - uUnfoldStart) / Math.max(0.001, 1.0 - uUnfoldStart);
+        const p = THREE.MathUtils.clamp(rawP, 0, 1);
+        const easeP = 1 - Math.pow(1 - p, 2);
+        groupU = uUnfoldStart + (uAnchor - uUnfoldStart) * easeP;
+      }
+
+      targetGroupPos.set(0, 0, groupU * totalLength);
+      targetGroupRotZ = -groupU * turns * Math.PI * 2;
+    } else {
+      const tempTarget = new THREE.Vector3();
+      ropePoint(targetU * turns, tempTarget);
+      targetGroupPos.set(-tempTarget.x, -tempTarget.y, 0);
+      targetGroupRotZ = 0;
+    }
+
+    // FASE 1: Fade out simultaneo dei simboli e dei testi
+    gsap.to(symbolOpacityUniform, {
+      value: 0,
+      duration: 0.25,
+      ease: 'power2.out',
+      onComplete: () => {
+        // FASE 2: Morphing continuo della linea da spirale a corda (o viceversa) + camera/fog + gruppo
+        const morphProgress = { value: 0 };
+        gsap.to(morphProgress, {
+          value: 1,
+          duration: 0.65,
+          ease: 'power2.inOut',
+          onUpdate: () => {
+            const p = morphProgress.value;
+
+            // Interpolazione vertici linea
+            for (let i = 0; i <= totalSegments; i++) {
+              linePoints[i].lerpVectors(fromPoints[i], toPoints[i], p);
+            }
+            lineGeometry.setFromPoints(linePoints);
+            lineGeometry.computeBoundingSphere();
+
+            // Interpolazione prospettiva camera
+            camera.fov = THREE.MathUtils.lerp(startFov, targetFov, p);
+            camera.position.set(0, 0, THREE.MathUtils.lerp(startCameraZ, targetCameraZ, p));
+            camera.updateProjectionMatrix();
+
+            // Interpolazione fog & near fade
+            fog.near = THREE.MathUtils.lerp(startFogNear, targetFogNear, p);
+            fog.far = THREE.MathUtils.lerp(startFogFar, targetFogFar, p);
+            for (const u of nearFadeUniformsList) {
+              u.start.value = THREE.MathUtils.lerp(startNearFadeStart, targetNearFadeStart, p);
+              u.close.value = THREE.MathUtils.lerp(startNearFadeClose, targetNearFadeClose, p);
+            }
+
+            // Interpolazione assetto del gruppo direttamente verso targetGroupPos/targetGroupRotZ
+            group.position.lerpVectors(startGroupPos, targetGroupPos, p);
+            group.rotation.z = THREE.MathUtils.lerp(startGroupRotZ, targetGroupRotZ, p);
+          },
+          onComplete: () => {
+            // Geometria linea completata: imposta la nuova modalità e posiziona i marker
+            shapeMode = next;
+            rebuildMarkerPositions();
+            rebuildLinePoints(0);
+
+            scrollState.u = targetU;
+            applyCameraForMode();
+            applyProgress(targetU);
+
+            // Sincronizza lo scrollTrigger e window.scrollY con il targetU
+            const st = scrollTrigger;
+            if (st && st.end > st.start) {
+              const targetScroll = st.start + targetU * (st.end - st.start);
+              window.scrollTo(0, targetScroll);
+            }
+
+            // FASE 3: Fade in dei simboli e dei testi nella nuova forma
+            gsap.to(symbolOpacityUniform, {
+              value: 1,
+              duration: 0.3,
+              ease: 'power2.in',
+              onComplete: () => {
+                isTransitioning = false;
+              },
+            });
+          },
+        });
+      },
+    });
+  }
+
+  function resize() {
+    updateCanvasSize();
+
+    const nextMode: ShapeMode = width < MOBILE_BREAKPOINT ? 'rope' : 'spiral';
+
+    if (nextMode !== shapeMode) {
+      if (isIntroPlaying) {
+        stopIntroEarly();
+      }
+      switchShapeMode(nextMode);
+    } else if (!isTransitioning && !isIntroPlaying) {
+      applyCameraForMode();
+      const st = scrollTrigger;
+      if (st && st.end > st.start) {
+        const targetScroll = st.start + scrollState.u * (st.end - st.start);
+        window.scrollTo(0, targetScroll);
+      }
+      applyProgress(scrollState.u);
+    }
+  }
+  window.addEventListener('resize', resize, { passive: true });
+  ScrollTrigger.addEventListener('refresh', resize);
+
+  if (shouldPlayIntro) {
+    isIntroPlaying = true;
+    symbolOpacityUniform.value = 0;
+    startScrollDriver();
+
+    introTimeline = gsap.timeline({
+      onComplete: () => {
+        isIntroPlaying = false;
+        introTimeline = null;
+        symbolOpacityUniform.value = 1.0;
+        group.scale.set(1, 1, 1);
+        scrollState.u = 0;
+        applyProgress(0);
+      },
+    });
+
+    if (shapeMode === 'spiral') {
+      const startZ = -totalLength * 0.45;
+      const startRotZ = Math.PI * 0.75;
+      group.position.set(0, 0, startZ);
+      group.rotation.z = startRotZ;
+
+      introTimeline.to(
+        group.position,
+        {
+          z: 0,
+          duration: 1.6,
+          ease: 'power2.out',
+        },
+        0,
+      );
+      introTimeline.to(
+        group.rotation,
+        {
+          z: 0,
+          duration: 1.6,
+          ease: 'power2.out',
+        },
+        0,
+      );
+      introTimeline.to(
+        symbolOpacityUniform,
+        {
+          value: 1.0,
+          duration: 1.3,
+          ease: 'power2.out',
+        },
+        0.15,
+      );
+    } else {
+      // Corda mobile: risalita morbida dal passato fino al primo marker sul capo iniziale
+      // della corda (anno 2026, t = 0), atterrando perfettamente su scrollState.u = 0.
+      const MAX_INTRO_YEARS = 3;
+      const introTurns = Math.min(turns, MAX_INTRO_YEARS);
+      const startU = turns > 0 ? THREE.MathUtils.clamp(introTurns / turns, 0, 1) : 0;
+      const targetU = 0.0;
+
+      scrollState.u = startU;
+      applyProgress(startU);
+
+      // Scorrimento disteso e fluido (~1.35s per anno, totale ~4.0s su 3 anni)
+      const flyDuration = Math.max(3.2, introTurns * 1.35);
+      const flyProgress = { u: startU };
+
+      introTimeline.to(
+        flyProgress,
+        {
+          u: targetU,
+          duration: flyDuration,
+          ease: 'power1.inOut',
+          onUpdate: () => {
+            scrollState.u = flyProgress.u;
+            applyProgress(flyProgress.u);
+          },
+        },
+        0,
+      );
+      introTimeline.to(
+        symbolOpacityUniform,
+        {
+          value: 1.0,
+          duration: 1.0,
+          ease: 'power2.out',
+        },
+        0.05,
+      );
+    }
+  } else {
+    isIntroPlaying = false;
+    symbolOpacityUniform.value = 1.0;
+    applyProgress(initialProgress);
+    startScrollDriver();
   }
 
   window.addEventListener('wheel', stopAutoScroll, { passive: true });
@@ -788,7 +1232,7 @@ export function initFieldsSpiral(options: {
   }
 
   function onPointerMove(e: MouseEvent) {
-    if (isOpening) return;
+    if (isOpening || isTransitioning) return;
     const hit = hitTest(e.clientX, e.clientY);
     canvas.style.cursor = hit ? 'pointer' : 'default';
   }
@@ -822,7 +1266,7 @@ export function initFieldsSpiral(options: {
   }
 
   function tryOpen(hit: MarkerObject) {
-    if (isOpening) return;
+    if (isOpening || isTransitioning) return;
     stopAutoScroll();
     isOpening = true;
     onHoverMarker?.(null);
@@ -830,7 +1274,7 @@ export function initFieldsSpiral(options: {
   }
 
   function focusMarker(hit: MarkerObject) {
-    if (!scrollTrigger || isOpening) return;
+    if (!scrollTrigger || isOpening || isTransitioning) return;
     stopAutoScroll();
     const targetU = THREE.MathUtils.clamp(hit.t / turns, 0, 1);
     const targetScroll = scrollTrigger.start + targetU * (scrollTrigger.end - scrollTrigger.start);
@@ -853,7 +1297,11 @@ export function initFieldsSpiral(options: {
   }
 
   function onClick(e: MouseEvent | TouchEvent) {
-    if (isOpening) return;
+    if (isOpening || isTransitioning) return;
+    if (isIntroPlaying) {
+      stopIntroEarly();
+      return;
+    }
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
     const hit = hitTest(clientX, clientY);
@@ -873,7 +1321,7 @@ export function initFieldsSpiral(options: {
     if (m.labelEl) {
       m.labelEl.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (!isOpening) tryOpen(m);
+        if (!isOpening && !isTransitioning) tryOpen(m);
       });
     }
   }
@@ -893,6 +1341,7 @@ export function initFieldsSpiral(options: {
   }
 
   let frame = 0;
+  let currentUnfoldFactor = -1;
   const groupQuatInverse = new THREE.Quaternion();
   function animate() {
     const currentProgress = scrollState.u;
@@ -900,6 +1349,25 @@ export function initFieldsSpiral(options: {
     const isRope = shapeMode === 'rope';
     const nearStart = isRope ? 1.0 : NEAR_FADE_START;
     const nearClose = isRope ? 0.3 : NEAR_FADE_CLOSE;
+
+    // Aggiornamento unfold dinamico della parte terminale della spirale
+    if (shapeMode === 'spiral' && !isTransitioning) {
+      const unfoldStartU = Math.max(0, (lastMarkerSpiralT - 0.05) / turns);
+      const rawProgress = (currentProgress - unfoldStartU) / Math.max(0.01, 1.0 - unfoldStartU);
+      const unfoldProgress = THREE.MathUtils.clamp(rawProgress, 0, 1);
+      const unfoldFactor = smoothstep(0, 1, unfoldProgress);
+
+      if (Math.abs(unfoldFactor - currentUnfoldFactor) > 0.0005) {
+        currentUnfoldFactor = unfoldFactor;
+        const posAttr = lineGeometry.attributes.position as THREE.BufferAttribute;
+        for (let i = 0; i <= totalSegments; i++) {
+          const t = (i / totalSegments) * spiralTotalTurns;
+          spiralPoint(t, unfoldFactor, linePoints[i]);
+          posAttr.setXYZ(i, linePoints[i].x, linePoints[i].y, linePoints[i].z);
+        }
+        posAttr.needsUpdate = true;
+      }
+    }
 
     let minMarker: MarkerObject | null = null;
     let minAbsDt = Infinity;
@@ -940,7 +1408,7 @@ export function initFieldsSpiral(options: {
     }
 
     // Scala dinamica: ingrandimento fluido in concomitanza del focus
-    if (!isOpening) {
+    if (!isOpening && !isTransitioning) {
       for (const m of markerObjects) {
         const absDt = Math.abs(currentTurnFocus - m.t);
         let scale = 1.0;
@@ -977,7 +1445,7 @@ export function initFieldsSpiral(options: {
       for (const m of markerObjects) {
         if (!m.labelEl) continue;
 
-        if (isOpening) {
+        if (isOpening || isTransitioning || isIntroPlaying) {
           m.labelEl.style.opacity = '0';
           m.labelEl.style.pointerEvents = 'none';
           continue;
@@ -1194,6 +1662,8 @@ export function initFieldsSpiral(options: {
     destroy: () => {
       cancelAnimationFrame(frame);
       stopAutoScroll();
+      introTimeline?.kill();
+      window.removeEventListener('resize', resize);
       ScrollTrigger.removeEventListener('refresh', resize);
       window.removeEventListener('wheel', stopAutoScroll);
       window.removeEventListener('touchstart', stopAutoScroll);
