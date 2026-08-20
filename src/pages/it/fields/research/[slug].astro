@@ -1,0 +1,14 @@
+---
+import { getCollection } from 'astro:content';
+import { perLingua } from '../../../../lib/contenuti';
+import PaginaResearchDettaglio from '../../../../components/PaginaResearchDettaglio.astro';
+
+export async function getStaticPaths() {
+	const entries = perLingua(await getCollection('research'), 'it');
+	return entries.map((entry) => ({ params: { slug: entry.chiave }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+---
+
+<PaginaResearchDettaglio entry={entry} lingua="it" />

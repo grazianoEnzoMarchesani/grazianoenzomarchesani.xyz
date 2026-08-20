@@ -1,0 +1,850 @@
+---
+import BaseHead from './BaseHead.astro';
+import '../styles/global.css';
+import Nav from './Nav.astro';
+import Footer from './Footer.astro';
+import TastoCitazione from './TastoCitazione.astro';
+import {
+  collegamentiProfili,
+  collegamento,
+  perAnno,
+  quante,
+  revisioniPerAnno,
+  softwarePerAnno,
+  datasetPerAnno,
+  attivitaPerAnno,
+  spezzaAutori,
+  type TipoPubblicazione,
+} from '../lib/pubblicazioni';
+import { type Lingua, linguaDefault, t } from '../i18n/testi';
+
+interface Props {
+  lingua?: Lingua;
+}
+
+const { lingua = (Astro.currentLocale as Lingua) || linguaDefault } = Astro.props;
+const isIt = lingua === 'it';
+
+const gruppi = perAnno();
+const gruppiRevisioni = revisioniPerAnno();
+const gruppiSoftware = softwarePerAnno();
+const gruppiDataset = datasetPerAnno();
+const gruppiAttivita = attivitaPerAnno();
+
+const tipi = [
+  { id: 'articolo', etichetta: isIt ? 'Articoli' : 'Articles', quantita: quante.articoli },
+  { id: 'capitolo', etichetta: isIt ? 'Capitoli di libro' : 'Book Chapters', quantita: quante.capitoli },
+  { id: 'atti', etichetta: isIt ? 'Atti di convegno' : 'Conference Papers', quantita: quante.atti },
+  { id: 'monografia', etichetta: isIt ? 'Monografie' : 'Monographs', quantita: quante.monografie },
+] as const;
+
+const etichetteTipo: Record<TipoPubblicazione, string> = {
+  articolo: isIt ? 'Articolo' : 'Article',
+  capitolo: isIt ? 'Capitolo di libro' : 'Book Chapter',
+  atti: isIt ? 'Atti di convegno' : 'Conference Paper',
+  monografia: isIt ? 'Monografia' : 'Monograph',
+};
+
+const titolo = t('publications.titolo', lingua);
+---
+
+<html lang={lingua}>
+  <head>
+    <BaseHead
+      title={`${titolo} — Graziano Enzo Marchesani`}
+      description={isIt ? "Pubblicazioni scientifiche, articoli su rivista, atti di convegno, dataset e attività di divulgazione di Graziano Enzo Marchesani." : "Scientific publications, journal articles, conference proceedings, datasets, and dissemination activities by Graziano Enzo Marchesani."}
+    />
+  </head>
+  <body class="bg-paper text-ink font-sans antialiased selection:bg-ink selection:text-paper">
+    <Nav lingua={lingua} />
+
+    <main class="mx-auto max-w-5xl px-6 pt-32 pb-32 sm:px-10">
+      {/* ---------------------------------------------------- Header */}
+      <header class="border-b border-ink/15 pb-10">
+        <p class="font-mono text-xs uppercase tracking-widest text-ink/60">
+          {isIt ? `Produzione scientifica · ${quante.dal}–${quante.al}` : `Research Output · ${quante.dal}–${quante.al}`}
+        </p>
+        <h1 class="font-display mt-3 text-[clamp(2.75rem,7vw,5.5rem)] leading-none tracking-normal uppercase">
+          {titolo}
+        </h1>
+        <p class="mt-5 max-w-2xl text-base leading-relaxed text-ink/80 sm:text-lg">
+          {isIt
+            ? "Articoli peer-reviewed su riviste scientifiche internazionali, capitoli di libro, atti di convegno, monografie, dataset e attività di divulgazione."
+            : "Peer-reviewed articles in international scientific journals, book chapters, conference proceedings, monographs, datasets, and dissemination activities."}
+        </p>
+
+        {/* Profili esterni */}
+        <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2">
+          <span class="font-mono text-xs uppercase tracking-wider text-ink/50">{isIt ? 'Profili:' : 'Profiles:'}</span>
+          {collegamentiProfili.map((p) => (
+            <a
+              href={p.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-mono text-xs uppercase tracking-wider text-ink/70 transition-colors hover:text-ink hover:underline underline-offset-4"
+            >
+              {p.etichetta} ↗
+            </a>
+          ))}
+        </div>
+      </header>
+
+      {/* ---------------------------------------------------- Filtri */}
+      <div class="pt-8 pb-4">
+        <nav
+          class="filtri relative inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-full bg-paper/80 p-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden text-xs uppercase tracking-widest tabular-nums"
+          aria-label={isIt ? "Filtra pubblicazioni per tipologia" : "Filter publications by type"}
+          data-filtri
+        >
+          <div
+            class="filtri__perno absolute inset-y-1 left-1 rounded-full bg-ink opacity-0 transition-[left,width] duration-300 ease-out motion-reduce:transition-none"
+            data-filtri-perno
+            aria-hidden="true"
+          />
+
+          <button
+            type="button"
+            data-filtro="tutti"
+            aria-pressed="true"
+            class="relative z-10 shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs uppercase tracking-widest text-ink/60 transition-colors duration-200 aria-pressed:text-paper [&:not([aria-pressed=true])]:hover:text-ink cursor-pointer outline-none focus:outline-none"
+          >
+            {isIt ? 'Tutte' : 'All'} · {quante.totale}
+          </button>
+
+          {tipi.map((t) => (
+            <button
+              type="button"
+              data-filtro={t.id}
+              aria-pressed="false"
+              class="relative z-10 shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs uppercase tracking-widest text-ink/60 transition-colors duration-200 aria-pressed:text-paper [&:not([aria-pressed=true])]:hover:text-ink cursor-pointer outline-none focus:outline-none"
+            >
+              {t.etichetta} · {t.quantita}
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      {/* -------------------------------------------------- Timeline */}
+      <section class="pb-24 pt-6 md:pb-32" aria-label={isIt ? "Cronologia pubblicazioni" : "Publications timeline"}>
+        {gruppi.map((gruppo) => (
+          <div class="anno relative grid grid-cols-1 border-t border-ink/15 pt-10 pb-16" data-anno={gruppo.anno}>
+            <div
+              class="anno__watermark col-start-1 row-start-1 sticky top-16 right-0 self-start text-right select-none font-display text-[clamp(10.5rem,34vw,24rem)] leading-none text-ink/[0.045] tracking-tight z-0 overflow-hidden cursor-pointer"
+              data-anno={gruppo.anno}
+              role="button"
+              tabindex="0"
+              aria-label={`Filter all work from ${gruppo.anno}`}
+            >
+              {gruppo.anno}
+            </div>
+
+            <div class="relative z-10 col-start-1 row-start-1">
+              <ul class="divide-y divide-ink/10">
+                {gruppo.voci.map((voce) => {
+                  const url = collegamento(voce);
+                  return (
+                    <li class="voce py-6 first:pt-0 last:pb-0" data-tipo={voce.tipo}>
+                      <p class="font-mono text-[11px] uppercase tracking-widest text-ink/50 mb-2">
+                        {etichetteTipo[voce.tipo]}
+                      </p>
+
+                      <h2 class="text-lg leading-snug font-normal text-ink sm:text-xl max-w-[65ch]">
+                        {url ? (
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="hover:underline underline-offset-4 decoration-ink/40 transition-colors"
+                          >
+                            {voce.titolo}
+                          </a>
+                        ) : (
+                          voce.titolo
+                        )}
+                      </h2>
+
+                      <p class="mt-2.5 max-w-[75ch] text-sm leading-relaxed text-ink/75">
+                        {spezzaAutori(voce.autori).map((pezzo) =>
+                          pezzo.io ? (
+                            <strong class="font-semibold text-ink">{pezzo.testo}</strong>
+                          ) : (
+                            pezzo.testo
+                          ),
+                        )}
+                      </p>
+
+                      {voce.sede && (
+                        <p class="mt-1.5 text-sm italic text-ink/65">{voce.sede}</p>
+                      )}
+
+                      <div class="mt-3.5 flex justify-end">
+                        <TastoCitazione voce={voce} tipo={voce.tipo} lingua={lingua} />
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </div>
+        ))}
+      </section>
+
+      {/* ------------------------------------------------- Software */}
+      <section class="border-t border-ink/15 pt-16 pb-24" aria-label="Software">
+        <div class="mb-8" data-sezione-testa>
+          <h2 class="font-display text-3xl uppercase tracking-normal sm:text-4xl">
+            Software
+          </h2>
+          <p class="mt-2 max-w-xl text-sm leading-relaxed text-ink/70 sm:text-base">
+            {isIt
+              ? <span>Strumenti di ricerca e software rilasciati con DOI citabile. Vedi anche <a href="/it/fields" class="underline underline-offset-4 decoration-ink/40 hover:text-ink transition-colors">/ambiti</a> per utilizzarli.</span>
+              : <span>Research tools and software released with a citable DOI. See also <a href="/fields" class="underline underline-offset-4 decoration-ink/40 hover:text-ink transition-colors">/fields</a> to use them.</span>}
+          </p>
+        </div>
+
+        {gruppiSoftware.map((gruppo) => (
+          <div class="anno-rev relative grid grid-cols-1 border-t border-ink/15 pt-10 pb-16 first:border-t-0 first:pt-0" data-anno={gruppo.anno}>
+            <div
+              class="anno__watermark col-start-1 row-start-1 sticky top-16 right-0 self-start text-right select-none font-display text-[clamp(10.5rem,34vw,24rem)] leading-none text-ink/[0.045] tracking-tight z-0 overflow-hidden cursor-pointer"
+              data-anno={gruppo.anno}
+              role="button"
+              tabindex="0"
+              aria-label={`Filter all work from ${gruppo.anno}`}
+            >
+              {gruppo.anno}
+            </div>
+
+            <div class="relative z-10 col-start-1 row-start-1">
+              <ul class="divide-y divide-ink/10">
+                {gruppo.voci.map((voce) => {
+                  const url = voce.doi ? `https://doi.org/${voce.doi}` : undefined;
+                  return (
+                    <li class="py-6">
+                      <h3 class="text-base font-normal leading-snug text-ink sm:text-lg max-w-[65ch]">
+                        {url ? (
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="hover:underline underline-offset-4 decoration-ink/40 transition-colors"
+                          >
+                            {voce.titolo}
+                          </a>
+                        ) : (
+                          voce.titolo
+                        )}
+                      </h3>
+                      <p class="mt-2 max-w-[75ch] text-sm leading-relaxed text-ink/75">
+                        {spezzaAutori(voce.autori).map((pezzo) =>
+                          pezzo.io ? (
+                            <strong class="font-semibold text-ink">{pezzo.testo}</strong>
+                          ) : (
+                            pezzo.testo
+                          ),
+                        )}
+                      </p>
+                      <div class="mt-3 flex justify-end">
+                        <TastoCitazione voce={voce} tipo="software" lingua={lingua} />
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </div>
+        ))}
+      </section>
+
+      {/* -------------------------------------- Datasets and Reports */}
+      <section class="border-t border-ink/15 pt-16 pb-24" aria-label={isIt ? "Dataset e relazioni tecniche" : "Datasets and technical reports"}>
+        <div class="mb-8" data-sezione-testa>
+          <h2 class="font-display text-3xl uppercase tracking-normal sm:text-4xl">
+            {isIt ? "Dataset e Report" : "Datasets & Reports"}
+          </h2>
+          <p class="mt-2 max-w-xl text-sm leading-relaxed text-ink/70 sm:text-base">
+            {isIt
+              ? "Dataset aperti, repository di codice e relazioni tecnico-scientifiche."
+              : "Open datasets, code repositories, and technical-scientific reports."}
+          </p>
+        </div>
+
+        {gruppiDataset.map((gruppo) => (
+          <div class="anno-rev relative grid grid-cols-1 border-t border-ink/15 pt-10 pb-16 first:border-t-0 first:pt-0" data-anno={gruppo.anno}>
+            <div
+              class="anno__watermark col-start-1 row-start-1 sticky top-16 right-0 self-start text-right select-none font-display text-[clamp(10.5rem,34vw,24rem)] leading-none text-ink/[0.045] tracking-tight z-0 overflow-hidden cursor-pointer"
+              data-anno={gruppo.anno}
+              role="button"
+              tabindex="0"
+              aria-label={`Filter all work from ${gruppo.anno}`}
+            >
+              {gruppo.anno}
+            </div>
+
+            <div class="relative z-10 col-start-1 row-start-1">
+              <ul class="divide-y divide-ink/10">
+                {gruppo.voci.map((voce) => {
+                  const url = voce.doi ? `https://doi.org/${voce.doi}` : undefined;
+                  return (
+                    <li class="py-6">
+                      <h3 class="text-base font-normal leading-snug text-ink sm:text-lg max-w-[65ch]">
+                        {url ? (
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="hover:underline underline-offset-4 decoration-ink/40 transition-colors"
+                          >
+                            {voce.titolo}
+                          </a>
+                        ) : (
+                          voce.titolo
+                        )}
+                      </h3>
+                      <p class="mt-2 max-w-[75ch] text-sm leading-relaxed text-ink/75">
+                        {spezzaAutori(voce.autori).map((pezzo) =>
+                          pezzo.io ? (
+                            <strong class="font-semibold text-ink">{pezzo.testo}</strong>
+                          ) : (
+                            pezzo.testo
+                          ),
+                        )}
+                      </p>
+                      <div class="mt-3 flex justify-end">
+                        <TastoCitazione voce={voce} tipo="dataset" lingua={lingua} />
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </div>
+        ))}
+      </section>
+
+      {/* --------------------------------- Dissemination and Outreach */}
+      <section class="border-t border-ink/15 pt-16 pb-24" aria-label={isIt ? "Attività di divulgazione e outreach" : "Dissemination and outreach activities"}>
+        <div class="mb-8" data-sezione-testa>
+          <h2 class="font-display text-3xl uppercase tracking-normal sm:text-4xl">
+            {isIt ? "Divulgazione e Outreach" : "Dissemination & Outreach"}
+          </h2>
+          <p class="mt-2 max-w-xl text-sm leading-relaxed text-ink/70 sm:text-base">
+            {isIt
+              ? "Relazioni su invito, presentazioni a convegni, workshop ed eventi di disseminazione progettuale."
+              : "Invited talks, conference presentations, workshops, and project dissemination events."}
+          </p>
+        </div>
+
+        {gruppiAttivita.map((gruppo) => (
+          <div class="anno-rev relative grid grid-cols-1 border-t border-ink/15 pt-10 pb-16 first:border-t-0 first:pt-0" data-anno={gruppo.anno}>
+            <div
+              class="anno__watermark col-start-1 row-start-1 sticky top-16 right-0 self-start text-right select-none font-display text-[clamp(10.5rem,34vw,24rem)] leading-none text-ink/[0.045] tracking-tight z-0 overflow-hidden cursor-pointer"
+              data-anno={gruppo.anno}
+              role="button"
+              tabindex="0"
+              aria-label={`Filter all work from ${gruppo.anno}`}
+            >
+              {gruppo.anno}
+            </div>
+
+            <div class="relative z-10 col-start-1 row-start-1">
+              <ul class="divide-y divide-ink/10">
+                {gruppo.voci.map((voce) => {
+                  const url = voce.doi ? `https://doi.org/${voce.doi}` : undefined;
+                  return (
+                    <li class="py-6">
+                      <h3 class="text-base font-normal leading-snug text-ink sm:text-lg max-w-[65ch]">
+                        {url ? (
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="hover:underline underline-offset-4 decoration-ink/40 transition-colors"
+                          >
+                            {voce.titolo}
+                          </a>
+                        ) : (
+                          voce.titolo
+                        )}
+                      </h3>
+                      <p class="mt-2 max-w-[75ch] text-sm leading-relaxed text-ink/75">
+                        {spezzaAutori(voce.autori).map((pezzo) =>
+                          pezzo.io ? (
+                            <strong class="font-semibold text-ink">{pezzo.testo}</strong>
+                          ) : (
+                            pezzo.testo
+                          ),
+                        )}
+                      </p>
+                      {voce.sede && (
+                        <p class="mt-1.5 text-sm italic text-ink/65">{voce.sede}</p>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </div>
+        ))}
+      </section>
+
+      {/* ------------------------------------- Peer Review Activities */}
+      <section class="border-t border-ink/15 pt-16 pb-12" aria-label={isIt ? "Attività di revisione tra pari" : "Peer review activities"}>
+        <div class="mb-8" data-sezione-testa>
+          <h2 class="font-display text-3xl uppercase tracking-normal sm:text-4xl">
+            {isIt ? "Attività di Peer Review" : "Peer Review Activities"}
+          </h2>
+          <p class="mt-2 max-w-xl text-sm leading-relaxed text-ink/70 sm:text-base">
+            {isIt
+              ? "Servizi di revisione editoriale per riviste scientifiche ed editori internazionali."
+              : "Editorial peer-review services for international scientific journals and publishers."}
+          </p>
+        </div>
+
+        {gruppiRevisioni.map((gruppo) => (
+          <div class="anno-rev relative grid grid-cols-1 border-t border-ink/15 pt-10 pb-16 first:border-t-0 first:pt-0" data-anno={gruppo.anno}>
+            <div
+              class="anno__watermark col-start-1 row-start-1 sticky top-16 right-0 self-start text-right select-none font-display text-[clamp(10.5rem,34vw,24rem)] leading-none text-ink/[0.045] tracking-tight z-0 overflow-hidden cursor-pointer"
+              data-anno={gruppo.anno}
+              role="button"
+              tabindex="0"
+              aria-label={`Filter all work from ${gruppo.anno}`}
+            >
+              {gruppo.anno}
+            </div>
+
+            <div class="relative z-10 col-start-1 row-start-1">
+              <ul class="divide-y divide-ink/10">
+                {gruppo.voci.map((rev) => (
+                  <li class="py-5">
+                    <h3 class="text-base font-medium text-ink">{rev.rivista}</h3>
+                    <p class="text-sm text-ink/65">{rev.editore}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        ))}
+      </section>
+    </main>
+
+    <Footer />
+  </body>
+</html>
+
+<style>
+  .anno:not(:has(.voce:not([hidden]))) {
+    display: none;
+  }
+
+  .anno--filtro-nascosto {
+    display: none !important;
+  }
+
+  .filtri [data-filtro] {
+    transition:
+      opacity 250ms ease-out,
+      max-width 250ms ease-out,
+      padding-left 250ms ease-out,
+      padding-right 250ms ease-out,
+      margin-left 250ms ease-out;
+    max-width: 20rem;
+    overflow: hidden;
+  }
+
+  .filtri [data-filtro].filtro--nascosto-anno {
+    opacity: 0;
+    max-width: 0;
+    padding-left: 0;
+    padding-right: 0;
+    margin-left: 0;
+    pointer-events: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .filtri [data-filtro] {
+      transition: none;
+    }
+  }
+
+  .anno > .col-start-1.z-10,
+  .anno-rev > .col-start-1.z-10 {
+    pointer-events: none;
+  }
+  .anno > .col-start-1.z-10 a,
+  .anno > .col-start-1.z-10 button,
+  .anno-rev > .col-start-1.z-10 a,
+  .anno-rev > .col-start-1.z-10 button,
+  .anno > .col-start-1.z-10 :global(a),
+  .anno > .col-start-1.z-10 :global(button),
+  .anno-rev > .col-start-1.z-10 :global(a),
+  .anno-rev > .col-start-1.z-10 :global(button) {
+    pointer-events: auto;
+  }
+
+  .anno__watermark {
+    transition: color 480ms cubic-bezier(0.33, 1, 0.68, 1);
+  }
+
+  .anno__watermark[aria-pressed='true'] {
+    color: color-mix(in srgb, currentColor 12%, transparent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .anno__watermark {
+      transition: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .voce--entra {
+      animation: voce-entra 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+  }
+
+  @keyframes voce-entra {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+</style>
+
+<script>
+  let staccaResize: (() => void) | undefined;
+  let riapplicaFiltroTipo: (() => void) | undefined;
+  let vociFuoriTipo: (() => HTMLElement[]) | undefined;
+  let bottoniFiltroTipo: HTMLButtonElement[] | undefined;
+  let posizionaPernoTipo: ((bottone: HTMLButtonElement) => void) | undefined;
+  let tipoSalvatoPerAnno: string | null = null;
+  let turnoRipristinoPerno = 0;
+  const DURATA_ESPANSIONE_FILTRO_TIPO = 260;
+
+  function entraModalitaAnno() {
+    const tutti = bottoniFiltroTipo?.find((b) => b.dataset.filtro === 'tutti');
+    if (!bottoniFiltroTipo || !posizionaPernoTipo || !tutti) return;
+    turnoRipristinoPerno++;
+    tipoSalvatoPerAnno =
+      bottoniFiltroTipo.find((b) => b.getAttribute('aria-pressed') === 'true')?.dataset.filtro ?? 'tutti';
+    bottoniFiltroTipo.forEach((b) => {
+      b.setAttribute('aria-pressed', String(b === tutti));
+      b.classList.toggle('filtro--nascosto-anno', b !== tutti);
+    });
+    posizionaPernoTipo(tutti);
+  }
+
+  function esciModalitaAnno() {
+    if (!bottoniFiltroTipo || !posizionaPernoTipo) return;
+    const scelto = bottoniFiltroTipo.find((b) => b.dataset.filtro === tipoSalvatoPerAnno) ?? bottoniFiltroTipo[0];
+    bottoniFiltroTipo.forEach((b) => {
+      b.classList.remove('filtro--nascosto-anno');
+      b.setAttribute('aria-pressed', String(b === scelto));
+    });
+    const mioTurno = ++turnoRipristinoPerno;
+    setTimeout(() => {
+      if (mioTurno !== turnoRipristinoPerno) return;
+      posizionaPernoTipo?.(scelto);
+    }, DURATA_ESPANSIONE_FILTRO_TIPO);
+    tipoSalvatoPerAnno = null;
+  }
+
+  function iniziaFiltri() {
+    const barra = document.querySelector<HTMLElement>('[data-filtri]');
+    const perno = barra?.querySelector<HTMLElement>('[data-filtri-perno]');
+    const voci = Array.from(document.querySelectorAll<HTMLElement>('.voce'));
+
+    if (!barra || !perno || !voci.length) return;
+
+    const bottoni = Array.from(barra.querySelectorAll<HTMLButtonElement>('[data-filtro]'));
+
+    function posizionaPerno(bottone: HTMLButtonElement) {
+      perno!.style.left = `${bottone.offsetLeft}px`;
+      perno!.style.width = `${bottone.offsetWidth}px`;
+      perno!.style.opacity = '1';
+    }
+
+    function animaComparsa(vociMostrate: HTMLElement[]) {
+      vociMostrate.forEach((voce, indice) => {
+        voce.style.animationDelay = `${Math.min(indice, 8) * 25}ms`;
+        voce.classList.remove('voce--entra');
+        void voce.offsetWidth;
+        voce.classList.add('voce--entra');
+      });
+    }
+
+    bottoniFiltroTipo = bottoni;
+    posizionaPernoTipo = posizionaPerno;
+
+    bottoni.forEach((bottone) => {
+      bottone.addEventListener('click', () => {
+        if (document.body.dataset.filtroAnno) return;
+        const scelto = bottone.dataset.filtro;
+
+        bottoni.forEach((b) => b.setAttribute('aria-pressed', String(b === bottone)));
+        posizionaPerno(bottone);
+
+        const mostrate: HTMLElement[] = [];
+        voci.forEach((voce) => {
+          const visibile = scelto === 'tutti' || voce.dataset.tipo === scelto;
+          voce.hidden = !visibile;
+          if (visibile) mostrate.push(voce);
+        });
+        animaComparsa(mostrate);
+      });
+    });
+
+    const attivo = bottoni.find((b) => b.getAttribute('aria-pressed') === 'true');
+    if (attivo) posizionaPerno(attivo);
+
+    const tipoScelto = () =>
+      bottoni.find((b) => b.getAttribute('aria-pressed') === 'true')?.dataset.filtro ?? 'tutti';
+
+    riapplicaFiltroTipo = () => {
+      const scelto = tipoScelto();
+      voci.forEach((voce) => {
+        voce.hidden = !(scelto === 'tutti' || voce.dataset.tipo === scelto);
+      });
+    };
+
+    vociFuoriTipo = () => {
+      const scelto = tipoSalvatoPerAnno ?? tipoScelto();
+      return scelto === 'tutti' ? [] : voci.filter((voce) => voce.dataset.tipo !== scelto);
+    };
+
+    staccaResize?.();
+    const alRedimensionamento = () => {
+      const attivo = bottoni.find((b) => b.getAttribute('aria-pressed') === 'true');
+      if (attivo) posizionaPerno(attivo);
+    };
+    window.addEventListener('resize', alRedimensionamento);
+    staccaResize = () => window.removeEventListener('resize', alRedimensionamento);
+  }
+
+  document.addEventListener('DOMContentLoaded', iniziaFiltri);
+  document.addEventListener('astro:page-load', iniziaFiltri);
+
+  let staccaClickAnno: (() => void) | undefined;
+  const DURATA_USCITA = 150;
+  const DURATA_RIENTRO = 400;
+  const CURVA = 'cubic-bezier(0.22, 1, 0.36, 1)';
+  const SPOSTAMENTO_MASSIMO = 1.5;
+  const SELETTORE_MOBILE = '.anno, .anno-rev, [data-sezione-testa], .voce';
+
+  let animazioni: Animation[] = [];
+  let transizioneCorrente = 0;
+
+  function fermaAnimazioni() {
+    animazioni.forEach((a) => a.cancel());
+    animazioni = [];
+  }
+
+  const motoRidotto = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const inPagina = (el: HTMLElement) => {
+    const r = el.getBoundingClientRect();
+    return Boolean(r.width || r.height);
+  };
+
+  function fotografa(): Map<HTMLElement, DOMRect> {
+    const posizioni = new Map<HTMLElement, DOMRect>();
+    document.querySelectorAll<HTMLElement>(SELETTORE_MOBILE).forEach((el) => {
+      const r = el.getBoundingClientRect();
+      if (r.width || r.height) posizioni.set(el, r);
+    });
+    return posizioni;
+  }
+
+  function offsetAntenato(el: HTMLElement, reso: Map<HTMLElement, { dx: number; dy: number }>) {
+    for (let p = el.parentElement; p; p = p.parentElement) {
+      const r = reso.get(p);
+      if (r) return r;
+    }
+    return { dx: 0, dy: 0 };
+  }
+
+  function discendeDa(el: HTMLElement, insieme: Set<HTMLElement>) {
+    for (let p = el.parentElement; p; p = p.parentElement) if (insieme.has(p)) return true;
+    return false;
+  }
+
+  function inUscita(anno: string | null): HTMLElement[] {
+    if (anno === null) return (vociFuoriTipo?.() ?? []).filter(inPagina);
+
+    const fuori: HTMLElement[] = [];
+    document.querySelectorAll<HTMLElement>('main > section').forEach((sezione) => {
+      const blocchi = Array.from(sezione.querySelectorAll<HTMLElement>('.anno, .anno-rev'));
+      const superstiti = blocchi.filter((b) => b.dataset.anno === anno);
+      if (!superstiti.length) fuori.push(sezione);
+      else fuori.push(...blocchi.filter((b) => !superstiti.includes(b)));
+    });
+    return fuori.filter(inPagina);
+  }
+
+  function ancoraScorrimento(chiave: string | null, prima: Map<HTMLElement, DOMRect>) {
+    if (!chiave) return;
+    const blocco = document.querySelector<HTMLElement>(
+      `.anno[data-anno="${chiave}"], .anno-rev[data-anno="${chiave}"]`,
+    );
+    const topPrima = blocco ? prima.get(blocco)?.top : undefined;
+    if (!blocco || topPrima === undefined) return;
+    const scarto = blocco.getBoundingClientRect().top - topPrima;
+    if (scarto) window.scrollBy({ top: scarto, behavior: 'instant' as ScrollBehavior });
+  }
+
+  function ricomponi(prima: Map<HTMLElement, DOMRect>) {
+    const dopo = fotografa();
+    const vh = window.innerHeight;
+    const fuoriCampo = (r: DOMRect) => r.bottom < 0 || r.top > vh;
+    const reso = new Map<HTMLElement, { dx: number; dy: number }>();
+    const saltati: HTMLElement[] = [];
+
+    dopo.forEach((finale, el) => {
+      const iniziale = prima.get(el);
+      if (!iniziale) return;
+      const eredita = offsetAntenato(el, reso);
+      const dx = iniziale.left - finale.left;
+      const dy = iniziale.top - finale.top;
+
+      if (!dx && !dy) {
+        reso.set(el, eredita);
+        return;
+      }
+      if (Math.abs(dy) > vh * SPOSTAMENTO_MASSIMO || (fuoriCampo(iniziale) && fuoriCampo(finale))) {
+        reso.set(el, eredita);
+        if (!fuoriCampo(finale)) saltati.push(el);
+        return;
+      }
+
+      reso.set(el, { dx, dy });
+      animazioni.push(
+        el.animate(
+          [
+            { transform: `translate(${dx - eredita.dx}px, ${dy - eredita.dy}px)` },
+            { transform: 'translate(0px, 0px)' },
+          ],
+          { duration: DURATA_RIENTRO, easing: CURVA },
+        ),
+      );
+    });
+
+    const comparse = saltati.concat(Array.from(dopo.keys()).filter((el) => !prima.has(el)));
+    const insiemeComparse = new Set(comparse);
+    comparse.forEach((el) => {
+      if (discendeDa(el, insiemeComparse) || fuoriCampo(dopo.get(el)!)) return;
+      animazioni.push(
+        el.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], {
+          duration: DURATA_RIENTRO,
+          easing: CURVA,
+          delay: 60,
+          fill: 'backwards',
+        }),
+      );
+    });
+  }
+
+  function applicaFiltroAnno(anno: string | null) {
+    const precedente = document.body.dataset.filtroAnno ?? null;
+
+    if (anno) {
+      document.body.dataset.filtroAnno = anno;
+      document.querySelectorAll<HTMLElement>('.voce[hidden]').forEach((voce) => {
+        voce.hidden = false;
+      });
+      if (!precedente) entraModalitaAnno();
+    } else {
+      delete document.body.dataset.filtroAnno;
+      if (precedente) esciModalitaAnno();
+      riapplicaFiltroTipo?.();
+    }
+
+    document.querySelectorAll<HTMLElement>('.anno, .anno-rev').forEach((blocco) => {
+      blocco.classList.toggle('anno--filtro-nascosto', anno !== null && blocco.dataset.anno !== anno);
+    });
+
+    document.querySelectorAll<HTMLElement>('.anno__watermark').forEach((marca) => {
+      marca.setAttribute('aria-pressed', String(marca.dataset.anno === anno));
+    });
+
+    document.querySelectorAll<HTMLElement>('main > section').forEach((sezione) => {
+      sezione.hidden = anno !== null && !sezione.querySelector('.anno:not(.anno--filtro-nascosto), .anno-rev:not(.anno--filtro-nascosto)');
+    });
+  }
+
+  async function impostaFiltroAnno(anno: string | null) {
+    const precedente = document.body.dataset.filtroAnno ?? null;
+    if (anno === precedente) return;
+
+    if (motoRidotto()) {
+      applicaFiltroAnno(anno);
+      return;
+    }
+
+    fermaAnimazioni();
+    const mia = ++transizioneCorrente;
+
+    const vh = window.innerHeight;
+    const daDissolvere = inUscita(anno).filter((el) => {
+      const r = el.getBoundingClientRect();
+      return r.bottom > 0 && r.top < vh;
+    });
+
+    if (daDissolvere.length) {
+      const dissolvenze = daDissolvere.map((el) =>
+        el.animate([{ opacity: 1 }, { opacity: 0 }], {
+          duration: DURATA_USCITA,
+          easing: 'ease-out',
+          fill: 'forwards',
+        }),
+      );
+      animazioni.push(...dissolvenze);
+      await Promise.allSettled(dissolvenze.map((a) => a.finished));
+      if (mia !== transizioneCorrente) return;
+    }
+
+    const prima = fotografa();
+    applicaFiltroAnno(anno);
+    ancoraScorrimento(anno ?? precedente, prima);
+    daDissolvere.forEach((el) => el.getAnimations().forEach((a) => a.cancel()));
+    ricomponi(prima);
+  }
+
+  function iniziaFiltroAnno() {
+    staccaClickAnno?.();
+
+    const gestisciAttivazione = (target: HTMLElement) => {
+      const marca = target.closest<HTMLElement>('.anno__watermark');
+      if (marca) {
+        const anno = marca.dataset.anno ?? null;
+        const attivo = document.body.dataset.filtroAnno ?? null;
+        impostaFiltroAnno(attivo === anno ? null : anno);
+        return true;
+      }
+      return false;
+    };
+
+    const alClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (gestisciAttivazione(target)) return;
+      if (document.body.dataset.filtroAnno && !target.closest('.voce, li, [data-filtri]')) {
+        impostaFiltroAnno(null);
+      }
+    };
+
+    const alTasto = (e: KeyboardEvent) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const target = e.target as HTMLElement;
+      if (target.classList.contains('anno__watermark')) {
+        e.preventDefault();
+        gestisciAttivazione(target);
+      }
+    };
+
+    document.addEventListener('click', alClick);
+    document.addEventListener('keydown', alTasto);
+    staccaClickAnno = () => {
+      document.removeEventListener('click', alClick);
+      document.removeEventListener('keydown', alTasto);
+    };
+  }
+
+  document.addEventListener('DOMContentLoaded', iniziaFiltroAnno);
+  document.addEventListener('astro:page-load', iniziaFiltroAnno);
+</script>

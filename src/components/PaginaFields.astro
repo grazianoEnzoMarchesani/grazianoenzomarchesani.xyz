@@ -1,0 +1,129 @@
+---
+import BaseHead from './BaseHead.astro';
+import '../styles/global.css';
+import Nav from './Nav.astro';
+import Footer from './Footer.astro';
+import FieldTransitionOverlay from './FieldTransitionOverlay.astro';
+import { FIELD_CATEGORY_ORDER } from '../data/fields';
+import { getFieldsTimeline } from '../data/fields-content';
+import { type Lingua, linguaDefault, t } from '../i18n/testi';
+
+interface Props {
+	lingua?: Lingua;
+}
+
+const { lingua = (Astro.currentLocale as Lingua) || linguaDefault } = Astro.props;
+const timeline = await getFieldsTimeline(lingua);
+const titolo = t('fields.titolo', lingua);
+
+const categoryLabels: Record<string, string> = {
+	research: t('fields.research', lingua),
+	tools: t('fields.tools', lingua),
+	teaching: t('fields.teaching', lingua),
+	projects: t('fields.projects', lingua),
+};
+---
+
+<html lang={lingua}>
+	<head>
+		<BaseHead title={`${titolo} — Graziano Enzo Marchesani`} />
+	</head>
+	<body class="bg-paper text-ink font-sans">
+		<FieldTransitionOverlay />
+		<Nav lingua={lingua} />
+
+		<main data-lingua={lingua}>
+			<section id="fields-pin" class="relative h-dvh w-full overflow-hidden" aria-hidden="true">
+				<canvas id="fields-canvas" class="absolute inset-0 h-full w-full"></canvas>
+				<div id="fields-labels" class="pointer-events-none absolute inset-0 h-full w-full overflow-hidden" aria-hidden="true"></div>
+			</section>
+
+			<ul
+				id="fields-list"
+				class="sr-only mx-auto max-w-2xl space-y-12 px-6 pt-28 pb-24 sm:px-10"
+				aria-label="Elenco cronologico dei contenuti Fields"
+			>
+				{timeline.map((yearData) => (
+					<li>
+						<span class="font-display text-3xl">{yearData.year}</span>
+						<ul class="mt-4 space-y-6">
+							{FIELD_CATEGORY_ORDER.map((category) => {
+								const items = yearData.markers.filter((m) => m.category === category);
+								if (items.length === 0) return null;
+								return (
+									<li>
+										<span class="text-xs uppercase tracking-widest opacity-60">{categoryLabels[category]}</span>
+										<ul class="mt-2 space-y-1">
+											{items.map((m) => <li class="text-sm">{m.title}</li>)}
+										</ul>
+									</li>
+								);
+							})}
+						</ul>
+					</li>
+				))}
+			</ul>
+
+			<script type="application/json" id="fields-data" is:inline set:html={JSON.stringify(timeline)} />
+		</main>
+
+		<Footer />
+	</body>
+</html>
+
+<script>
+	import { gsap } from 'gsap';
+	import { navigate } from 'astro:transitions/client';
+	import { initFieldsSpiral, OPEN_ZOOM_DURATION_MS } from '../scripts/fields-spiral';
+	import type { FieldYear } from '../data/fields';
+
+	let spiralHandle: { destroy: () => void } | undefined;
+
+	function setup() {
+		spiralHandle?.destroy();
+		spiralHandle = undefined;
+
+		const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		const list = document.getElementById('fields-list');
+		const pinSection = document.getElementById('fields-pin');
+		const main = document.querySelector('main[data-lingua]');
+		const lingua = main?.getAttribute('data-lingua') || 'en';
+
+		if (prefersReducedMotion) {
+			pinSection?.remove();
+			list?.classList.remove('sr-only');
+			list?.removeAttribute('aria-hidden');
+		} else {
+			const canvas = document.getElementById('fields-canvas');
+			const labelsContainer = document.getElementById('fields-labels');
+
+			if (canvas instanceof HTMLCanvasElement && pinSection) {
+				const dataEl = document.getElementById('fields-data');
+				const timeline: FieldYear[] = dataEl ? JSON.parse(dataEl.textContent ?? '[]') : [];
+
+				spiralHandle = initFieldsSpiral({
+					canvas,
+					pinSection,
+					labelsContainer: labelsContainer ?? undefined,
+					timeline,
+					onOpenMarker: async (marker, playZoom) => {
+						sessionStorage.setItem('fields-target-marker', marker.id);
+						const overlay = document.getElementById('field-transition-overlay');
+						const fadeIn = overlay
+							? gsap.to(overlay, {
+									opacity: 1,
+									duration: OPEN_ZOOM_DURATION_MS / 1000,
+									ease: 'power2.in',
+								})
+							: null;
+						await Promise.all([playZoom(), fadeIn?.then(() => {})]);
+						const targetUrl = lingua === 'it' ? `/it/fields/${marker.id}` : `/fields/${marker.id}`;
+						navigate(targetUrl);
+					},
+				});
+			}
+		}
+	}
+
+	document.addEventListener('astro:page-load', setup);
+</script>

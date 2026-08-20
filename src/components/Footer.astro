@@ -1,8 +1,48 @@
 ---
+interface Props {
+	showRss?: boolean;
+}
+
 const email = 'graziano.marchesani@unicam.it';
+const pathname = Astro.url.pathname;
+const isFields = pathname === '/fields' || pathname.startsWith('/fields/') || pathname === '/it/fields' || pathname.startsWith('/it/fields/');
+const { showRss = isFields } = Astro.props;
 ---
 
-<footer class="pointer-events-none fixed inset-x-0 bottom-0 z-20 flex justify-center px-6 py-4 text-xs uppercase tracking-widest sm:justify-end sm:px-10">
+<footer
+	class:list={[
+		'pointer-events-none fixed inset-x-0 bottom-0 z-20 flex items-center px-6 py-4 text-xs uppercase tracking-widest sm:px-10',
+		showRss ? 'justify-between' : 'justify-center sm:justify-end',
+	]}
+>
+	{
+		showRss && (
+			<a
+				href="/rss.xml"
+				target="_blank"
+				rel="alternate"
+				type="application/rss+xml"
+				title="RSS Feed"
+				class="pointer-events-auto flex items-center gap-1.5 opacity-70 hover:opacity-100 transition-opacity"
+			>
+				<svg
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="1.5"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					class="h-3 w-3"
+					aria-hidden="true"
+				>
+					<path d="M4 11a9 9 0 0 1 9 9" />
+					<path d="M4 4a16 16 0 0 1 16 16" />
+					<circle cx="5" cy="19" r="1" fill="currentColor" stroke="none" />
+				</svg>
+				<span>RSS</span>
+			</a>
+		)
+	}
 	<a href={`mailto:${email}`} class="pointer-events-auto hover:opacity-60 transition-opacity">
 		{email}
 	</a>

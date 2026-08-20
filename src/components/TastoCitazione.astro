@@ -1,13 +1,17 @@
 ---
 import { generaCitazioni, stiliCitazione, etichettaStile, type TipoCitabile, type VoceCitabile } from "../lib/citazioni";
+import { type Lingua, linguaDefault, t } from "../i18n/testi";
 
 interface Props {
   voce: VoceCitabile;
   tipo: TipoCitabile;
+  lingua?: Lingua;
 }
 
-const { voce, tipo } = Astro.props;
+const { voce, tipo, lingua = (Astro.currentLocale as Lingua) || linguaDefault } = Astro.props;
 const citazioni = generaCitazioni(voce, tipo);
+const etichettaCite = t('publications.copiaCitazione', lingua);
+const etichettaCopied = t('publications.copiato', lingua);
 ---
 
 <div class="cita relative inline-flex items-center" data-cita>
@@ -44,7 +48,7 @@ const citazioni = generaCitazioni(voce, tipo);
       aria-label={`Open citation formats for: ${voce.titolo}`}
     >
       <span class="cita__icon inline-block text-[11px] opacity-40 transition-transform duration-300 ease-out" aria-hidden="true">+</span>
-      <span>Cite</span>
+      <span>{etichettaCite}</span>
     </button>
   </div>
 
@@ -55,7 +59,7 @@ const citazioni = generaCitazioni(voce, tipo);
     role="status"
     aria-live="polite"
   >
-    Copied!
+    {etichettaCopied}
   </span>
 </div>
 

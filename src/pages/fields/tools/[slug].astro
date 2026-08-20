@@ -1,90 +1,14 @@
 ---
-import { ClientRouter } from 'astro:transitions';
-import { getCollection, render } from 'astro:content';
-import { getAdjacentFieldMarker } from '../../../data/fields-content';
-import '../../../styles/global.css';
-import Nav from '../../../components/Nav.astro';
-import Footer from '../../../components/Footer.astro';
-import FieldTransitionOverlay from '../../../components/FieldTransitionOverlay.astro';
-import FieldArticleNavigation from '../../../components/FieldArticleNavigation.astro';
-import FieldArticleBody from '../../../components/FieldArticleBody.astro';
+import { getCollection } from 'astro:content';
+import { perLingua } from '../../../lib/contenuti';
+import PaginaToolsDettaglio from '../../../components/PaginaToolsDettaglio.astro';
 
 export async function getStaticPaths() {
-	const entries = await getCollection('tools');
-	return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+	const entries = perLingua(await getCollection('tools'), 'en');
+	return entries.map((entry) => ({ params: { slug: entry.chiave }, props: { entry } }));
 }
 
 const { entry } = Astro.props;
-const currentId = `tools/${entry.id}`;
-const { next, prev } = await getAdjacentFieldMarker(currentId);
-const { Content } = await render(entry);
-
-const { nome, sommario, data, linguaggio, ambiente, repo, doi, sito, licenza } = entry.data;
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>{nome} — Graziano Enzo Marchesani</title>
-		<ClientRouter />
-	</head>
-	<body class="bg-paper text-ink font-sans">
-		<FieldTransitionOverlay />
-		<Nav />
-
-		<main class="mx-auto max-w-2xl px-6 pt-32 pb-24 sm:px-10">
-			<p class="text-xs uppercase tracking-widest opacity-60">Tools · {data.getFullYear()}</p>
-			<h1 class="font-display mt-2 text-4xl">{nome}</h1>
-			<p class="mt-4 opacity-80">{sommario}</p>
-
-			<ul class="mt-4 flex flex-wrap gap-2">
-				{linguaggio && (
-					<li class="rounded-full border border-ink/20 px-3 py-1 text-xs uppercase tracking-widest opacity-70">
-						{linguaggio}
-					</li>
-				)}
-				{ambiente.map((a) => (
-					<li class="rounded-full border border-ink/20 px-3 py-1 text-xs uppercase tracking-widest opacity-70">
-						{a}
-					</li>
-				))}
-			</ul>
-
-			<FieldArticleBody>
-				<Content />
-			</FieldArticleBody>
-
-			<ul class="mt-10 space-y-2 text-sm">
-				<li>
-					<a href={repo} class="underline hover:opacity-60" target="_blank" rel="noopener noreferrer">
-						Repository
-					</a>
-				</li>
-				{sito && (
-					<li>
-						<a href={sito} class="underline hover:opacity-60" target="_blank" rel="noopener noreferrer">
-							Website
-						</a>
-					</li>
-				)}
-				{doi && (
-					<li>
-						<a href={doi} class="underline hover:opacity-60" target="_blank" rel="noopener noreferrer">
-							DOI
-						</a>
-					</li>
-				)}
-				{licenza && <li class="opacity-70">License: {licenza}</li>}
-			</ul>
-
-			<FieldArticleNavigation currentId={currentId} next={next} prev={prev} />
-		</main>
-
-		<Footer />
-	</body>
-</html>
-
+<PaginaToolsDettaglio entry={entry} lingua="en" />

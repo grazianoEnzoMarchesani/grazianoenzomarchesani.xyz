@@ -1,0 +1,213 @@
+---
+import { Image } from 'astro:assets';
+import BaseHead from './BaseHead.astro';
+import '../styles/global.css';
+import Nav from './Nav.astro';
+import Footer from './Footer.astro';
+import ritratto from '../content/about/ritratto.png';
+import {
+  identita,
+  getBio,
+  profiliRicerca,
+  profiliSocial,
+  cv,
+  getPosizioni,
+  getFormazione,
+  getRiconoscimenti,
+} from '../lib/identita';
+import { type Lingua, linguaDefault, t } from '../i18n/testi';
+
+interface Props {
+  lingua?: Lingua;
+}
+
+const { lingua = (Astro.currentLocale as Lingua) || linguaDefault } = Astro.props;
+const bio = getBio(lingua);
+const posizioni = getPosizioni(lingua);
+const formazione = getFormazione(lingua);
+const riconoscimenti = getRiconoscimenti(lingua);
+
+const isIt = lingua === 'it';
+const ruolo = isIt ? identita.ruolo.it : identita.ruolo.en;
+const affiliazione = isIt ? identita.affiliazione.it : identita.affiliazione.en;
+---
+
+<html lang={lingua}>
+  <head>
+    <BaseHead
+      title={`${t('about.titolo', lingua)} — Graziano Enzo Marchesani`}
+      description={isIt ? "Architetto, ricercatore e dottore di ricerca in Pianificazione Urbana Sostenibile. Percorso accademico, posizioni, formazione e ricerca di Graziano Enzo Marchesani." : "Architect, researcher, and PhD in Sustainable Urban Planning. Academic journey, positions, education, and research background of Graziano Enzo Marchesani."}
+    />
+  </head>
+  <body class="bg-paper text-ink font-sans antialiased selection:bg-ink selection:text-paper">
+    <Nav lingua={lingua} />
+
+    <main class="mx-auto max-w-5xl px-6 pt-32 pb-32 sm:px-10">
+      {/* ---------------------------------------------------- Header */}
+      <header class="border-b border-ink/15 pb-10">
+        <p class="font-mono text-xs uppercase tracking-widest text-ink/60">
+          {t('about.titolo', lingua)} · {identita.citta}, Italy
+        </p>
+        <h1 class="font-display mt-3 text-[clamp(2.75rem,7vw,5.5rem)] leading-none tracking-normal uppercase">
+          {identita.nome}
+        </h1>
+        <p class="mt-5 max-w-2xl text-base leading-relaxed text-ink/80 sm:text-lg">
+          {ruolo} — {affiliazione}
+        </p>
+
+        {/* Profili e Contatti */}
+        <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2">
+          <span class="font-mono text-xs uppercase tracking-wider text-ink/50">{isIt ? 'Profili e collegamenti:' : 'Profiles & Social:'}</span>
+          {profiliRicerca.map((p) => (
+            <a
+              href={p.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-mono text-xs uppercase tracking-wider text-ink/70 transition-colors hover:text-ink hover:underline underline-offset-4"
+            >
+              {p.etichetta} ↗
+            </a>
+          ))}
+          {profiliSocial.map((s) => (
+            <a
+              href={s.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-mono text-xs uppercase tracking-wider text-ink/70 transition-colors hover:text-ink hover:underline underline-offset-4"
+            >
+              {s.etichetta} ↗
+            </a>
+          ))}
+        </div>
+      </header>
+
+      {/* ---------------------------------------------------- Griglia 2 Colonne */}
+      <div class="mt-14 grid gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-20">
+        {/* Colonna Sinistra: Ritratto + Bio + CV */}
+        <section aria-label={t('about.bio', lingua)}>
+          <div class="overflow-hidden rounded-2xl border border-ink/15 bg-ink/5">
+            <Image
+              src={ritratto}
+              alt="Graziano Enzo Marchesani"
+              width={800}
+              height={800}
+              format="webp"
+              quality={85}
+              class="w-full object-cover grayscale contrast-[1.04]"
+              loading="eager"
+            />
+          </div>
+
+          <div class="mt-8 space-y-4 text-[0.98rem] leading-relaxed text-ink/85 sm:text-base">
+            {bio.map((paragrafo) => (
+              <p>{paragrafo}</p>
+            ))}
+          </div>
+
+          <div class="mt-8 pt-2">
+            {cv.disponibile ? (
+              <a
+                href={cv.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-2 rounded-full border border-ink px-6 py-2.5 font-mono text-xs uppercase tracking-widest text-ink transition-colors hover:bg-ink hover:text-paper"
+              >
+                {t('about.scaricaCv', lingua)} ↗
+              </a>
+            ) : (
+              <span
+                class="inline-flex items-center gap-2 rounded-full border border-ink/20 px-6 py-2.5 font-mono text-xs uppercase tracking-widest text-ink/40 cursor-not-allowed select-none"
+                aria-disabled="true"
+                title={isIt ? "Versione pubblica del CV in preparazione" : "Public CV version currently in preparation"}
+              >
+                {t('about.scaricaCv', lingua)} ({isIt ? 'Su richiesta' : 'On request'})
+              </span>
+            )}
+          </div>
+        </section>
+
+        {/* Colonna Destra: Record strutturati (Posizioni, Formazione, Riconoscimenti) */}
+        <div class="space-y-16">
+          {/* Sezione Posizioni */}
+          <section aria-label={t('about.posizioni', lingua)}>
+            <h2 class="font-mono text-xs uppercase tracking-widest text-ink/60 pb-3 border-b border-ink/15">
+              {t('about.posizioni', lingua)}
+            </h2>
+            <ul class="divide-y divide-ink/10">
+              {posizioni.map((p) => (
+                <li class="py-5 first:pt-4">
+                  <div class="flex items-center gap-2.5 font-mono text-xs text-ink/60">
+                    <span>{p.anni}</span>
+                    {p.attivo && (
+                      <span class="inline-flex items-center rounded-full bg-ink px-2 py-0.5 text-[0.65rem] font-mono font-medium uppercase tracking-wider text-paper">
+                        {t('about.inCorso', lingua)}
+                      </span>
+                    )}
+                  </div>
+                  <h3 class="mt-2 text-base font-medium leading-snug text-ink">
+                    {p.titolo}
+                  </h3>
+                  <p class="mt-1 text-sm leading-relaxed text-ink/65">
+                    {p.ente}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          {/* Sezione Formazione */}
+          <section aria-label={t('about.formazione', lingua)}>
+            <h2 class="font-mono text-xs uppercase tracking-widest text-ink/60 pb-3 border-b border-ink/15">
+              {t('about.formazione', lingua)}
+            </h2>
+            <ul class="divide-y divide-ink/10">
+              {formazione.map((f) => (
+                <li class="py-5 first:pt-4">
+                  <p class="font-mono text-xs text-ink/60">{f.anno}</p>
+                  <h3 class="mt-2 text-base font-medium leading-snug text-ink">
+                    {f.titolo}
+                  </h3>
+                  <p class="mt-1 text-sm leading-relaxed text-ink/65">
+                    {f.ente}
+                    {f.esito && (
+                      <span class="font-mono text-xs text-ink/80"> · {f.esito}</span>
+                    )}
+                  </p>
+                  {f.tesi && (
+                    <p class="mt-2 text-xs italic leading-relaxed text-ink/75">
+                      {isIt ? 'Tesi:' : 'Thesis:'} {f.tesi}
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          {/* Sezione Riconoscimenti */}
+          <section aria-label={t('about.riconoscimenti', lingua)}>
+            <h2 class="font-mono text-xs uppercase tracking-widest text-ink/60 pb-3 border-b border-ink/15">
+              {t('about.riconoscimenti', lingua)}
+            </h2>
+            <ul class="divide-y divide-ink/10">
+              {riconoscimenti.map((r) => (
+                <li class="py-5 first:pt-4">
+                  <p class="font-mono text-xs text-ink/60">{r.anno}</p>
+                  <h3 class="mt-2 text-base font-medium leading-snug text-ink">
+                    {r.titolo}
+                  </h3>
+                  {r.esito && (
+                    <p class="mt-1 font-mono text-xs uppercase tracking-wider text-ink/80">
+                      {r.esito}
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <Footer />
+  </body>
+</html>

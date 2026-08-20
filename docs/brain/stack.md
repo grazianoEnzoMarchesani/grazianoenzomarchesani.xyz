@@ -25,7 +25,21 @@ Vedi [constraints.md](constraints.md) per i vincoli che hanno guidato queste sce
 
 ## Contenuti
 
-- **Astro Content Collections** (nativo). Nessun CMS esterno per ora.
+- **Astro Content Collections** (nativo) con **`loaderBilingue()`** custom (`src/lib/loader-bilingue.ts`): estrae entrambe le lingue da un unico file `.mdx` tramite token `$$$` (nel frontmatter e nel corpo), generando `en/<slug>` e `it/<slug>` con fallback trasparente a `en`. Nessun CMS esterno per ora.
+- **`@astrojs/rss`** (aggiunto 2026-08-20) — generatore ufficiale di feed RSS integrato con le Content Collections di Astro; produce `/rss.xml` e `/fields/rss.xml` con foglio di stile XSLT personalizzato `public/rss.xsl`.
+
+## Bilingue & i18n
+
+- **Astro i18n nativo** (`astro.config.mjs`): `defaultLocale: 'en'`, `locales: ['en', 'it']`, `routing: { prefixDefaultLocale: false, fallbackType: 'rewrite' }`, `fallback: { it: 'en' }`.
+- **Dizionario UI** (`src/i18n/testi.ts`): dizionario tipizzato zero-dipendenze con helper `t(chiave, lingua)` e calcolo dinamico dell'URL opposto per il selettore di lingua `EN | IT` in `Nav.astro`.
+- **Query contenuti bilingue** (`src/lib/contenuti.ts`): `perLingua(voci, lingua)` per filtrare collezioni con fallback automatico e flag `tradotto`.
+
+## Ricerca Semantica Vettoriale Client-Side
+
+- **`@xenova/transformers` + ONNX Runtime WebAssembly** (aggiunto 2026-08-20):
+  - **Build-Time**: `scripts/genera-search-index.mjs` + `scripts/integrazione-ricerca.mjs` generano `public/search-index.json` con metadati e vettori di embedding (384 float normalizzati, `all-MiniLM-L6-v2`) per Research, Tools, Teaching, Projects, Pubblicazioni e Competenze in italiano e inglese.
+  - **In-Browser Runtime**: `src/scripts/search-worker.ts` e `src/scripts/search-client.ts` gestiscono la ricerca ibrida (matching testuale immediato in-memory unito al calcolo vettoriale della query in Web Worker per il calcolo della similarità coseno).
+  - **Interfaccia**: `SearchModal.astro` (Command Palette modale globale, richiamabile con `⌘K` o icona lente in `Nav.astro`).
 
 ## Immagini/performance
 
@@ -39,6 +53,7 @@ Vedi [constraints.md](constraints.md) per i vincoli che hanno guidato queste sce
   attuale (vedi [design.md](design.md)): **Anton** (`@fontsource/anton`,
   display/titoli) + **Inter Variable** (`@fontsource-variable/inter`,
   UI/testo).
+- **Preload Web Font critici**: configurati in `src/components/BaseHead.astro` con `<link rel="preload" as="font" type="font/woff2" crossorigin="anonymous">` per i file binari `.woff2` primari (`anton-latin-400-normal.woff2` e `inter-latin-wght-normal.woff2`), eliminando i flash di testo non formattato (FOUT) e garantendo il rendering immediato con font corretti fin dal primo frame sia in dev che in produzione.
 
 ## Build tooling
 

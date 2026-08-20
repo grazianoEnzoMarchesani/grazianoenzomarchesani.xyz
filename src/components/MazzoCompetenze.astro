@@ -1,17 +1,20 @@
 ---
 import { mazzoCompetenze } from '../lib/competenze';
+import { type Lingua } from '../i18n/testi';
 
 interface Props {
+  lingua?: Lingua;
   descrizione?: string;
   etichettaCollegate?: string;
 }
 
 const {
-  descrizione = 'Interactive deck of skills and interconnections',
-  etichettaCollegate = 'Connected skills',
+  lingua = (Astro.currentLocale as Lingua) || 'en',
+  descrizione = lingua === 'it' ? 'Mazzo interattivo di competenze e interconnessioni' : 'Interactive deck of skills and interconnections',
+  etichettaCollegate = lingua === 'it' ? 'Competenze collegate' : 'Connected skills',
 } = Astro.props;
 
-const competenze = mazzoCompetenze('en');
+const competenze = mazzoCompetenze(lingua);
 ---
 
 <div class="mazzo-competenze w-full" data-mazzo>

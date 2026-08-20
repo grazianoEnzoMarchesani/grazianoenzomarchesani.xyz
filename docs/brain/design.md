@@ -68,9 +68,9 @@ una sessione dedicata — non ancora fatto.
   sofisticazione dell'interfaccia sta nella pagina interna.
 - Ogni link ha un elemento minimo visibile (freccia) per accessibilità e
   focus da tastiera.
-- Nav fissa in alto con le stesse voci e tasto home con logo vettoriale geometrico del monogramma che sostituisce la sigla testuale `GM`. **`src/assets/logo.svg` è la fonte di verità unica** del logo (sessione 2026-08-19): `Nav.astro` importa il file grezzo (`?raw`) e lo inietta via `set:html` (classe `h-12 w-auto` sull'`<svg>` iniettato, colori del file rispettati as-is — non più `currentColor`/`fill-current`), transizione `hover:opacity-60` sul link, `aria-label="Graziano Enzo Marchesani - Home"`. `public/favicon.svg` e `public/favicon.ico` sono generati automaticamente a build time dallo stesso file sorgente (vedi [stack.md](stack.md)) — modificare `logo.svg` e rilanciare la build basta a propagare la modifica ovunque, nessun file da tenere sincronizzato a mano.
+- Nav fissa in alto con le stesse voci (localizzate `FIELDS`/`AMBITI`, `PUBLICATIONS`/`PUBBLICAZIONI`, `SKILLS`/`COMPETENZE`, `ABOUT`/`CHI SONO`) racchiuse in pillola borderless semi-trasparente `bg-paper/60 backdrop-blur-sm`, selettore di lingua compatto `EN | IT` in pillola borderless coordinata `bg-paper/60 backdrop-blur-sm` con stato attivo in contrasto `bg-ink text-paper` che commuta preservando la rotta corrente, e tasto home con logo vettoriale geometrico del monogramma che sostituisce la sigla testuale `GM`. **`src/assets/logo.svg` è la fonte di verità unica** del logo (sessione 2026-08-19): `Nav.astro` importa il file grezzo (`?raw`) e lo inietta via `set:html` (classe `h-12 w-auto` sull'`<svg>` iniettato, colori del file rispettati as-is — non più `currentColor`/`fill-current`), transizione `hover:opacity-60` sul link, `aria-label="Graziano Enzo Marchesani - Home"`. `public/favicon.svg` e `public/favicon.ico` sono generati automaticamente a build time dallo stesso file sorgente (vedi [stack.md](stack.md)) — modificare `logo.svg` e rilanciare la build basta a propagare la modifica ovunque, nessun file da tenere sincronizzato a mano.
 - Footer minimo persistente (`position: fixed`), solo email di contatto —
-  niente form integrato nelle schermate.
+  niente form integrato nelle schermate; include link/icona RSS solo su `/fields` e relative schede.
 - Dati reali (non segnaposto): identità e sezioni prese da
   `sitoBello2/src/content` (vedi [content-plan.md](content-plan.md)).
 
@@ -423,8 +423,19 @@ al setup, senza alcun listener di resize.
 - **Declinazione Paper & Ink minimale**: carte con base panna/paper, bordi sottili `border-ink/14`, tipografia Anton per i titoli e il numero di legami, indicatore di categoria in mono uppercase, e inversione selettiva a fondo scuro (`bg-ink text-paper`) per la carta centrale attiva nel ventaglio.
 - **Glossario editoriale a 3 famiglie**: sezione inferiore strutturata per famiglie (*Computing & building tools*, *Measuring the environment*, *Representing & sharing*) e relative 11 categorie con tutte le 32 descrizioni estese per massima accessibilità e indicizzazione SEO.
 
+## Ricerca Semantica & Command Palette (v1, implementata)
+
+- **Palette monocromatica rigorosa (Ink/Paper)**: il modale (`SearchModal.astro`) rispetta integralmente la regola dei due soli colori senza alcun accento cromatico.
+  - Indicatore di stato: in caricamento un pallino grigio tenue pulsante (`bg-ink/30 animate-pulse`); a regime un pallino nero pieno (`bg-ink`).
+  - Nessun colore di stato verde/arancione: l'interfaccia resta coerente con la natura sobria ed elegante del resto del sito.
+- **Scorciatoia adattiva per OS**: rileva il sistema operativo lato client — mostra `⌘K` su macOS/iOS e `Ctrl K` su Windows/Linux, sia nel pulsante in navbar sia nella scorciatoia da tastiera.
+- **Minimizzazione del carico visivo (`/ponytail`)**:
+  - Nessuna percentuale numerica visibile a schermo nei risultati (la graduatoria è già intrinsecamente ordinata per rilevanza semantica/lessicale decrescente).
+  - Badge lingua solo in modalità fallback: quando l'utente naviga in italiano, le schede mostrano un discreto badge `EN` esclusivamente per quegli articoli che non hanno una traduzione italiana, mentre non mostrano alcun badge superfluo per i contenuti regolari.
+
 ## Sospeso (da riprendere in sessioni future)
 
 - **Approfondimento tipografico** ("giochi" serif/sans più elaborati).
 - **Eventuale accento colore**, se emerge un'esigenza concreta.
+
 

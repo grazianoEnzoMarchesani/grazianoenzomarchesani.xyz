@@ -166,5 +166,43 @@ Log cronologico, append-only: una voce breve per sessione. Per lo stato attuale 
       - In cima (anno 2026, primo marker), il filo entra orizzontalmente dal bordo opposto alla prima ansa (da sinistra se l'ansa è a destra, a quota $Y=0$), attraversando il primo marker e procedendo verso la curva.
       - In fondo (ultimo anno in basso), il filo esce orizzontalmente con la tangente naturale dell'ultima ansa prolungandosi oltre lo schermo.
     - La modifica è confinata **esclusivamente alla polilinea visiva**: il posizionamento dei marker, il tracciamento della telecamera `ropePoint(t)` e i limiti di scroll $[0, 1]$ non sono alterati, così che con nessun scroll l'utente possa mai vedere l'estremità della corda.
-    - Verificato con `astro check` (0 errori) e `npm run build` (51 pagine statiche).
-
+  - **Feed RSS Unificato per Fields (`@astrojs/rss`, `src/lib/rss.ts`, `src/pages/rss.xml.ts`, `src/pages/fields/rss.xml.ts`, `src/components/Footer.astro`)**:
+    - Implementato feed RSS che aggrega cronologicamente tutti i contenuti delle quattro Content Collection di Fields (`research`, `tools`, `teaching`, `projects` — 46 schede totali).
+    - Configurato `site: 'https://grazianoenzomarchesani.xyz'` in `astro.config.mjs`.
+    - Endpoint principale a `/rss.xml` con alias route a `/fields/rss.xml`.
+    - Creato modulo server-side `src/lib/rss.ts` con normalizzazione delle date, categorizzazione e ordinamento discendente.
+    - Tag `<link rel="alternate" type="application/rss+xml" ...>` aggiunto nell'`<head>` di tutte le pagine per il rilevamento automatico da parte dei lettori di feed.
+    - Icona/link RSS con SVG discreta e accessibile aggiunta nel `Footer.astro` condiviso, configurata per comparire solo nella vista `/fields` e in tutte le relative schede/articoli (`/fields/**`), restando nascosta su Home, Publications, Skills e About.
+    - Creato foglio di stile XSLT `public/rss.xsl` con stile paper/ink, spiegazione di cos'è il feed per utenti non tecnici, box di copia URL ed elenco leggibile degli articoli, applicato automaticamente da Safari, Chrome ed Edge.
+    - Verificato con `astro check` (0 errori), `npm run build` (generati staticamente `dist/rss.xml` e `dist/fields/rss.xml` contenenti tutti i 46 item).
+  - **Infrastruttura Bilingue a File Unico (`$$$`) con Astro i18n (`src/lib/loader-bilingue.ts`, `src/lib/contenuti.ts`, `src/i18n/testi.ts`, `astro.config.mjs`)**:
+    - Implementato il supporto bilingue (EN default su `/`, IT su `/it/` con fallback trasparente ad EN se la traduzione manca).
+    - Portato e adattato per Astro 5 il loader custom `loaderBilingue()` (`src/lib/loader-bilingue.ts`), che legge file `.mdx`/`.md` unici ed estrae entrambe le versioni linguistiche tramite il token `$$$` nel frontmatter (`campo: "EN" $$$ "IT"`) e nel corpo (riga isolata `$$$`), generando per lo store Astro le due voci `en/<slug>` e `it/<slug>`.
+    - Riconvertiti tutti i 46 file `.mdx` di `src/content/{research,tools,teaching,projects}` fondendo la versione italiana originale con il formato `$$$`.
+    - Configurato `i18n` nativo in `astro.config.mjs` (`locales: ['en', 'it']`, `defaultLocale: 'en'`, `prefixDefaultLocale: false`, `fallbackType: 'rewrite'`, `fallback: { it: 'en' }`).
+    - Creato `src/lib/contenuti.ts` con funzioni `perLingua()`, `chiaveDi()`, `linguaDi()` e formattazione date localizzate con `Intl`.
+    - Creato dizionario tipizzato zero-dipendenze `src/i18n/testi.ts` con helper `t()` e `urlPerLingua()`.
+    - Aggiunto selettore di lingua `EN | IT` accessibile e compatto nella barra `Nav.astro`.
+    - Strutturate le pagine principali e i dettagli di Fields con componenti condivisi (`PaginaHome`, `PaginaFields`, `PaginaAbout`, `PaginaSkills`, `PaginaPublications`, `Pagina*Dettaglio`) sia su `/` che su `/it/`, azzerando la duplicazione del markup.
+    - Verificato con `npx astro check` (0 errori, 0 warning) e `npm run build` (102 pagine statiche generate con successo, sia in EN che in IT).
+  - **Rifinitura Estetica Navbar e Selettore Lingua (`src/components/Nav.astro`, `docs/brain/design.md`)**:
+    - Rimosso il bordo scuro (`border border-ink/20`) dal contenitore del selettore lingua, uniformandolo al principio progettuale "borderless" già adottato per il contatore e la barra filtri.
+    - Esteso lo sfondo traslucido panna con sfocatura (`bg-paper/60 rounded-full px-3.5 py-1 backdrop-blur-sm`) anche al gruppo delle voci di navigazione (`<ul>`), creando una coerenza visiva pulita tra i menu della navbar.
+    - Verificato con `astro check` (0 errori, 0 warning).
+  - **Ricerca Semantica Vettoriale Client-Side & Command Palette ⌘K (`scripts/genera-search-index.mjs`, `scripts/integrazione-ricerca.mjs`, `src/scripts/search-worker.ts`, `src/scripts/search-client.ts`, `src/components/SearchModal.astro`, `src/components/Nav.astro`)**:
+    - Sessione di `/grill-me` e `/ponytail`: implementato motore di ricerca interno basato su embedding vettoriali 100% statico e in-browser, compatibile con GitHub Pages senza richiedere alcun backend o API a pagamento.
+    - **Build-time indexer**: `scripts/genera-search-index.mjs` agganciato ad Astro via `scripts/integrazione-ricerca.mjs`. Estrae ed indicizza tutti i 248 contenuti (Research, Tools, Teaching, Projects, Pubblicazioni, Competenze) in italiano e inglese, calcola i vettori di embedding normalizzati (384 float, modello compatto `all-MiniLM-L6-v2`) e genera `public/search-index.json` con caching tramite hash manifest.
+    - **Web Worker & Transformers.js**: `src/scripts/search-worker.ts` carica on-demand nel browser la pipeline ONNX con cache IndexedDB persistente (download del modello solo all'apertura del search modal, zero impatto sulla normale velocità di caricamento delle pagine).
+    - **Motore ibrido a due livelli (`src/scripts/search-client.ts`)**: restituisce risultati lessicali istantanei (0ms) durante la digitazione e integra la similarità coseno vettoriale non appena il worker ha calcolato l'embedding della query.
+    - **Command Palette accessibile (`src/components/SearchModal.astro`)**: modale con scorciatoia `⌘K` / `Ctrl+K`, indicatore di stato del modello neurale, navigazione tastiera (frecce, invio, esc), badge di affinità percentuale, categoria e lingua.
+    - **Rifinitura monocromatica zero-accenti (`src/components/SearchModal.astro`)**: rimossi i colori verde/arancione di stato e dei badge percentuale, uniformando tutto alla palette rigorosa Ink/Paper a due toni del sito (pallino `bg-ink/30` pulsante in download, `bg-ink` solido pronto; badge `bg-ink/5 text-ink/70`).
+    - **Deduplicazione e Fallback Linguistico (`src/scripts/search-client.ts`)**: implementato il filtro per lingua corrente con deduplicazione (in `en` vengono mostrate solo le schede inglesi; in `it` viene mostrata la versione italiana o il fallback inglese se l'articolo non è tradotto, eliminando ogni risultato duplicato EN/IT per lo stesso contenuto).
+    - **Risoluzione FOUT (Flash of Unstyled Text) e Preload Web Font (`src/components/BaseHead.astro`, `src/styles/global.css`, `Pagina*.astro`)**:
+      - Diagnosticato il cambio di font all'avvio causato da `font-display: swap` in `@fontsource` e dall'assenza di preload dei binari `.woff2`.
+      - Creato il componente centralizzato [BaseHead.astro](file:///Users/grazianoenzomarchesani/Documents/GitHub/grazianoenzomarchesani.xyz/src/components/BaseHead.astro) contenente:
+        - Meta tag standard, favicon e link RSS.
+        - Preload prioritario asincrono dei file `.woff2` critici (`anton-latin-400-normal.woff2` e `inter-latin-wght-normal.woff2`) con `as="font" type="font/woff2" crossorigin="anonymous"`.
+        - Router nativo `<ClientRouter />` condiviso.
+      - Aggiornate tutte le 9 pagine e dettagli del sito ad utilizzare `<BaseHead />`.
+      - Aggiornato [PaginaHome.astro](file:///Users/grazianoenzomarchesani/Documents/GitHub/grazianoenzomarchesani.xyz/src/components/PaginaHome.astro) con il ciclo di vita `astro:page-load` e pulizia (`cleanup`) di ScrollTrigger e event listener durante le transizioni client.
+      - Verificato con `npx astro check` (0 errori, 0 warning) e `npm run build` (102 pagine statiche generate correttamente).

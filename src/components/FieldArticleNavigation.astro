@@ -1,16 +1,21 @@
 ---
 import type { FieldMarker } from '../data/fields';
+import { type Lingua, linguaDefault, t } from '../i18n/testi';
 
 interface Props {
 	currentId: string;
 	next?: FieldMarker;
 	prev?: FieldMarker;
+	lingua?: Lingua;
 }
 
-const { currentId, next } = Astro.props;
+const { currentId, next, lingua = (Astro.currentLocale as Lingua) || linguaDefault } = Astro.props;
+const isIt = lingua === 'it';
+const fieldsUrl = isIt ? '/it/fields' : '/fields';
+const nextUrl = next ? (isIt ? `/it/fields/${next.id}` : `/fields/${next.id}`) : '';
 ---
 
-<div id="overscroll-root" data-current-id={currentId} data-next-url={next ? `/fields/${next.id}` : ''} data-next-title={next?.title ?? ''}>
+<div id="overscroll-root" data-current-id={currentId} data-fields-url={fieldsUrl} data-next-url={nextUrl} data-next-title={next?.title ?? ''}>
 	<!-- Pull to return top indicator -->
 	<div
 		id="pull-top-indicator"
@@ -18,7 +23,7 @@ const { currentId, next } = Astro.props;
 		aria-hidden="true"
 	>
 		<span class="rounded-full border border-ink/20 bg-paper/95 px-4 py-1.5 text-xs uppercase tracking-widest text-ink shadow-sm backdrop-blur-sm">
-			↑ Release to return to Fields
+			{isIt ? '↑ Rilascia per tornare agli Ambiti' : '↑ Release to return to Fields'}
 		</span>
 	</div>
 
@@ -27,18 +32,18 @@ const { currentId, next } = Astro.props;
 		<button
 			id="back-to-fields-btn"
 			type="button"
-			class="inline-block text-left text-sm uppercase tracking-widest underline hover:opacity-60"
+			class="inline-block text-left text-sm uppercase tracking-widest underline hover:opacity-60 cursor-pointer"
 		>
-			← Back to Fields
+			← {t('fields.indietro', lingua)}
 		</button>
 
 		{next && (
 			<a
 				id="next-article-link"
-				href={`/fields/${next.id}`}
+				href={nextUrl}
 				class="inline-block text-left sm:text-right text-sm tracking-wide opacity-80 hover:opacity-100 group"
 			>
-				<span class="block text-xs uppercase tracking-widest opacity-60">Next Field Article ↓</span>
+				<span class="block text-xs uppercase tracking-widest opacity-60">{t('fields.successivo', lingua)} ↓</span>
 				<span class="underline group-hover:opacity-70">{next.title}</span>
 			</a>
 		)}
@@ -52,7 +57,7 @@ const { currentId, next } = Astro.props;
 			aria-hidden="true"
 		>
 			<span class="rounded-full border border-ink/20 bg-paper/95 px-4 py-1.5 text-xs uppercase tracking-widest text-ink shadow-sm backdrop-blur-sm">
-				↓ Release for next: {next.title}
+				{isIt ? `↓ Rilascia per il successivo: ${next.title}` : `↓ Release for next: ${next.title}`}
 			</span>
 		</div>
 	)}
@@ -67,6 +72,7 @@ const { currentId, next } = Astro.props;
 		if (!root) return;
 
 		const currentId = root.getAttribute('data-current-id') ?? '';
+		const fieldsUrl = root.getAttribute('data-fields-url') ?? '/fields';
 		const nextUrl = root.getAttribute('data-next-url') ?? '';
 		const backBtn = document.getElementById('back-to-fields-btn');
 		const nextLink = document.getElementById('next-article-link');
@@ -89,7 +95,7 @@ const { currentId, next } = Astro.props;
 			if (overlay) {
 				await gsap.to(overlay, { opacity: 1, duration: 0.3, ease: 'power1.in' });
 			}
-			navigate('/fields');
+			navigate(fieldsUrl);
 		}
 
 		async function goToNext() {
@@ -118,126 +124,106 @@ const { currentId, next } = Astro.props;
 		const THRESHOLD = 80;
 		let pullTopDistance = 0;
 		let pullBottomDistance = 0;
+		let isTrackingTouch = false;
 		let touchStartY = 0;
-		let isTouching = false;
 
-		function updateIndicators() {
-			if (topIndicator) {
-				if (pullTopDistance > 10) {
-					const progress = Math.min(pullTopDistance / THRESHOLD, 1);
-					topIndicator.style.opacity = `${progress}`;
-					topIndicator.style.transform = `translateY(${progress * 8}px)`;
-				} else {
-					topIndicator.style.opacity = '0';
-					topIndicator.style.transform = '-translateY(8px)';
-				}
-			}
-
-			if (bottomIndicator) {
-				if (pullBottomDistance > 10) {
-					const progress = Math.min(pullBottomDistance / THRESHOLD, 1);
-					bottomIndicator.style.opacity = `${progress}`;
-					bottomIndicator.style.transform = `translateY(${-progress * 8}px)`;
-				} else {
-					bottomIndicator.style.opacity = '0';
-					bottomIndicator.style.transform = 'translateY(8px)';
-				}
-			}
+		function updateTopIndicator(dist: number) {
+			if (!topIndicator) return;
+			const progress = Math.min(dist / THRESHOLD, 1);
+			topIndicator.style.opacity = progress.toString();
+			topIndicator.style.transform = `translateY(${progress * 12}px)`;
 		}
 
-		// Wheel / Trackpad overscroll
-		let wheelTimer: number | undefined;
+		function updateBottomIndicator(dist: number) {
+			if (!bottomIndicator) return;
+			const progress = Math.min(dist / THRESHOLD, 1);
+			bottomIndicator.style.opacity = progress.toString();
+			bottomIndicator.style.transform = `translateY(-${progress * 12}px)`;
+		}
 
-		function onWheel(e: WheelEvent) {
+		function handleWheel(e: WheelEvent) {
 			if (isNavigating) return;
-
 			const scrollTop = window.scrollY || document.documentElement.scrollTop;
 			const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-			const atTop = scrollTop <= 2;
-			const atBottom = scrollTop >= maxScroll - 2;
 
-			if (atTop && e.deltaY < 0) {
-				pullTopDistance += -e.deltaY;
-				updateIndicators();
+			// Top overscroll
+			if (scrollTop <= 1 && e.deltaY < 0) {
+				pullTopDistance += Math.abs(e.deltaY) * 0.4;
+				updateTopIndicator(pullTopDistance);
 				if (pullTopDistance >= THRESHOLD) {
-					pullTopDistance = 0;
-					updateIndicators();
 					goBackToFields();
-					return;
 				}
-			} else if (atBottom && e.deltaY > 0 && nextUrl) {
-				pullBottomDistance += e.deltaY;
-				updateIndicators();
+			} else if (pullTopDistance > 0 && e.deltaY > 0) {
+				pullTopDistance = Math.max(0, pullTopDistance - e.deltaY);
+				updateTopIndicator(pullTopDistance);
+			}
+
+			// Bottom overscroll (only if next article exists)
+			if (nextUrl && scrollTop >= maxScroll - 2 && e.deltaY > 0) {
+				pullBottomDistance += e.deltaY * 0.4;
+				updateBottomIndicator(pullBottomDistance);
 				if (pullBottomDistance >= THRESHOLD) {
-					pullBottomDistance = 0;
-					updateIndicators();
 					goToNext();
-					return;
 				}
-			} else {
-				pullTopDistance = Math.max(0, pullTopDistance - 15);
-				pullBottomDistance = Math.max(0, pullBottomDistance - 15);
-				updateIndicators();
-			}
-
-			window.clearTimeout(wheelTimer);
-			wheelTimer = window.setTimeout(() => {
-				pullTopDistance = 0;
-				pullBottomDistance = 0;
-				updateIndicators();
-			}, 250);
-		}
-
-		// Touch swipe / pull
-		function onTouchStart(e: TouchEvent) {
-			if (e.touches.length === 1) {
-				touchStartY = e.touches[0].clientY;
-				isTouching = true;
+			} else if (pullBottomDistance > 0 && e.deltaY < 0) {
+				pullBottomDistance = Math.max(0, pullBottomDistance + e.deltaY);
+				updateBottomIndicator(pullBottomDistance);
 			}
 		}
 
-		function onTouchMove(e: TouchEvent) {
-			if (!isTouching || isNavigating) return;
-			const currentY = e.touches[0].clientY;
-			const diff = currentY - touchStartY;
+		function handleTouchStart(e: TouchEvent) {
+			if (e.touches.length !== 1) return;
+			touchStartY = e.touches[0].clientY;
+			isTrackingTouch = true;
+			pullTopDistance = 0;
+			pullBottomDistance = 0;
+		}
 
+		function handleTouchMove(e: TouchEvent) {
+			if (!isTrackingTouch || isNavigating) return;
+			const touchY = e.touches[0].clientY;
+			const deltaY = touchY - touchStartY;
 			const scrollTop = window.scrollY || document.documentElement.scrollTop;
 			const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-			const atTop = scrollTop <= 2;
-			const atBottom = scrollTop >= maxScroll - 2;
 
-			if (atTop && diff > 0) {
-				pullTopDistance = diff * 0.6;
-				updateIndicators();
-			} else if (atBottom && diff < 0 && nextUrl) {
-				pullBottomDistance = -diff * 0.6;
-				updateIndicators();
+			if (scrollTop <= 0 && deltaY > 0) {
+				pullTopDistance = deltaY * 0.5;
+				updateTopIndicator(pullTopDistance);
+			} else if (nextUrl && scrollTop >= maxScroll - 1 && deltaY < 0) {
+				pullBottomDistance = Math.abs(deltaY) * 0.5;
+				updateBottomIndicator(pullBottomDistance);
 			}
 		}
 
-		function onTouchEnd() {
-			if (!isTouching) return;
-			isTouching = false;
+		function handleTouchEnd() {
+			if (!isTrackingTouch) return;
+			isTrackingTouch = false;
 
 			if (pullTopDistance >= THRESHOLD) {
-				pullTopDistance = 0;
-				updateIndicators();
 				goBackToFields();
-			} else if (pullBottomDistance >= THRESHOLD && nextUrl) {
-				pullBottomDistance = 0;
-				updateIndicators();
+			} else {
+				updateTopIndicator(0);
+			}
+
+			if (pullBottomDistance >= THRESHOLD && nextUrl) {
 				goToNext();
 			} else {
-				pullTopDistance = 0;
-				pullBottomDistance = 0;
-				updateIndicators();
+				updateBottomIndicator(0);
 			}
+			pullTopDistance = 0;
+			pullBottomDistance = 0;
 		}
 
-		window.addEventListener('wheel', onWheel, { passive: true });
-		window.addEventListener('touchstart', onTouchStart, { passive: true });
-		window.addEventListener('touchmove', onTouchMove, { passive: true });
-		window.addEventListener('touchend', onTouchEnd, { passive: true });
+		window.addEventListener('wheel', handleWheel, { passive: true });
+		window.addEventListener('touchstart', handleTouchStart, { passive: true });
+		window.addEventListener('touchmove', handleTouchMove, { passive: true });
+		window.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+		// Fade out overlay on page entry
+		const overlay = document.getElementById('field-transition-overlay');
+		if (overlay) {
+			gsap.to(overlay, { opacity: 0, duration: 0.35, ease: 'power1.out' });
+		}
 	}
 
 	document.addEventListener('astro:page-load', setup);

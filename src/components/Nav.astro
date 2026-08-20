@@ -1,6 +1,16 @@
 ---
-import { sezioni } from '../data/home';
+import { getSezioni } from '../data/home';
+import { type Lingua, urlPerLingua, t } from '../i18n/testi';
 import rawLogo from '../assets/logo.svg?raw';
+import SearchModal from './SearchModal.astro';
+
+interface Props {
+	lingua?: Lingua;
+}
+
+const lingua: Lingua = Astro.props.lingua || (Astro.currentLocale as Lingua) || (Astro.url.pathname.startsWith('/it') ? 'it' : 'en');
+const sezioni = getSezioni(lingua);
+const homeHref = lingua === 'it' ? '/it' : '/';
 
 const logoMarkup = rawLogo
 	.replace(/<\?xml[^>]*\?>\s*/, '')
@@ -10,10 +20,71 @@ const logoMarkup = rawLogo
 ---
 
 <nav class="fixed inset-x-0 top-0 z-20 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-6 py-4 text-xs uppercase tracking-widest sm:px-10">
-	<a href="/" aria-label="Graziano Enzo Marchesani - Home" class="hover:opacity-60 transition-opacity flex items-center" set:html={logoMarkup} />
-	<ul class="flex flex-wrap items-center gap-x-5 gap-y-1">
-		{sezioni.map((s) => (
-			<li><a href={s.href} class="hover:opacity-60 transition-opacity">{s.titolo}</a></li>
-		))}
-	</ul>
+	<a href={homeHref} aria-label="Graziano Enzo Marchesani - Home" class="hover:opacity-60 transition-opacity flex items-center" set:html={logoMarkup} />
+	<div class="flex flex-wrap items-center gap-x-3 sm:gap-x-5 gap-y-2">
+		<ul class="flex flex-wrap items-center gap-x-5 gap-y-1 rounded-full bg-paper/60 px-3.5 py-1 backdrop-blur-sm">
+			{sezioni.map((s) => (
+				<li><a href={s.href} class="hover:opacity-60 transition-opacity">{s.titolo}</a></li>
+			))}
+		</ul>
+		<div class="flex items-center gap-2">
+			<button
+				id="nav-search-btn"
+				type="button"
+				class="flex items-center gap-1.5 rounded-full bg-paper/60 px-2.5 py-1 text-[10px] tracking-normal backdrop-blur-sm text-ink/70 hover:text-ink hover:bg-paper transition-all cursor-pointer"
+				aria-label={t('search.apri', lingua)}
+			>
+				<svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+					<path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+				</svg>
+				<span id="nav-search-shortcut" class="hidden sm:inline font-mono opacity-60">⌘K</span>
+			</button>
+			<div class="flex items-center gap-1 rounded-full bg-paper/60 px-2 py-0.5 text-[10px] tracking-normal backdrop-blur-sm" aria-label={t('nav.selettoreLingua', lingua)}>
+				<a
+					href={urlPerLingua(Astro.url.pathname, 'en')}
+					class:list={[
+						'rounded px-1.5 py-0.5 transition-colors',
+						lingua === 'en' ? 'bg-ink text-paper font-semibold' : 'text-ink/60 hover:text-ink',
+					]}
+					aria-current={lingua === 'en' ? 'page' : undefined}
+				>
+					EN
+				</a>
+				<span class="opacity-30">/</span>
+				<a
+					href={urlPerLingua(Astro.url.pathname, 'it')}
+					class:list={[
+						'rounded px-1.5 py-0.5 transition-colors',
+						lingua === 'it' ? 'bg-ink text-paper font-semibold' : 'text-ink/60 hover:text-ink',
+					]}
+					aria-current={lingua === 'it' ? 'page' : undefined}
+				>
+					IT
+				</a>
+			</div>
+		</div>
+	</div>
 </nav>
+
+<SearchModal lingua={lingua} />
+
+<script>
+	const aggiornaScorciatoia = () => {
+		const isMac = typeof navigator !== 'undefined' && /(Mac|iPhone|iPod|iPad)/i.test(navigator.userAgent || navigator.platform || '');
+		const shortcutEl = document.getElementById('nav-search-shortcut');
+		if (shortcutEl && !isMac) {
+			shortcutEl.textContent = 'Ctrl K';
+		}
+	};
+
+	aggiornaScorciatoia();
+	document.addEventListener('astro:page-load', aggiornaScorciatoia);
+
+	// Event delegation su document: funziona sempre su ogni cambio lingua e navigazione
+	document.addEventListener('click', (e) => {
+		const target = e.target as HTMLElement | null;
+		if (target?.closest('#nav-search-btn')) {
+			document.dispatchEvent(new CustomEvent('open-search'));
+		}
+	});
+</script>
