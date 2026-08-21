@@ -216,6 +216,13 @@ generato e piazzato indipendentemente dalle altre.
     `import.meta.glob` eager di tutti i bucket insieme, che gonfierebbe
     il bundle JS di ~1MB per ogni visitatore indipendentemente da cosa
     vede davvero.
+  - **Il `manifest.json` invece è importato a build time, non
+    `fetch`ato** (cambiato in sessione 2026-08-21): sono ~2KB di sola
+    tabella nome/dimensioni, ma prenderli via rete costava un round
+    trip intero *prima* di poter anche solo iniziare a scaricare l'SVG.
+    La distinzione con gli SVG regge su un criterio solo — il manifest
+    serve **sempre e tutto**, gli SVG servono in minima parte — quindi
+    inlinare il primo e fetchare i secondi non è un'incoerenza.
   - **Auto-skip**: `generate-patterns.mjs` è agganciato a
     `astro:config:setup` (stesso pattern di
     `integrazione-pubblicazioni.mjs`) tramite hash sha256 delle 4 icone
@@ -287,6 +294,33 @@ generato e piazzato indipendentemente dalle altre.
   vengono richiesti subito dopo il load e compaiono con dissolvenza
   (~300ms) quando arrivano, rispettando `prefers-reduced-motion`
   (comparsa istantanea in quel caso).
+- **Gli sfondi non aspettano GSAP** (cambiato in sessione 2026-08-21).
+  `initSectionPatterns()` era importato nello stesso `<script>` di
+  `gsap` + `ScrollTrigger`: ~112KB che dovevano scaricarsi *ed
+  eseguirsi* prima che il browser chiedesse il primo byte di SVG, pur
+  non servendo a nulla per gli sfondi. Ora `PaginaHome.astro` ha un
+  secondo `<script>`, messo deliberatamente **per primo** perché gli
+  script module vengono eseguiti nell'ordine del documento: quello
+  degli sfondi parte appena arriva il suo chunk (55 byte di entry +
+  2.9KB di `section-patterns`, zero GSAP). Lo script GSAP raccoglie il
+  lavoro già in volo tramite `prefetchSectionPatterns()` /
+  `sectionPatternsReady()`, così `initSectionMorph()` e
+  `ScrollTrigger.refresh()` partono nello stesso momento logico di
+  prima. **L'handler di resize chiama invece `initSectionPatterns()`
+  diretta**, mai l'handoff: deve sempre ripescare il bucket per la
+  nuova larghezza.
+  - **Misurato**, non stimato (Chrome headless, cache vuota, Fast 3G a
+    150ms di RTT, mediana su 5 run, baseline ottenuta con `git stash`):
+    la richiesta del primo SVG parte a **6963ms invece di 9614ms** e
+    arriva a 8167ms invece di 10408ms. **~2.25s in meno** a freddo
+    prima che lo sfondo cominci ad apparire; a cache calda resta solo
+    la dissolvenza di 300ms, invariata. La catena passa da
+    `HTML → 112KB JS → manifest → SVG` a `HTML → 3KB JS → SVG`.
+  - Il ritardo percepito dall'utente era **quasi tutto rete, non la
+    dissolvenza**: i 300ms scritti nel codice sono la coda, non la
+    causa. Restano intatti — su richiesta esplicita dell'utente
+    l'intervento doveva toccare le prestazioni e **nulla** di ciò che
+    si vede.
 - **Reinizializzazione completa su resize** (cambiato in sessione
   2026-08-20, vedi sotto "Fix resize"): non più statico al load.
 - **Gotcha CSS trovato e corretto**: un primo tentativo con `-z-10`

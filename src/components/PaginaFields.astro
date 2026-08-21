@@ -6,6 +6,7 @@ import Footer from './Footer.astro';
 import FieldTransitionOverlay from './FieldTransitionOverlay.astro';
 import { FIELD_CATEGORY_ORDER } from '../data/fields';
 import { getFieldsTimeline } from '../data/fields-content';
+import { getIndiceTag } from '../lib/tag';
 import { type Lingua, linguaDefault, t } from '../i18n/testi';
 
 interface Props {
@@ -14,6 +15,9 @@ interface Props {
 
 const { lingua = (Astro.currentLocale as Lingua) || linguaDefault } = Astro.props;
 const timeline = await getFieldsTimeline(lingua);
+const { tag } = await getIndiceTag(lingua);
+/** slug -> etichetta: i satelliti mostrano il nome, l'URL porta lo slug. */
+const dizionarioTag = Object.fromEntries(tag.map((v) => [v.slug, v.etichetta]));
 const titolo = t('fields.titolo', lingua);
 
 const categoryLabels: Record<string, string> = {
@@ -64,7 +68,29 @@ const categoryLabels: Record<string, string> = {
 				))}
 			</ul>
 
+			<div id="fields-tag-layer" class="pointer-events-none fixed inset-0 z-20" aria-hidden="true"></div>
+
+			<div
+				id="fields-tag-bar"
+				class="pointer-events-none fixed inset-x-0 top-24 z-30 mx-auto flex max-w-3xl flex-wrap justify-center gap-2 px-6"
+				hidden
+			></div>
+
+			<button
+				id="fields-tag-toggle"
+				type="button"
+				class="fields-tag-toggle pillola-tag fixed bottom-14 left-1/2 z-30 hidden -translate-x-1/2 items-center gap-2 rounded-full px-3 py-1 font-mono text-[11px] uppercase tracking-wider text-ink/80 sm:bottom-16"
+				aria-pressed="false"
+				aria-label={t('tag.filtro', lingua)}
+			>
+				<span class="fields-tag-pallino" aria-hidden="true"></span>
+				<span aria-hidden="true">{t('tag.occhiello', lingua)}</span>
+				<span id="fields-tag-conteggio" class="font-mono text-[10px] tracking-widest opacity-60" aria-hidden="true"></span>
+			</button>
+
 			<script type="application/json" id="fields-data" is:inline set:html={JSON.stringify(timeline)} />
+			<script type="application/json" id="fields-tag-dizionario" is:inline set:html={JSON.stringify(dizionarioTag)} />
+			<span id="fields-tag-testi" hidden data-rimuovi={t('tag.rimuovi', lingua)}></span>
 		</main>
 
 		<Footer lingua={lingua} />
@@ -75,13 +101,23 @@ const categoryLabels: Record<string, string> = {
 	import { gsap } from 'gsap';
 	import { navigate } from 'astro:transitions/client';
 	import { initFieldsSpiral, OPEN_ZOOM_DURATION_MS } from '../scripts/fields-spiral';
+	import {
+		creaFiltroTag,
+		filtraTimeline,
+		leggiTagAttivi,
+		urlConTag,
+		type DizionarioTag,
+	} from '../scripts/fields-tag';
 	import type { FieldYear } from '../data/fields';
 
 	let spiralHandle: { destroy: () => void } | undefined;
+	let filtro: ReturnType<typeof creaFiltroTag> | undefined;
 
 	function cleanup() {
 		spiralHandle?.destroy();
 		spiralHandle = undefined;
+		filtro?.destroy();
+		filtro = undefined;
 	}
 
 	function setup() {
@@ -97,36 +133,93 @@ const categoryLabels: Record<string, string> = {
 			pinSection?.remove();
 			list?.classList.remove('sr-only');
 			list?.removeAttribute('aria-hidden');
-		} else {
-			const canvas = document.getElementById('fields-canvas');
-			const labelsContainer = document.getElementById('fields-labels');
-
-			if (canvas instanceof HTMLCanvasElement && pinSection) {
-				const dataEl = document.getElementById('fields-data');
-				const timeline: FieldYear[] = dataEl ? JSON.parse(dataEl.textContent ?? '[]') : [];
-
-				spiralHandle = initFieldsSpiral({
-					canvas,
-					pinSection,
-					labelsContainer: labelsContainer ?? undefined,
-					timeline,
-					onOpenMarker: async (marker, playZoom) => {
-						sessionStorage.setItem('fields-target-marker', marker.id);
-						const overlay = document.getElementById('field-transition-overlay');
-						const fadeIn = overlay
-							? gsap.to(overlay, {
-									opacity: 1,
-									duration: OPEN_ZOOM_DURATION_MS / 1000,
-									ease: 'power2.in',
-								})
-							: null;
-						await Promise.all([playZoom(), fadeIn?.then(() => {})]);
-						const targetUrl = lingua === 'it' ? `/it/fields/${marker.id}` : `/fields/${marker.id}`;
-						navigate(targetUrl);
-					},
-				});
-			}
+			return;
 		}
+
+		const canvas = document.getElementById('fields-canvas');
+		const labelsContainer = document.getElementById('fields-labels');
+		if (!(canvas instanceof HTMLCanvasElement) || !pinSection) return;
+
+		const dataEl = document.getElementById('fields-data');
+		const timelineCompleta: FieldYear[] = dataEl ? JSON.parse(dataEl.textContent ?? '[]') : [];
+
+		const dizEl = document.getElementById('fields-tag-dizionario');
+		const dizionario: DizionarioTag = dizEl ? JSON.parse(dizEl.textContent ?? '{}') : {};
+
+		const strato = document.getElementById('fields-tag-layer');
+		const barra = document.getElementById('fields-tag-bar');
+		const pulsante = document.getElementById('fields-tag-toggle');
+		const conteggio = document.getElementById('fields-tag-conteggio');
+		const testi = document.getElementById('fields-tag-testi');
+
+		const hrefVoce = (id: string) => (lingua === 'it' ? `/it/fields/${id}` : `/fields/${id}`);
+
+		function costruisci(tagAttivi: string[]) {
+			const timeline = filtraTimeline(timelineCompleta, tagAttivi);
+			const marker = timeline.flatMap((anno) => anno.markers);
+
+			// Un solo risultato non è una spirale: si va dritti all'articolo,
+			// e i tag spariscono dall'URL prima di partire — così il ritorno
+			// col tasto indietro riapre Fields nella sua forma di sempre.
+			if (tagAttivi.length > 0 && marker.length === 1) {
+				history.replaceState({ tag: [] }, '', urlConTag([]));
+				navigate(hrefVoce(marker[0].id));
+				return;
+			}
+
+			if (conteggio) conteggio.textContent = tagAttivi.length > 0 ? String(marker.length) : '';
+
+			spiralHandle?.destroy();
+			spiralHandle = initFieldsSpiral({
+				canvas: canvas as HTMLCanvasElement,
+				pinSection: pinSection as HTMLElement,
+				labelsContainer: labelsContainer ?? undefined,
+				timeline,
+				onFocusMarker: (fuoco) => filtro?.aggiornaFuoco(fuoco),
+				onOpenMarker: async (marker, playZoom) => {
+					sessionStorage.setItem('fields-target-marker', marker.id);
+					const overlay = document.getElementById('field-transition-overlay');
+					const fadeIn = overlay
+						? gsap.to(overlay, {
+								opacity: 1,
+								duration: OPEN_ZOOM_DURATION_MS / 1000,
+								ease: 'power2.in',
+							})
+						: null;
+					await Promise.all([playZoom(), fadeIn?.then(() => {})]);
+					navigate(hrefVoce(marker.id));
+				},
+			});
+		}
+
+		/** Ricostruzione visibile: la scena sfuma, si rifà, rientra con la sua intro. */
+		function ricostruisci(tagAttivi: string[]) {
+			window.scrollTo(0, 0);
+			gsap.to(pinSection, {
+				opacity: 0,
+				duration: 0.2,
+				ease: 'power2.in',
+				onComplete: () => {
+					costruisci(tagAttivi);
+					gsap.to(pinSection, { opacity: 1, duration: 0.35, ease: 'power2.out' });
+				},
+			});
+		}
+
+		if (strato && barra && pulsante instanceof HTMLButtonElement) {
+			pulsante.classList.remove('hidden');
+			pulsante.classList.add('flex');
+			filtro = creaFiltroTag({
+				contenitore: strato,
+				pulsante,
+				barra,
+				dizionario,
+				etichettaRimuovi: testi?.dataset.rimuovi ?? 'Remove tag',
+				onCambio: ricostruisci,
+			});
+		}
+
+		costruisci(leggiTagAttivi());
 	}
 
 	if (document.getElementById('fields-pin') || document.getElementById('fields-list')) {

@@ -6,9 +6,17 @@ import interFontUrl from '@fontsource-variable/inter/files/inter-latin-wght-norm
 interface Props {
 	title: string;
 	description?: string;
+	/** URL canonico assoluto. Se assente si usa l'URL corrente. */
+	canonical?: string;
+	/** Percorsi (assoluti dal root) della stessa pagina nelle due lingue. */
+	alternate?: { en: string; it: string };
 }
 
-const { title, description } = Astro.props;
+const { title, description, canonical, alternate } = Astro.props;
+/** Un solo URL per pagina: sempre con la barra finale, canonical e hreflang identici. */
+const assoluto = (percorso: string) =>
+	new URL(percorso.endsWith('/') ? percorso : `${percorso}/`, Astro.site ?? Astro.url).href;
+const canonicalUrl = canonical ?? assoluto(Astro.url.pathname);
 ---
 
 <meta charset="utf-8" />
@@ -21,6 +29,15 @@ const { title, description } = Astro.props;
 <!-- Preload dei font critici per eliminare il FOUT (Flash of Unstyled Text) -->
 <link rel="preload" href={antonFontUrl} as="font" type="font/woff2" crossorigin="anonymous" />
 <link rel="preload" href={interFontUrl} as="font" type="font/woff2" crossorigin="anonymous" />
+
+<link rel="canonical" href={canonicalUrl} />
+{alternate && (
+	<>
+		<link rel="alternate" hreflang="en" href={assoluto(alternate.en)} />
+		<link rel="alternate" hreflang="it" href={assoluto(alternate.it)} />
+		<link rel="alternate" hreflang="x-default" href={assoluto(alternate.en)} />
+	</>
+)}
 
 <title>{title}</title>
 {description && <meta name="description" content={description} />}

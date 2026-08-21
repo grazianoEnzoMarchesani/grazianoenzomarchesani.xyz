@@ -8,6 +8,7 @@ import Footer from './Footer.astro';
 import FieldTransitionOverlay from './FieldTransitionOverlay.astro';
 import FieldArticleNavigation from './FieldArticleNavigation.astro';
 import FieldArticleBody from './FieldArticleBody.astro';
+import ElencoTag from './ElencoTag.astro';
 import { type Lingua, linguaDefault, t } from '../i18n/testi';
 
 interface Props {
@@ -44,18 +45,7 @@ const { nome, sommario, data, linguaggio, ambiente, repo, doi, sito, licenza } =
         </p>
       )}
 
-      <ul class="mt-4 flex flex-wrap gap-2">
-        {linguaggio && (
-          <li class="rounded-full border border-ink/20 px-3 py-1 text-xs uppercase tracking-widest opacity-70">
-            {linguaggio}
-          </li>
-        )}
-        {ambiente.map((a) => (
-          <li class="rounded-full border border-ink/20 px-3 py-1 text-xs uppercase tracking-widest opacity-70">
-            {a}
-          </li>
-        ))}
-      </ul>
+      <ElencoTag id={currentId} lingua={lingua} grezzi={[linguaggio, ...ambiente]} />
 
       <FieldArticleBody>
         <Content />

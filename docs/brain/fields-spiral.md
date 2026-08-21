@@ -14,12 +14,20 @@ screenshot Playwright headless senza errori console).
 
 ## Ruolo nell'architettura di Fields
 
-La spirale è la **vista d'ingresso/esplorativa** di `/fields`, non l'unica
-interfaccia di navigazione: filtri/facet per anno e tag restano previsti
-(vedi [content-plan.md](content-plan.md)) ma non ancora progettati né
-costruiti — capitolo futuro separato. In questa prima iterazione `/fields`
-contiene *solo* la spirale, nessun titolo statico o frame attorno (scelta
+La spirale è la **vista d'ingresso/esplorativa** di `/fields`, e dal
+2026-08-21 è anche la **superficie del filtro a tag**: un pallino in basso
+a destra accende i satelliti dei tag attorno al marker in focus, e la
+scelta di un tag ricostruisce spirale e corda con le sole voci compatibili.
+Progetto, regole e vincoli di posizionamento stanno in [tag.md](tag.md);
+qui restano la geometria e il moto. Il filtro è l'unico cromo permanente
+ammesso sulla scena: nessun titolo statico né frame attorno (scelta
 esplicita: massima immersione).
+
+Ciò che la spirale espone al filtro: `FieldMarker.tag` (slug dei tag
+pubblici) e la callback `onFocusMarker`, che a ogni frame passa il marker
+nel punto focale, la sua posizione a schermo e l'ingombro di **tutti** i
+titoli visibili — è quest'ultimo che permette ai satelliti di non coprire
+mai un titolo, né quello in focus né quelli dei marker vicini.
 
 ## Concetto visivo
 
@@ -245,7 +253,7 @@ viewport tagliate di netto dal bordo del canvas invece di dissolversi.
   (stesso risultato visivo dato che lo sfondo è `PAPER` pieno, ma senza
   introdurre blending). Si aggancia al chunk `<fog_fragment>` già presente
   sui materiali invece di duplicarne la logica.
-- **Soglia**: fissa (`NEAR_FADE_START = 6.0`, `NEAR_FADE_CLOSE = 2.0`),
+- **Soglia**: fissa (`NEAR_FADE_START = 4.2`, `NEAR_FADE_CLOSE = 1.6`),
   non ricalcolata dinamicamente in base a quale marker sta uscendo —
   sempre attiva indipendentemente dallo stato di scroll/rotazione.
   Volutamente ampia: il raggio fisso della spirale rispetto al cono
@@ -265,6 +273,32 @@ viewport tagliate di netto dal bordo del canvas invece di dissolversi.
   e durante lo scroll), nessun errore console, dissolvenza confermata
   visivamente morbida e continua su tutti i bordi (anche interna alla
   singola sagoma, non solo marker per marker).
+
+### Correzione: il fog di sfondo non può invertirsi (sessione 2026-08-21)
+
+Riguarda il `THREE.Fog` di sfondo, non il fog in primo piano. Era
+configurato `near = PITCH * 1.8` (costante) e `far = totalLength * 0.85`,
+con `totalLength = turns * PITCH`. Tarato sui dieci anni pieni funziona;
+ma **quando la timeline si accorcia** — un filtro a tag che lascia uno o
+due anni — `far` scivola **sotto** `near`, il denominatore di
+`(depth − near) / (far − near)` diventa negativo e la nebbia si capovolge:
+viene dipinto di carta ciò che è *vicino* e resta nero ciò che è lontano.
+
+Sintomo osservato con `?tag=milano`: due voci filtrate, una sola sagoma a
+schermo e il titolo dell'altra appeso a un punto vuoto. Il titolo era
+posizionato correttamente accanto al suo marker — era il marker a essere
+stato cancellato dal fog.
+
+Guardia: `far = max(totalLength * 0.85, SPIRAL_FOG_NEAR + PITCH * 3)`. Il
+fondo non può mai stare più vicino dell'inizio, e sotto tre giri di
+profondità non c'è spazio su cui sfumare. Si attiva solo sotto i sei
+anni: la spirale non filtrata è invariata.
+
+Sulla corda il difetto non esiste perché lì `near`/`far` si calcolano
+dalla distanza della camera (`z + 10`, `z + 30`), mai dalla lunghezza
+della timeline. **Regola generale che ne discende**: ogni costante tarata
+sulla timeline intera va riletta pensando a una timeline da un anno — il
+filtro a tag rende quel caso ordinario, non limite.
 
 ### Correzione: da "bordo inferiore" a "distanza dalla camera"
 
@@ -537,6 +571,21 @@ Al ridimensionamento della finestra tra desktop e mobile (soglia `MOBILE_BREAKPO
   - Raddrizzamento su schermo: a $s = 1$ (punta terminale), la derivata verticale $\frac{dY}{ds} = 0$ e la derivata di profondità $\frac{dZ}{ds} = 0$ garantiscono una linea di arrivo perfettamente orizzontale in piano visivo.
   - La trasformazione è calcolata dinamicamente nello spazio WORLD e riconvertita in coordinate locali del gruppo compensando la rotazione effettiva $\phi$ e la quota $Z$.
   - Disattivazione del frustum culling prematuro (`helixLine.frustumCulled = false`) per garantire il rendering fluido e continuo del filo durante tutta l'escursione in profondità dello scroll.
+### Il punto focale non è `u * turns` (sessione 2026-08-21)
+
+Conseguenza diretta della decelerazione qui sopra: oltre `uUnfoldStart`
+il gruppo si ferma sull'assetto di atterraggio mentre lo scroll continua
+a correre. Il marker in focus veniva però cercato con `u * turns`, cioè
+sul progress grezzo — una posizione che a quel punto **nessun marker
+occupa**. Con dieci anni la divergenza vive nell'ultimo 2% dello scroll e
+non si nota; con due anni copre l'ultimo terzo, dove nessun marker
+risultava in focus pur essendo esattamente sul piano focale.
+
+La compressione ora sta in `spiralGroupU()` (era duplicata alla lettera
+in `applyProgress` e in `switchShapeMode`) e `focusTurn()` è l'unica
+risposta alla domanda "dove è arrivata davvero la spirale". Chi cerca il
+focus chiede a lei, mai allo scroll.
+
 ## Sincronizzazione e Ripristino Focus Scroll al Ritorno dagli Articoli (sessione 2026-08-20)
 - **Persistenza continua dello stato**: All'apertura di qualunque articolo in `/fields/*`, `FieldArticleNavigation.astro` memorizza immediatamente l'ID del marker corrente in `sessionStorage` (`fields-target-marker`). Durante la navigazione tra articoli (avanzamento al successivo tramite link o pull-to-next), la memoria viene aggiornata all'articolo attivo.
 - **Ritorno a Fields (Spirale o Corda)**: Che l'utente torni indietro tramite il tasto "Back to Fields", l'overscroll pull-to-return, il link nella navbar o il tasto indietro del browser, la pagina `/fields` legge il target salvato:

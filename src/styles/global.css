@@ -99,3 +99,58 @@ body {
   --legend-muted-foreground: color-mix(in srgb, var(--color-ink) 55%, transparent);
   --legend-track: color-mix(in srgb, var(--color-ink) 15%, transparent);
 }
+
+/* LE PILLOLE DEI TAG
+   ------------------
+   Niente contorno: la forma nasce solo dal riempimento. Il fondo è opaco
+   e appena più scuro della carta — deve staccarsi da una pagina dello
+   stesso colore e, sulla spirale, coprire i marker che passano sotto.
+   Un fondo translucido non farebbe né l'una né l'altra cosa. */
+.pillola-tag {
+  background: color-mix(in srgb, var(--color-ink) 7%, var(--color-paper));
+  transition: background-color 200ms ease;
+}
+
+.pillola-tag:hover,
+a.pillola-tag:hover,
+button.pillola-tag:hover {
+  background: color-mix(in srgb, var(--color-ink) 13%, var(--color-paper));
+}
+
+/* IL PALLINO DEL FILTRO A TAG DI FIELDS
+   ------------------------------------
+   Unico controllo permanente sopra la spirale: spento è un contorno,
+   acceso è pieno, e quando un filtro è attivo porta accanto il numero
+   di voci rimaste (scritto dallo script). */
+.fields-tag-toggle {
+  opacity: 0.75;
+}
+
+.fields-tag-toggle:hover,
+.fields-tag-toggle[data-attivo='true'],
+.fields-tag-toggle[data-filtrato='true'] {
+  opacity: 1;
+}
+
+.fields-tag-pallino {
+  display: block;
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 9999px;
+  border: 1px solid color-mix(in srgb, var(--color-ink) 55%, transparent);
+  background: transparent;
+  transition:
+    background-color 200ms ease,
+    border-color 200ms ease;
+}
+
+.fields-tag-toggle[data-attivo='true'] .fields-tag-pallino,
+.fields-tag-toggle[data-filtrato='true'] .fields-tag-pallino {
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+}
+
+/* I satelliti entrano sfumando: la posizione la scrive lo script a ogni frame. */
+.fields-tag-satellite {
+  will-change: transform, opacity;
+}

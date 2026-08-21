@@ -1,6 +1,7 @@
 import { getCollection } from 'astro:content';
 import type { FieldCategory, FieldMarker, FieldYear } from './fields';
 import { perLingua } from '../lib/contenuti';
+import { getIndiceTag } from '../lib/tag';
 import { type Lingua, linguaDefault } from '../i18n/testi';
 
 /**
@@ -32,6 +33,7 @@ function markerYearFraction(id: string, date?: Date): number {
 
 function addMarker(
   byYear: Map<number, FieldMarker[]>,
+  tagPerVoce: Map<string, string[]>,
   year: number | null,
   category: FieldCategory,
   slug: string,
@@ -40,19 +42,27 @@ function addMarker(
 ) {
   if (year === null) return;
   const id = `${category}/${slug}`;
-  const marker: FieldMarker = { id, category, title, yearFraction: markerYearFraction(id, date) };
+  const marker: FieldMarker = {
+    id,
+    category,
+    title,
+    yearFraction: markerYearFraction(id, date),
+    tag: tagPerVoce.get(id) ?? [],
+  };
   const markers = byYear.get(year) ?? [];
   markers.push(marker);
   byYear.set(year, markers);
 }
 
 export async function getFieldsTimeline(lingua: Lingua | string = linguaDefault): Promise<FieldYear[]> {
-  const [rawResearch, rawTools, rawTeaching, rawProjects] = await Promise.all([
+  const [rawResearch, rawTools, rawTeaching, rawProjects, indice] = await Promise.all([
     getCollection('research'),
     getCollection('tools'),
     getCollection('teaching'),
     getCollection('projects'),
+    getIndiceTag(lingua),
   ]);
+  const { tagPerVoce } = indice;
 
   const research = perLingua(rawResearch, lingua);
   const tools = perLingua(rawTools, lingua);
@@ -62,16 +72,16 @@ export async function getFieldsTimeline(lingua: Lingua | string = linguaDefault)
   const byYear = new Map<number, FieldMarker[]>();
 
   for (const entry of research) {
-    addMarker(byYear, entry.data.data.getFullYear(), 'research', entry.chiave, entry.data.titolo, entry.data.data);
+    addMarker(byYear, tagPerVoce, entry.data.data.getFullYear(), 'research', entry.chiave, entry.data.titolo, entry.data.data);
   }
   for (const entry of tools) {
-    addMarker(byYear, entry.data.data.getFullYear(), 'tools', entry.chiave, entry.data.nome, entry.data.data);
+    addMarker(byYear, tagPerVoce, entry.data.data.getFullYear(), 'tools', entry.chiave, entry.data.nome, entry.data.data);
   }
   for (const entry of teaching) {
-    addMarker(byYear, firstYear(entry.data.anni), 'teaching', entry.chiave, entry.data.titolo, entry.data.data);
+    addMarker(byYear, tagPerVoce, firstYear(entry.data.anni), 'teaching', entry.chiave, entry.data.titolo, entry.data.data);
   }
   for (const entry of projects) {
-    addMarker(byYear, firstYear(entry.data.anni), 'projects', entry.chiave, entry.data.titolo, entry.data.data);
+    addMarker(byYear, tagPerVoce, firstYear(entry.data.anni), 'projects', entry.chiave, entry.data.titolo, entry.data.data);
   }
 
   const years = [...byYear.keys()].sort((a, b) => b - a);

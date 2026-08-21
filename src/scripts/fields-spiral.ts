@@ -190,6 +190,19 @@ function getIconGeometries(category: FieldCategory): THREE.BufferGeometry[] {
  * logica. `-mvPosition.z` è la stessa metrica di profondità che
  * three.js usa internamente per il fog di sfondo (`vFogDepth`).
  */
+/**
+ * Fog di sfondo della spirale. `near` è fisso; `far` nasce dalla
+ * lunghezza totale, ma con una timeline corta — un filtro a tag che
+ * lascia uno o due anni — quel valore scivola SOTTO `near` e il fog si
+ * inverte: sfuma nella carta quello che è VICINO e lascia nero quello
+ * che è lontano. Risultato: il marker in focus sparisce e resta a
+ * schermo solo quello in fondo, col titolo dell'altro accanto a un
+ * punto vuoto. Il fondo deve stare almeno tre giri oltre l'inizio,
+ * altrimenti non c'è profondità su cui sfumare.
+ */
+const SPIRAL_FOG_NEAR = PITCH * 1.8;
+const SPIRAL_FOG_SPAN_MIN = PITCH * 3;
+
 const NEAR_FADE_START = 4.2; // profondità (world units) da cui inizia la dissolvenza con grandangolo
 const NEAR_FADE_CLOSE = 1.6; // profondità da cui è completa prima del piano camera
 
@@ -252,6 +265,20 @@ function buildShapeMesh(category: FieldCategory): THREE.Object3D {
   return group;
 }
 
+export type FieldFocus = {
+  marker: FieldMarker;
+  /** Centro della sagoma in pixel di viewport. */
+  x: number;
+  y: number;
+  /** Ingombro del titolo fluttuante, in pixel di viewport. */
+  etichetta: Ingombro;
+  /** Ingombro di TUTTI i titoli visibili, compreso quello in focus: chi
+   *  disegna i satelliti deve evitare anche i titoli dei marker vicini. */
+  ingombri: Ingombro[];
+};
+
+export type Ingombro = { left: number; right: number; top: number; bottom: number };
+
 type MarkerObject = {
   /** Geometria visibile — vedi buildShapeMesh(). */
   visual: THREE.Object3D;
@@ -299,14 +326,21 @@ export function initFieldsSpiral(options: {
   labelsContainer?: HTMLElement;
   timeline: FieldYear[];
   onHoverMarker?: (marker: FieldMarker | null) => void;
+  /** Chiamato a ogni frame con il marker nel punto focale (o null).
+   *  Porta con sé la posizione a schermo della sagoma e l'ingombro del
+   *  titolo, così chi disegna i satelliti dei tag può girargli attorno
+   *  senza mai sovrapporsi. */
+  onFocusMarker?: (fuoco: FieldFocus | null) => void;
   /** Click/tap su un marker o sul suo titolo: avvia la transizione di apertura. */
   onOpenMarker: (marker: FieldMarker, playZoom: () => Promise<void>) => void;
 }): FieldsSpiralHandle {
-  const { canvas, pinSection, labelsContainer, timeline, onHoverMarker, onOpenMarker } = options;
+  const { canvas, pinSection, labelsContainer, timeline, onHoverMarker, onFocusMarker, onOpenMarker } =
+    options;
   nearFadeUniformsList.length = 0;
   symbolOpacityUniform.value = 1.0;
   const turns = timeline.length;
   const totalLength = turns * PITCH;
+  const spiralFogFar = Math.max(totalLength * 0.85, SPIRAL_FOG_NEAR + SPIRAL_FOG_SPAN_MIN);
 
   const ropeCounts = timeline.map((year) => year.markers.length);
   // Dislivello (= altezza dell'ansa) anno per anno: cresce col numero di
@@ -569,7 +603,7 @@ export function initFieldsSpiral(options: {
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
-  scene.fog = new THREE.Fog(PAPER, PITCH * 1.8, totalLength * 0.85);
+  scene.fog = new THREE.Fog(PAPER, SPIRAL_FOG_NEAR, spiralFogFar);
 
   const camera = new THREE.PerspectiveCamera(
     shapeMode === 'spiral' ? CAMERA_FOV : ROPE_CAMERA_FOV,
@@ -602,8 +636,8 @@ export function initFieldsSpiral(options: {
       camera.position.set(0, 0, CAMERA_Z);
       camera.lookAt(0, 0, 0);
       camera.fov = CAMERA_FOV;
-      fog.near = PITCH * 1.8;
-      fog.far = totalLength * 0.85;
+      fog.near = SPIRAL_FOG_NEAR;
+      fog.far = spiralFogFar;
       for (const u of nearFadeUniformsList) {
         u.start.value = NEAR_FADE_START;
         u.close.value = NEAR_FADE_CLOSE;
@@ -831,20 +865,37 @@ export function initFieldsSpiral(options: {
   // continui a ruotare salendo verso l'alto o tagliandosi nel near-fade.
   // Corda: scorrimento ravvicinato che traccia la curva portando il punto attivo a (0,0).
   const tempRopePoint = new THREE.Vector3();
+  /**
+   * Progress del GRUPPO, che non coincide con quello dello scroll: dopo
+   * l'ultimo marker la corsa si comprime verso l'assetto di atterraggio
+   * (decelerazione ease-out), così la coda della spirale si srotola
+   * invece di continuare a scorrere.
+   */
+  function spiralGroupU(u: number) {
+    const uUnfoldStart = Math.max(0, (lastMarkerSpiralT - 0.06) / turns);
+    const uAnchor = Math.min(1.0, (lastMarkerSpiralT + 0.14) / turns);
+    if (u <= uUnfoldStart) return u;
+    const rawP = (u - uUnfoldStart) / Math.max(0.001, 1.0 - uUnfoldStart);
+    const p = THREE.MathUtils.clamp(rawP, 0, 1);
+    const easeP = 1 - Math.pow(1 - p, 2);
+    return uUnfoldStart + (uAnchor - uUnfoldStart) * easeP;
+  }
+
+  /**
+   * Giro effettivamente al punto focale. NON è `u * turns`: sulla
+   * spirale, oltre l'inizio dell'unfold, il gruppo si ferma mentre lo
+   * scroll continua. Chi cerca il marker in focus deve guardare dove la
+   * spirale è davvero arrivata, altrimenti insegue una posizione che
+   * nessun marker occupa — e su una timeline corta (spirale filtrata per
+   * tag) quel tratto è un terzo dello scroll, non l'ultimo 2%.
+   */
+  function focusTurn(u: number) {
+    return (shapeMode === 'spiral' ? spiralGroupU(u) : u) * turns;
+  }
+
   function applyProgress(u: number) {
     if (shapeMode === 'spiral') {
-      let groupU = u;
-      const uUnfoldStart = Math.max(0, (lastMarkerSpiralT - 0.06) / turns);
-      const uAnchor = Math.min(1.0, (lastMarkerSpiralT + 0.14) / turns);
-
-      if (u > uUnfoldStart) {
-        const rawP = (u - uUnfoldStart) / Math.max(0.001, 1.0 - uUnfoldStart);
-        const p = THREE.MathUtils.clamp(rawP, 0, 1);
-        // Decelerazione morbida (ease-out quadratico) verso l'assetto di atterraggio
-        const easeP = 1 - Math.pow(1 - p, 2);
-        groupU = uUnfoldStart + (uAnchor - uUnfoldStart) * easeP;
-      }
-
+      const groupU = spiralGroupU(u);
       group.position.set(0, 0, groupU * totalLength);
       group.rotation.z = -groupU * turns * Math.PI * 2;
     } else {
@@ -945,7 +996,7 @@ export function initFieldsSpiral(options: {
     // Identifica l'elemento attualmente in focus (o più vicino al fuoco) prima del resize
     let refMarker = currentFocusedMarker;
     if (!refMarker) {
-      const currentTurn = scrollState.u * turns;
+      const currentTurn = focusTurn(scrollState.u);
       let minD = Infinity;
       for (const m of markerObjects) {
         const d = Math.abs(m.t - currentTurn);
@@ -991,7 +1042,7 @@ export function initFieldsSpiral(options: {
     const startFogNear = fog.near;
     const targetFogNear = next === 'spiral' ? PITCH * 1.8 : targetCameraZ + 10;
     const startFogFar = fog.far;
-    const targetFogFar = next === 'spiral' ? totalLength * 0.85 : targetCameraZ + 30;
+    const targetFogFar = next === 'spiral' ? spiralFogFar : targetCameraZ + 30;
 
     const startNearFadeStart = nearFadeUniformsList[0]?.start.value ?? (shapeMode === 'spiral' ? NEAR_FADE_START : 1.0);
     const targetNearFadeStart = next === 'spiral' ? NEAR_FADE_START : 1.0;
@@ -1004,17 +1055,7 @@ export function initFieldsSpiral(options: {
     const targetGroupPos = new THREE.Vector3();
     let targetGroupRotZ = 0;
     if (next === 'spiral') {
-      let groupU = targetU;
-      const uUnfoldStart = Math.max(0, (lastMarkerSpiralT - 0.06) / turns);
-      const uAnchor = Math.min(1.0, (lastMarkerSpiralT + 0.14) / turns);
-
-      if (targetU > uUnfoldStart) {
-        const rawP = (targetU - uUnfoldStart) / Math.max(0.001, 1.0 - uUnfoldStart);
-        const p = THREE.MathUtils.clamp(rawP, 0, 1);
-        const easeP = 1 - Math.pow(1 - p, 2);
-        groupU = uUnfoldStart + (uAnchor - uUnfoldStart) * easeP;
-      }
-
+      const groupU = spiralGroupU(targetU);
       targetGroupPos.set(0, 0, groupU * totalLength);
       targetGroupRotZ = -groupU * turns * Math.PI * 2;
     } else {
@@ -1345,7 +1386,7 @@ export function initFieldsSpiral(options: {
   const groupQuatInverse = new THREE.Quaternion();
   function animate() {
     const currentProgress = scrollState.u;
-    const currentTurnFocus = currentProgress * turns;
+    const currentTurnFocus = focusTurn(currentProgress);
     const isRope = shapeMode === 'rope';
     const nearStart = isRope ? 1.0 : NEAR_FADE_START;
     const nearClose = isRope ? 0.3 : NEAR_FADE_CLOSE;
@@ -1438,9 +1479,13 @@ export function initFieldsSpiral(options: {
         box: { left: number; right: number; top: number; bottom: number };
         isFocus: boolean;
         absDt: number;
+        screenX: number;
+        screenY: number;
       };
 
       const activeLabels: ActiveLabel[] = [];
+      const ingombri: Ingombro[] = [];
+      let fuoco: FieldFocus | null = null;
 
       for (const m of markerObjects) {
         if (!m.labelEl) continue;
@@ -1590,6 +1635,8 @@ export function initFieldsSpiral(options: {
             box: { left: boxLeft, right: boxRight, top: boxTop, bottom: boxBottom },
             isFocus,
             absDt,
+            screenX,
+            screenY,
           });
         } else {
           // Spirale: accanto al marker sulla destra (la spira curva verso l'interno)
@@ -1605,6 +1652,14 @@ export function initFieldsSpiral(options: {
           m.labelEl.style.transform = `translate3d(${labelX.toFixed(1)}px, ${labelY.toFixed(1)}px, 0) translateY(-50%)`;
           m.labelEl.style.opacity = opacity.toFixed(2);
           m.labelEl.style.pointerEvents = opacity > 0.2 ? 'auto' : 'none';
+
+          const labelW = Math.min(220, availableWidth);
+          const box = { left: labelX, right: labelX + labelW, top: labelY - 30, bottom: labelY + 30 };
+          ingombri.push(box);
+
+          if (m === minMarker && absDt < focusThreshold) {
+            fuoco = { marker: m.marker, x: screenX, y: screenY, etichetta: box, ingombri };
+          }
         }
       }
 
@@ -1649,8 +1704,22 @@ export function initFieldsSpiral(options: {
           item.m.labelEl!.style.transform = `translate3d(${item.labelX.toFixed(1)}px, ${item.labelY.toFixed(1)}px, 0) ${item.yTransform}`;
           item.m.labelEl!.style.opacity = item.opacity.toFixed(2);
           item.m.labelEl!.style.pointerEvents = item.opacity > 0.2 ? 'auto' : 'none';
+
+          ingombri.push(item.box);
+
+          if (item.isFocus) {
+            fuoco = {
+              marker: item.m.marker,
+              x: item.screenX,
+              y: item.screenY,
+              etichetta: item.box,
+              ingombri,
+            };
+          }
         }
       }
+
+      onFocusMarker?.(isOpening || isTransitioning || isIntroPlaying ? null : fuoco);
     }
 
     renderer.render(scene, camera);

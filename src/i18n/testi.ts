@@ -60,6 +60,17 @@ const en = {
   'fields.linguaggio': 'Language',
   'fields.nonTradotto': 'This article is currently available only in English.',
 
+  // Tag di Fields
+  'tag.occhiello': 'Tag',
+  'tag.sottotitolo': 'Everything in Fields filed under this tag.',
+  'tag.conteggio': 'entries',
+  'tag.conteggioUno': 'entry',
+  'tag.tuttiITag': 'All tags',
+  'tag.correlati': 'Often together with',
+  'tag.vediInFields': 'See in Fields',
+  'tag.filtro': 'Filter by tag',
+  'tag.rimuovi': 'Remove tag',
+
   // Publications
   'publications.titolo': 'Publications',
   'publications.sottotitolo': 'Peer-reviewed papers, conference proceedings, software releases, datasets, and research contributions.',
@@ -153,6 +164,17 @@ const it: Record<keyof typeof en, string> = {
   'fields.ambiente': 'Ambiente',
   'fields.linguaggio': 'Linguaggio',
   'fields.nonTradotto': 'Questo articolo è attualmente disponibile solo in inglese.',
+
+  // Tag di Fields
+  'tag.occhiello': 'Tag',
+  'tag.sottotitolo': 'Tutto quello che negli Ambiti sta sotto questo tag.',
+  'tag.conteggio': 'voci',
+  'tag.conteggioUno': 'voce',
+  'tag.tuttiITag': 'Tutti i tag',
+  'tag.correlati': 'Spesso insieme a',
+  'tag.vediInFields': 'Guarda in Ambiti',
+  'tag.filtro': 'Filtra per tag',
+  'tag.rimuovi': 'Togli il tag',
 
   // Publications
   'publications.titolo': 'Pubblicazioni',

@@ -1,0 +1,55 @@
+---
+/**
+ * I TAG DI UNA VOCE, SOTTO IL TITOLO
+ * ==================================
+ *
+ * Unica resa dei tag dentro gli articoli di Fields. I tag pubblici
+ * (quelli che filtrano almeno due voci) sono link a `/fields/tag/<slug>`:
+ * sono il punto d'ingresso al filtro, non decorazione. Le altre etichette
+ * di frontmatter passate in `grezzi` — un ruolo, un'istituzione unica —
+ * restano pillole mute: portare a una pagina da un elemento solo
+ * significherebbe promettere un filtro che non filtra.
+ */
+import { getIndiceTag, hrefTag, slugTag } from '../lib/tag';
+import { type Lingua, linguaDefault } from '../i18n/testi';
+
+interface Props {
+  /** `categoria/chiave`, lo stesso id usato dai marker della spirale. */
+  id: string;
+  lingua?: Lingua;
+  /** Etichette di frontmatter da mostrare comunque, anche se non sono tag pubblici. */
+  grezzi?: (string | undefined)[];
+  class?: string;
+}
+
+const { id, lingua = linguaDefault, grezzi = [], class: classe = 'mt-4' } = Astro.props;
+
+const { tag, tagPerVoce } = await getIndiceTag(lingua);
+const slugDellaVoce = tagPerVoce.get(id) ?? [];
+const pubblici = slugDellaVoce
+  .map((slug) => tag.find((v) => v.slug === slug)!)
+  .filter(Boolean)
+  .sort((a, b) => b.conteggio - a.conteggio);
+
+const gia = new Set(pubblici.flatMap((v) => [v.slug, v.etichetta.toLowerCase()]));
+const muti = grezzi
+  .filter((testo): testo is string => Boolean(testo))
+  .filter((testo) => !gia.has(slugTag(testo)) && !gia.has(testo.toLowerCase()));
+
+const pillola = 'pillola-tag rounded-full px-3 py-1 text-xs uppercase tracking-widest';
+---
+
+{(pubblici.length > 0 || muti.length > 0) && (
+  <ul class:list={['flex flex-wrap gap-2', classe]}>
+    {pubblici.map((v) => (
+      <li>
+        <a href={hrefTag(v.slug, lingua)} class:list={[pillola, 'block opacity-70 transition-opacity hover:opacity-100']}>
+          {v.etichetta}
+        </a>
+      </li>
+    ))}
+    {muti.map((testo) => (
+      <li class:list={[pillola, 'opacity-70']}>{testo}</li>
+    ))}
+  </ul>
+)}

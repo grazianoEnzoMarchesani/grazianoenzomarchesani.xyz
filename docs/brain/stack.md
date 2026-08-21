@@ -33,6 +33,8 @@ Vedi [constraints.md](constraints.md) per i vincoli che hanno guidato queste sce
 - **Astro i18n nativo** (`astro.config.mjs`): `defaultLocale: 'en'`, `locales: ['en', 'it']`, `routing: { prefixDefaultLocale: false, fallbackType: 'rewrite' }`, `fallback: { it: 'en' }`.
 - **Dizionario UI** (`src/i18n/testi.ts`): dizionario tipizzato zero-dipendenze con helper `t(chiave, lingua)` e calcolo dinamico dell'URL opposto per il selettore di lingua `EN | IT` in `Nav.astro`.
 - **Query contenuti bilingue** (`src/lib/contenuti.ts`): `perLingua(voci, lingua)` per filtrare collezioni con fallback automatico e flag `tradotto`.
+- **Tassonomia bilingue** (`src/lib/tag.ts`, 2026-08-21): etichette dei tag in due lingue ma **slug sempre calcolato dall'inglese**, così una pagina di tag ha un solo URL per entrambe le lingue e il selettore EN|IT continua a funzionare. Vedi [tag.md](tag.md).
+- **SEO delle pagine tradotte** (`src/components/BaseHead.astro`, 2026-08-21): props `canonical` e `alternate` che emettono `<link rel="canonical">` e `hreflang` en/it/x-default, con barra finale normalizzata perché canonical e hreflang puntino allo stesso identico URL.
 
 ## Ricerca Semantica Vettoriale Client-Side
 

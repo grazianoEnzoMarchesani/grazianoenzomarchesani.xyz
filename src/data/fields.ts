@@ -18,6 +18,10 @@ export type FieldMarker = {
    *  dove cade il marker lungo il pezzo di corda del suo anno nella
    *  variante mobile di Fields (vedi `src/scripts/fields-spiral.ts`). */
   yearFraction: number;
+  /** Slug dei tag pubblici della voce (vedi `src/lib/tag.ts`). Sono
+   *  quelli che la spirale mostra come satelliti attorno al marker in
+   *  focus e che governano la ricostruzione filtrata. */
+  tag: string[];
 };
 
 export type FieldYear = {

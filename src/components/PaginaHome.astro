@@ -76,10 +76,22 @@ const sezioni = getSezioni(lingua);
 	}
 </style>
 
+<!--
+	Sfondi delle sezioni: script separato e volutamente PRIMO. Gli script
+	module vengono eseguiti nell'ordine del documento, quindi stando qui
+	parte appena arriva il suo (piccolo) chunk, senza aspettare gsap +
+	ScrollTrigger dello script sotto. Non cambia cosa viene disegnato,
+	solo quando parte la richiesta.
+-->
+<script>
+	import { prefetchSectionPatterns } from '../scripts/section-patterns';
+	prefetchSectionPatterns();
+</script>
+
 <script>
 	import { gsap } from 'gsap';
 	import { ScrollTrigger } from 'gsap/ScrollTrigger';
-	import { initSectionPatterns } from '../scripts/section-patterns';
+	import { initSectionPatterns, sectionPatternsReady } from '../scripts/section-patterns';
 	import { initSectionMorph, teardownPreviousMorph } from '../scripts/section-morph';
 
 	gsap.registerPlugin(ScrollTrigger);
@@ -102,7 +114,7 @@ const sezioni = getSezioni(lingua);
 
 		let currentTitleTimeline: gsap.core.Timeline | null = null;
 
-		initSectionPatterns().then(() => {
+		sectionPatternsReady().then(() => {
 			initSectionMorph();
 			ScrollTrigger.refresh();
 		});
@@ -111,6 +123,8 @@ const sezioni = getSezioni(lingua);
 		const handleResize = () => {
 			if (window.innerWidth === lastWidth) return;
 			lastWidth = window.innerWidth;
+			// Il resize deve sempre ripescare il bucket per la nuova
+			// larghezza: init diretta, mai l'handoff del primo caricamento.
 			initSectionPatterns().then(() => {
 				initSectionMorph();
 				ScrollTrigger.refresh();

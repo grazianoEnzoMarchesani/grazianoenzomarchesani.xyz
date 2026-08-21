@@ -42,9 +42,13 @@ Zod specifico ereditato dal vecchio sito, più un piccolo set di campi
 comuni (titolo, sommario, anno, tag) per poter listare/filtrare tutto
 insieme nella vista Fields. Niente collection unica a union
 discriminata. Navigabili da un'unica interfaccia con filtri/facet, non
-da quattro pagine separate in nav. Dettagli ancora aperti: route
-esatte, URL delle singole voci — sessione dedicata quando si arriva a
-quel punto dell'implementazione.
+da quattro pagine separate in nav.
+
+**Filtri/facet: fatti** (2026-08-21). Tutte e quattro le collection hanno
+`tag: string[]`, e `src/lib/tag.ts` porta su un asse unico anche le facet
+implicite dei frontmatter. Da lì nascono le pagine statiche per tag
+(`/fields/tag/<slug>`, `/it/fields/tag/<slug>`) e il filtro a satelliti
+sulla spirale. Regole, sorgenti e motivazioni in [tag.md](tag.md).
 
 **`research-projects` non fa parte di Fields**: è una categoria a sé
 (progetti/grant finanziati — acronimo/programma/anni/ruolo/partner),
@@ -55,8 +59,8 @@ propria, altro) è da decidere in una sessione dedicata.
 
 **Animazione di Fields**: decisa e implementata in prima versione,
 sessione del 2026-08-18 — una spirale 3D scroll-driven (Three.js), vista
-d'ingresso/esplorativa non filtrabile ancora. Dettagli completi in
-[fields-spiral.md](fields-spiral.md).
+d'ingresso/esplorativa, dal 2026-08-21 anche filtrabile per tag. Dettagli
+completi in [fields-spiral.md](fields-spiral.md) e [tag.md](tag.md).
 
 ## Migrazione dal vecchio sito
 

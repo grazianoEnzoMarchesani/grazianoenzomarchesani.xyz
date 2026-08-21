@@ -1,0 +1,13 @@
+---
+import PaginaTag from '../../../components/PaginaTag.astro';
+import { getSlugTagPubblici } from '../../../lib/tag';
+
+export async function getStaticPaths() {
+	const slugs = await getSlugTagPubblici();
+	return slugs.map((slug) => ({ params: { slug } }));
+}
+
+const { slug } = Astro.params;
+---
+
+<PaginaTag slug={slug!} lingua="en" />

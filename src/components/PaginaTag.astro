@@ -1,0 +1,144 @@
+---
+/**
+ * LA PAGINA DI UN TAG
+ * ===================
+ *
+ * Destinazione statica dei tag cliccati dentro gli articoli
+ * (`/fields/tag/<slug>`, `/it/fields/tag/<slug>`). È HTML reale — titolo,
+ * elenco delle voci con sommario, link canonici — perché è questa la
+ * pagina che deve essere indicizzata: una query string su un sito statico
+ * non genera contenuto, e quindi non genera SEO.
+ */
+import BaseHead from './BaseHead.astro';
+import Nav from './Nav.astro';
+import Footer from './Footer.astro';
+import FieldTransitionOverlay from './FieldTransitionOverlay.astro';
+import { getIndiceTag, hrefTag, type Tag } from '../lib/tag';
+import { type Lingua, linguaDefault, t } from '../i18n/testi';
+import '../styles/global.css';
+
+interface Props {
+  slug: string;
+  lingua?: Lingua;
+}
+
+const { slug, lingua = linguaDefault } = Astro.props;
+
+const { tag, vociPerTag } = await getIndiceTag(lingua);
+const corrente = tag.find((v) => v.slug === slug)!;
+const voci = vociPerTag.get(slug) ?? [];
+
+/**
+ * Tag che ricorrono nelle stesse voci: il primo passo dell'AND progressivo.
+ *
+ * Le voci in comune decidono l'ORDINE e restano un numero interno. Scritto
+ * accanto al tag si leggerebbe come "quante voci ha questo tag", che è
+ * un'altra grandezza (`Tag.conteggio`): su una pagina dove il totale è
+ * dichiarato in testa, due numeri con lo stesso aspetto e due significati
+ * diversi non si distinguono. L'ordine dice già quale legame è più forte.
+ */
+const idVoci = new Set(voci.map((v) => v.id));
+const correlati: Tag[] = tag
+  .filter((v) => v.slug !== slug)
+  .map((v) => ({
+    tag: v,
+    inComune: (vociPerTag.get(v.slug) ?? []).filter((voce) => idVoci.has(voce.id)).length,
+  }))
+  .filter((v) => v.inComune > 0)
+  .sort((a, b) => b.inComune - a.inComune)
+  .slice(0, 8)
+  .map((v) => v.tag);
+
+const altriTag = tag.filter((v) => v.slug !== slug).slice(0, 24);
+
+const etichettaConteggio = voci.length === 1 ? t('tag.conteggioUno', lingua) : t('tag.conteggio', lingua);
+const descrizione = `${corrente.etichetta} — ${voci.length} ${etichettaConteggio}. ${t('tag.sottotitolo', lingua)}`;
+const fieldsHref = lingua === 'it' ? '/it/fields' : '/fields';
+---
+
+<html lang={lingua}>
+  <head>
+    <BaseHead
+      title={`${corrente.etichetta} — Fields — Graziano Enzo Marchesani`}
+      description={descrizione}
+      alternate={{ en: `/fields/tag/${slug}`, it: `/it/fields/tag/${slug}` }}
+    />
+  </head>
+  <body class="bg-paper text-ink font-sans">
+    <FieldTransitionOverlay />
+    <Nav lingua={lingua} />
+
+    <main class="mx-auto max-w-3xl px-6 pt-32 pb-24 sm:px-10">
+      <p class="font-mono text-xs uppercase tracking-widest text-ink/60">
+        <a href={fieldsHref} class="transition-colors hover:text-ink">{t('fields.titolo', lingua)}</a>
+        <span class="mx-2 opacity-40">/</span>
+        {t('tag.occhiello', lingua)}
+      </p>
+
+      <h1 class="font-display mt-2 text-4xl sm:text-5xl">{corrente.etichetta}</h1>
+      <p class="mt-3 flex flex-wrap items-center gap-3 font-mono text-xs uppercase tracking-widest text-ink/60">
+        <span>{voci.length} {etichettaConteggio}</span>
+        <span aria-hidden="true" class="opacity-40">·</span>
+        <a href={`${fieldsHref}?tag=${slug}`} class="underline decoration-ink/40 underline-offset-4 transition-colors hover:text-ink">
+          {t('tag.vediInFields', lingua)}
+        </a>
+      </p>
+
+      {/* Stessa voce d'elenco di Publications: il titolo è in sans a peso
+          normale, non nel display dei titoli d'articolo. Qui le voci sono
+          una lista da scorrere, non venti titoli da gridare uno sotto
+          l'altro. */}
+      <ul class="mt-12 divide-y divide-ink/10 border-t border-ink/15">
+        {voci.map((voce) => (
+          <li>
+            <a href={voce.href} class="group block py-6">
+              <p class="font-mono text-[11px] uppercase tracking-widest text-ink/50 mb-2">
+                {t(`fields.${voce.categoria}` as 'fields.research', lingua)}
+                {voce.anno && <span class="ml-2 text-ink/40">{voce.anno}</span>}
+              </p>
+              <h2 class="max-w-[65ch] text-lg font-normal leading-snug text-ink underline-offset-4 decoration-ink/40 transition-colors group-hover:underline sm:text-xl">
+                {voce.titolo}
+              </h2>
+              <p class="mt-2.5 max-w-[75ch] text-sm leading-relaxed text-ink/75">{voce.sommario}</p>
+            </a>
+          </li>
+        ))}
+      </ul>
+
+      {correlati.length > 0 && (
+        <section class="mt-16">
+          <h2 class="font-mono text-xs uppercase tracking-widest text-ink/50">{t('tag.correlati', lingua)}</h2>
+          <ul class="mt-4 flex flex-wrap gap-2">
+            {correlati.map((v) => (
+              <li>
+                <a
+                  href={hrefTag(v.slug, lingua)}
+                  class="pillola-tag inline-block rounded-full px-3 py-1 text-xs uppercase tracking-widest opacity-80 transition-opacity hover:opacity-100"
+                >
+                  {v.etichetta}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {altriTag.length > 0 && (
+        <section class="mt-12">
+          <h2 class="font-mono text-xs uppercase tracking-widest text-ink/50">{t('tag.tuttiITag', lingua)}</h2>
+          <ul class="mt-4 flex flex-wrap gap-x-4 gap-y-2">
+            {altriTag.map((v) => (
+              <li>
+                <a href={hrefTag(v.slug, lingua)} class="text-sm text-ink/60 underline-offset-4 decoration-ink/30 transition-colors hover:text-ink hover:underline">
+                  {v.etichetta}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </main>
+
+    <Footer lingua={lingua} />
+  </body>
+</html>

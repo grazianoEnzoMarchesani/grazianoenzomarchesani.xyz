@@ -13,5 +13,6 @@ Due tipi di file:
 - [content-plan.md](content-plan.md) — cosa deve contenere il sito, migrazione dal vecchio sito. *Decisione.*
 - [design.md](design.md) — direzione visiva/estetica. *Decisione.*
 - [blocchi-articoli.md](blocchi-articoli.md) — immagini, video, LaTeX e grafici dentro il corpo degli articoli di Fields. *Decisione.*
+- [tag.md](tag.md) — la tassonomia unificata di Fields: sorgenti dei tag, pagine statiche per tag, filtro a satelliti sulla spirale, regole per scriverli. *Decisione.*
 - [fields-spiral.md](fields-spiral.md) — l'animazione 3D della pagina Fields (la spirale scroll-driven). *Decisione.*
 - [session-log.md](session-log.md) — cronologia breve, una voce per sessione. *Log.*

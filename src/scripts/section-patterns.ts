@@ -10,22 +10,20 @@
  * ~1MB di sfondi anche per le sezioni che non vede mai; con fetch ne
  * scarica solo i pochi file che il suo viewport sceglie davvero, e il
  * browser li mette in cache.
+ *
+ * Il manifest invece è importato (non fetchato): sono ~2KB di sola
+ * tabella nome/dimensioni, e prenderli via rete costava un round trip
+ * intero *prima* di poter anche solo iniziare a scaricare l'SVG. La
+ * catena a freddo era HTML → bundle → manifest → SVG; ora è una tappa
+ * più corta.
  */
+
+import manifestJson from '../../public/patterns/generated/manifest.json';
 
 type ManifestEntry = { bucket: string; w: number; h: number; variant: number; file: string };
 type Manifest = { variantsPerBucket: number; entries: ManifestEntry[] };
 
-const MANIFEST_URL = '/patterns/generated/manifest.json';
-
-let manifestPromise: Promise<Manifest | null> | null = null;
-function loadManifest(): Promise<Manifest | null> {
-  if (!manifestPromise) {
-    manifestPromise = fetch(MANIFEST_URL)
-      .then((res) => (res.ok ? (res.json() as Promise<Manifest>) : null))
-      .catch(() => null);
-  }
-  return manifestPromise;
-}
+const manifest = manifestJson as Manifest;
 
 const svgTextCache = new Map<string, Promise<string>>();
 function loadSvgText(file: string): Promise<string> {
@@ -68,7 +66,6 @@ export async function initSectionPatterns() {
   const targets = Array.from(document.querySelectorAll<SVGSVGElement>('[data-pattern-bg]'));
   if (!targets.length) return;
 
-  const manifest = await loadManifest();
   if (!manifest || manifest.entries.length === 0) return;
 
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -102,4 +99,29 @@ export async function initSectionPatterns() {
       }
     })
   );
+}
+
+/**
+ * Handoff tra i due <script> della home. Gli sfondi non dipendono da
+ * GSAP, ma stando nello stesso modulo aspettavano che gsap +
+ * ScrollTrigger (~112KB) fossero scaricati ed eseguiti prima di
+ * chiedere il primo byte di SVG. Ora partono da uno script separato e
+ * più leggero; questo passa il lavoro già in volo a chi lo attende.
+ */
+let inFlight: Promise<void> | null = null;
+
+/** Chiamata dallo script leggero: avvia subito, senza aspettare GSAP. */
+export function prefetchSectionPatterns(): void {
+  inFlight = initSectionPatterns();
+}
+
+/**
+ * Chiamata da setupHome(): al primo caricamento raccoglie il lavoro già
+ * avviato, alle navigazioni successive (ClientRouter monta SVG nuovi)
+ * ne avvia uno pulito, esattamente come prima.
+ */
+export function sectionPatternsReady(): Promise<void> {
+  const pending = inFlight;
+  inFlight = null;
+  return pending ?? initSectionPatterns();
 }
