@@ -16,6 +16,12 @@ const nextUrl = next ? (isIt ? `/it/fields/${next.id}` : `/fields/${next.id}`) :
 ---
 
 <div id="overscroll-root" data-current-id={currentId} data-fields-url={fieldsUrl} data-next-url={nextUrl} data-next-title={next?.title ?? ''}>
+	<!-- Indicatori overscroll (desktop): opacita' guidata dall'accumulo di scroll -->
+	<span id="overscroll-arrow-top" aria-hidden="true" class="pointer-events-none fixed left-1/2 -translate-x-1/2 top-20 sm:top-28 z-40 text-[28px] leading-none opacity-0">↑</span>
+	{next && (
+		<span id="overscroll-arrow-bottom" aria-hidden="true" class="pointer-events-none fixed left-1/2 -translate-x-1/2 bottom-20 sm:bottom-28 z-40 text-[28px] leading-none opacity-0">↓</span>
+	)}
+
 	<!-- Bottom manual link / info -->
 	<div class="mt-14 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-t border-ink/10 pt-6">
 		<button
@@ -103,9 +109,27 @@ const nextUrl = next ? (isIt ? `/it/fields/${next.id}` : `/fields/${next.id}`) :
 		});
 
 		// Overscroll serendipità (desktop wheel/trackpad)
-		const THRESHOLD = 90;
-		let pullTopDistance = 0;
-		let pullBottomDistance = 0;
+		const THRESHOLD = 2000;
+		const arrowTop = document.getElementById('overscroll-arrow-top');
+		const arrowBottom = document.getElementById('overscroll-arrow-bottom');
+		let pullTop = 0;
+		let pullBottom = 0;
+		let quietTimer = 0;
+		let lastFreeScroll = 0;
+
+		function paint(el: HTMLElement | null, pull: number) {
+			if (!el) return;
+			// nessuna transizione mentre carica (deve seguire il dito), animata al rilascio
+			el.style.transition = pull === 0 ? 'opacity .3s' : 'none';
+			el.style.opacity = pull === 0 ? '0' : String(0.15 + 0.85 * Math.min(1, pull / THRESHOLD));
+		}
+
+		function release() {
+			pullTop = 0;
+			pullBottom = 0;
+			paint(arrowTop, 0);
+			paint(arrowBottom, 0);
+		}
 
 		function handleWheel(e: WheelEvent) {
 			if (isNavigating) return;
@@ -120,25 +144,30 @@ const nextUrl = next ? (isIt ? `/it/fields/${next.id}` : `/fields/${next.id}`) :
 
 			const scrollTop = window.scrollY || document.documentElement.scrollTop;
 			const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+			const atTop = scrollTop <= 1;
+			const atBottom = scrollTop >= maxScroll - 2;
+			const now = e.timeStamp;
 
-			// Top overscroll
-			if (scrollTop <= 1 && e.deltaY < 0) {
-				pullTopDistance += Math.abs(e.deltaY) * 0.4;
-				if (pullTopDistance >= THRESHOLD) {
-					goBackToFields();
-				}
-			} else if (pullTopDistance > 0 && e.deltaY > 0) {
-				pullTopDistance = Math.max(0, pullTopDistance - e.deltaY);
-			}
+			if (!atTop && !atBottom) lastFreeScroll = now;
+			// ponytail: 200ms di quiete al bordo per scartare l'inerzia del trackpad;
+			// se su qualche device l'inerzia dura di piu', alzare la costante.
+			const gestureStartedAtEdge = now - lastFreeScroll > 200;
 
-			// Bottom overscroll (solo se esiste un articolo successivo)
-			if (nextUrl && scrollTop >= maxScroll - 2 && e.deltaY > 0) {
-				pullBottomDistance += e.deltaY * 0.4;
-				if (pullBottomDistance >= THRESHOLD) {
-					goToNext();
-				}
-			} else if (pullBottomDistance > 0 && e.deltaY < 0) {
-				pullBottomDistance = Math.max(0, pullBottomDistance + e.deltaY);
+			pullTop = atTop && e.deltaY < 0 && gestureStartedAtEdge ? pullTop - e.deltaY : 0;
+			pullBottom = nextUrl && atBottom && e.deltaY > 0 && gestureStartedAtEdge ? pullBottom + e.deltaY : 0;
+
+			paint(arrowTop, pullTop);
+			paint(arrowBottom, pullBottom);
+
+			clearTimeout(quietTimer);
+			quietTimer = window.setTimeout(release, 400);
+
+			if (pullTop >= THRESHOLD) {
+				release();
+				goBackToFields();
+			} else if (pullBottom >= THRESHOLD) {
+				release();
+				goToNext();
 			}
 		}
 
@@ -146,6 +175,7 @@ const nextUrl = next ? (isIt ? `/it/fields/${next.id}` : `/fields/${next.id}`) :
 
 		currentCleanup = () => {
 			window.removeEventListener('wheel', handleWheel);
+			clearTimeout(quietTimer);
 		};
 
 		// Rimuove il listener prima di cambiare pagina tramite View Transitions

@@ -8,11 +8,11 @@ Vedi [constraints.md](constraints.md) per i vincoli che hanno guidato queste sce
 
 - **Astro** — framework principale, output statico. Gestisce le pagine e gli articoli come contenuti tipizzati.
 - **TypeScript**. Type-checking via `@astrojs/check` (devDependency, aggiunta 2026-08-18) — `npx astro check`.
-- **MDX** per i contenuti — serve perché nelle pagine devono poter comparire componenti veri (grafici, embed video, immagini ottimizzate), non solo sintassi Markdown.
+- **Markdown, non MDX, per i contenuti delle collection.** `@astrojs/mdx` è installato e serve alle pagine, ma i corpi degli articoli passano da `renderMarkdown()` dentro `loaderBilingue()`: l'estensione `.mdx` dei file di contenuto è decorativa e un componente JSX nel corpo non verrebbe mai eseguito. I blocchi ricchi (grafici, video, LaTeX, figure) si ottengono con un plugin remark sulla sintassi Markdown nativa — vedi [blocchi-articoli.md](blocchi-articoli.md).
 
 ## UI framework
 
-- **React**, adottato senza vincoli ideologici: se in futuro conviene altro, si cambia senza problemi. Necessario comunque per i grafici (vedi Bklit UI sotto, basato su shadcn/ui = React + Radix + Tailwind).
+- **React**, adottato senza vincoli ideologici: se in futuro conviene altro, si cambia senza problemi. Necessario per i grafici (vedi Bklit UI sotto). I grafici sono l'**unico** punto del sito che spedisce React al browser: prima del 2026-08-21 non esisteva nemmeno un'isola idratata.
 
 ## Styling
 
@@ -40,6 +40,10 @@ Vedi [constraints.md](constraints.md) per i vincoli che hanno guidato queste sce
   - **Build-Time**: `scripts/genera-search-index.mjs` + `scripts/integrazione-ricerca.mjs` generano `public/search-index.json` con metadati e vettori di embedding (384 float normalizzati, `all-MiniLM-L6-v2`) per Research, Tools, Teaching, Projects, Pubblicazioni e Competenze in italiano e inglese.
   - **In-Browser Runtime**: `src/scripts/search-worker.ts` e `src/scripts/search-client.ts` gestiscono la ricerca ibrida (matching testuale immediato in-memory unito al calcolo vettoriale della query in Web Worker per il calcolo della similarità coseno).
   - **Interfaccia**: `SearchModal.astro` (Command Palette modale globale, richiamabile con `⌘K` o icona lente in `Nav.astro`).
+  - **Cache del modello legata al secure context**: `env.useBrowserCache = typeof caches !== 'undefined'` in `search-worker.ts`. La Cache API esiste solo in secure context (HTTPS o `localhost`) e `@xenova/transformers` fa `throw` secco se manca (`hub.js`, "Browser cache is not available in this environment"), quindi non va mai impostata a `true` fisso. Con la guardia, su origin insicura il modello si riscarica a ogni sessione (~23 MB da HuggingFace + ~10 MB di wasm da jsDelivr) invece di rompersi. In produzione (GitHub Pages, HTTPS) la cache funziona normalmente.
+  - **Nessun fallimento silenzioso**: `search-client.ts` gestisce sia il messaggio `error` del worker sia `worker.onerror` (un modulo worker che non si carica non passa dal `try/catch` sul costruttore) tramite `segnalaErrore()`; lo stato `StatoMotore` espone `errore: string | null` e `SearchModal.astro` ha il ramo dedicato "Solo ricerca testuale" / "Text search only" con il messaggio nel `title`. Senza questi, un motore morto resta indistinguibile da un caricamento lento.
+  - **Lo stato del motore si mostra solo quando devia** (deciso 2026-08-21): allo stato normale — motore semantico pronto — la barra di stato di `SearchModal.astro` non mostra nulla, solo gli hint da tastiera `↑↓ navigate / ↵ select`. L'etichetta resta nel DOM e riappare in posizione (fade 200ms, opacità 0.7) su `:hover`/`:focus-within` della barra, senza box flottante che si sovrapponga ai risultati. Resta invece **visibile e persistente** nei due casi in cui la ricerca è degradata: durante il caricamento del modello (con percentuale) e nel ramo "Solo ricerca testuale". Rimosso il pallino-indicatore: tre tonalità di grigio senza legenda non comunicavano nulla. Uno `<span class="sr-only" role="status" aria-live="polite">` continua ad annunciare lo stato agli screen reader anche quando è invisibile. Limite noto e accettato: su touch non esiste hover, quindi a motore pronto lo stato è irraggiungibile da mobile.
+  - **Ricerca testuale insensibile ai diacritici**: `norm()` in `search-client.ts` applica `.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()` a query e campi indicizzati, così `facade` trova `façade`. L'**embedding riceve la query originale non normalizzata**: l'indice vettoriale è generato dal testo accentato, normalizzare anche lì degraderebbe il semantico.
 
 ## Immagini/performance
 
@@ -63,7 +67,17 @@ Vedi [constraints.md](constraints.md) per i vincoli che hanno guidato queste sce
 
 ## Grafici
 
-- **Bklit UI** — registry shadcn/ui specializzato in chart. Installazione via CLI: `npx shadcn@latest add @bklit/<nome-componente>`. Richiede React (vedi sopra).
+- **Bklit UI** — registry shadcn/ui specializzato in chart, **vendorizzato in `src/vendor/bklit/`** (33 item, 171 file) e non installato via `npx shadcn add`: il progetto non usa shadcn/ui, e i sorgenti devono restare modificabili e funzionanti da locale. È un fork a tutti gli effetti — gli aggiornamenti upstream non arrivano da soli, si rifanno scendere con `node scripts/scarica-bklit.mjs` (`--diff` per vedere cosa cambierebbe). Dettagli, patch all'upstream e trappole in [blocchi-articoli.md](blocchi-articoli.md).
+- Dipendenze npm trascinate dal vendoring: `@visx/*` (13 pacchetti, pinnati alle **alpha** `4.0.1-alpha.0` che Bklit richiede e che il fork congela), `motion`, `d3-array/geo/sankey/scale/shape`, `@number-flow/react`, `@base-ui/react`, `react-use-measure`, `topojson-client`, `clsx`, `tailwind-merge`. Il `package.json` è passato da 13 a ~46 dipendenze.
+- **Costo runtime misurato** (2026-08-21, articolo con un grafico a linea): ~54 kB gzip di React + ~50 kB di `chart-context` (visx+motion) + ~24 kB di adattatore. **Zero** sugli articoli senza grafici: il codice sta in chunk dinamici dietro `IntersectionObserver`.
+
+## LaTeX
+
+- **KaTeX** con `remark-math` + `rehype-katex` (aggiunti 2026-08-21): renderizza **al build**, in pagina finiscono HTML e CSS e nessun JS. Foglio di stile importato in `FieldArticleBody.astro`, non in `global.css`, così pesa solo sulle pagine articolo.
+
+## Embed video
+
+- **`lite-youtube-embed`** (aggiunto 2026-08-21) con **poster scaricato al build** in `public/yt/`: il sito non contatta Google finché l'utente non preme play. Senza poster locale la facciata chiamerebbe `i.ytimg.com` a ogni caricamento di pagina, prima di qualsiasi consenso.
 
 ## Deploy
 

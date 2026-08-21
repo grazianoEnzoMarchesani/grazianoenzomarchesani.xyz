@@ -120,15 +120,13 @@ raw a contenuto reale nelle pagine:
 
 **Content Collections e Bilingue**: `src/content.config.ts` configurato con `loaderBilingue()` su tutte le 4 collezioni di Fields (`research`, `tools`, `teaching`, `projects`), struttura invariata (`research/tools/projects` nested un file per cartella, `teaching` idem con cartelle speciali escluse). Tutti i 46 file `.mdx` gestiscono nativamente la doppia lingua con token `$$$`. Pagine dinamiche generate sia su `/fields/...` che su `/it/fields/...` con `perLingua()` da `src/lib/contenuti.ts`.
 
-Escluso di proposito: `research/prova-articolo-completo` — nel vecchio
-sito era esplicitamente un articolo usa-e-getta di test ("safe to
-delete once checked") per verificare insieme media/chart/LaTeX, usa
-`chart` e i placeholder `{{media:id}}`/`{{chart:id}}` che lo schema
-attuale non supporta (grafici Bklit e pipeline media custom entrambi
-rimandati). Lasciato `.md`: il pattern `*/*.mdx` della collection lo
-esclude automaticamente, nessuna azione necessaria salvo deciderne la
-sorte in futuro (cancellare, o riscrivere come vero articolo quando i
-chart interattivi saranno pronti).
+`research/prova-articolo-completo` è la **pagina di regressione permanente** dei
+blocchi ricchi (riscritta il 2026-08-21, non più esclusa dal loader). Non è un
+contenuto: contiene un blocco per tipo — grafico, immagine con didascalia, video,
+LaTeX inline e display — così una regressione si vede a occhio. La versione
+precedente veniva dal vecchio sito e usava i placeholder `{{media:id}}`/`{{chart:id}}`
+e un registro `chart` nel frontmatter: convenzioni del vecchio sito, abbandonate.
+Sintassi attuale in [blocchi-articoli.md](blocchi-articoli.md).
 
 **Fields collegata ai dati reali** (sessione 2026-08-18): la spirale 3D
 legge ora le quattro collection vere invece dei dati placeholder
@@ -186,3 +184,6 @@ obiettivo e architettura completati (sessione `/grill-me` + `/ponytail` del 2026
 - Embed esterni, es. video YouTube.
 - Codice LaTeX.
 - Grafici interattivi (Bklit UI).
+
+Tutti e quattro **realizzati il 2026-08-21** — sintassi, pipeline e limiti in
+[blocchi-articoli.md](blocchi-articoli.md).

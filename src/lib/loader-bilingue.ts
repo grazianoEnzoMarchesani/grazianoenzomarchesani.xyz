@@ -71,6 +71,21 @@ export interface LoaderBilingueOptions {
   ignore?: string[];
 }
 
+/**
+ * Il content layer conserva in cache l'HTML già renderizzato e lo riusa finché il
+ * digest non cambia. Il digest però guarda solo il contenuto dell'articolo: se
+ * cambia la pipeline markdown (plugin remark/rehype, config), gli articoli non
+ * toccati continuano a servire HTML vecchio, e in dev sembra che il plugin nuovo
+ * non funzioni. Si mette quindi nel digest anche lo stato della pipeline.
+ */
+async function digestPipeline(root: URL): Promise<string> {
+  const sorgenti = ["src/lib/remark-articolo.ts", "astro.config.mjs"];
+  const contenuti = await Promise.all(
+    sorgenti.map((percorso) => fs.readFile(new URL(percorso, root), "utf-8").catch(() => "")),
+  );
+  return contenuti.join("\u0000");
+}
+
 export function loaderBilingue(cartella: string, options: LoaderBilingueOptions = {}): Loader {
   const ignorePatterns = options.ignore ?? [];
 
@@ -83,6 +98,7 @@ export function loaderBilingue(cartella: string, options: LoaderBilingueOptions 
         return;
       }
       const baseFs = fileURLToPath(baseDir);
+      const pipeline = await digestPipeline(config.root);
 
       const chiaveDiFile = (percorso: string) => percorso.split("/")[0].replace(/\.(mdx|md)$/, "");
 
@@ -105,7 +121,7 @@ export function loaderBilingue(cartella: string, options: LoaderBilingueOptions 
         const [, frontmatterGrezzo, corpoGrezzo] = corrispondenza;
         const frontmatter = spaccaFrontmatter(frontmatterGrezzo, relativo);
         const corpo = spaccaCorpo(corpoGrezzo, relativo);
-        const digest = generateDigest(contenuto);
+        const digest = generateDigest(contenuto + pipeline);
 
         for (const lingua of LINGUE) {
           const id = `${lingua}/${chiave}`;
@@ -144,7 +160,6 @@ export function loaderBilingue(cartella: string, options: LoaderBilingueOptions 
           continue;
         }
         if (voce.isFile() && (voce.name.endsWith(".mdx") || voce.name.endsWith(".md"))) {
-          if (voce.name === "prova-articolo-completo.md") continue;
           percorsi.push(voce.name);
         } else if (voce.isDirectory()) {
           const candidatoMdx = `${voce.name}/${voce.name}.mdx`;
@@ -152,9 +167,7 @@ export function loaderBilingue(cartella: string, options: LoaderBilingueOptions 
           if (existsSync(new URL(candidatoMdx, baseDir))) {
             percorsi.push(candidatoMdx);
           } else if (existsSync(new URL(candidatoMd, baseDir))) {
-            if (voce.name !== "prova-articolo-completo") {
-              percorsi.push(candidatoMd);
-            }
+            percorsi.push(candidatoMd);
           }
         }
       }

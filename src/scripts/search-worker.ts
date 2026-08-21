@@ -1,8 +1,10 @@
 import { pipeline, env } from '@xenova/transformers';
 
-// Disabilita modelli locali per il runtime browser e abilita cache del browser
+// Disabilita modelli locali per il runtime browser.
+// La Cache API esiste solo in secure context (https o localhost): su un dev server
+// raggiunto via IP di LAN `caches` e' undefined e transformers.js farebbe throw.
 env.allowLocalModels = false;
-env.useBrowserCache = true;
+env.useBrowserCache = typeof caches !== 'undefined';
 
 let extractorPromise: Promise<any> | null = null;
 

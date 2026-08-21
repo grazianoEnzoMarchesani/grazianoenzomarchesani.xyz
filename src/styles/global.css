@@ -46,3 +46,56 @@ body {
 }
 
 
+
+/*
+ * Token dei grafici Bklit (src/vendor/bklit/).
+ *
+ * Bklit presuppone il sistema di token shadcn; qui esiste solo ink/paper, quindi
+ * i suoi `--chart-*` si rimappano su quelli invece di riscrivere i 171 file
+ * vendorizzati — che restano così allineati all'upstream e aggiornabili con
+ * `node scripts/scarica-bklit.mjs`.
+ *
+ * La scala `--chart-1..5` resta monocroma come da default Bklit: va bene per una
+ * serie sola, NON distingue due serie. Una palette categoriale è nel backlog.
+ */
+:root {
+  --chart-1: color-mix(in srgb, var(--color-ink) 100%, transparent);
+  --chart-2: color-mix(in srgb, var(--color-ink) 72%, transparent);
+  --chart-3: color-mix(in srgb, var(--color-ink) 52%, transparent);
+  --chart-4: color-mix(in srgb, var(--color-ink) 34%, transparent);
+  --chart-5: color-mix(in srgb, var(--color-ink) 20%, transparent);
+
+  --chart-background: var(--color-paper);
+  --chart-foreground: var(--color-ink);
+  --chart-foreground-muted: color-mix(in srgb, var(--color-ink) 55%, transparent);
+  --chart-line-primary: var(--chart-1);
+  --chart-line-secondary: var(--chart-2);
+  --chart-crosshair: color-mix(in srgb, var(--color-ink) 45%, transparent);
+  --chart-grid: color-mix(in srgb, var(--color-ink) 12%, transparent);
+  --chart-brush-border: var(--chart-grid);
+  --chart-label: color-mix(in srgb, var(--color-ink) 60%, transparent);
+
+  /* Il tooltip di Bklit nasce scuro (è pensato per dashboard dark). Qui non esiste
+     una dark mode: si ribalta su carta, e a staccarlo dal grafico basta lo `shadow-lg`
+     che il componente ha già. */
+  --chart-tooltip-background: color-mix(in srgb, var(--color-paper) 96%, var(--color-ink));
+  --chart-tooltip-foreground: var(--color-ink);
+  --chart-tooltip-muted: color-mix(in srgb, var(--color-ink) 55%, transparent);
+
+  --chart-marker-background: var(--color-paper);
+  --chart-marker-border: color-mix(in srgb, var(--color-ink) 25%, transparent);
+  --chart-marker-foreground: var(--color-ink);
+
+  --chart-scale-01: color-mix(in srgb, var(--color-ink) 6%, var(--color-paper));
+  --chart-scale-02: color-mix(in srgb, var(--color-ink) 22%, var(--color-paper));
+  --chart-scale-03: color-mix(in srgb, var(--color-ink) 42%, var(--color-paper));
+  --chart-scale-04: color-mix(in srgb, var(--color-ink) 64%, var(--color-paper));
+  --chart-scale-05: color-mix(in srgb, var(--color-ink) 86%, var(--color-paper));
+  --chart-scale-pattern-color: color-mix(in srgb, var(--color-ink) 4%, var(--color-paper));
+
+  --legend: var(--color-paper);
+  --legend-foreground: var(--color-ink);
+  --legend-muted: color-mix(in srgb, var(--color-ink) 6%, var(--color-paper));
+  --legend-muted-foreground: color-mix(in srgb, var(--color-ink) 55%, transparent);
+  --legend-track: color-mix(in srgb, var(--color-ink) 15%, transparent);
+}

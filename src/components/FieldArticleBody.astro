@@ -1,10 +1,22 @@
 ---
-/** Stili condivisi per il corpo Markdown/MDX delle quattro pagine di dettaglio di Fields. */
+/** Stili condivisi per il corpo Markdown delle quattro pagine di dettaglio di Fields. */
+
+// KaTeX renderizza al build: qui serve solo il foglio di stile. Sta in questo
+// componente e non in global.css perché così Astro lo include unicamente nelle
+// pagine articolo. I font KaTeX li scarica il browser solo se in pagina c'è
+// davvero una formula, quindi un articolo senza matematica non li paga.
+import 'katex/dist/katex.min.css';
+import 'lite-youtube-embed/src/lite-yt-embed.css';
 ---
 
 <div class="field-article">
 	<slot />
 </div>
+
+<script>
+	import '../scripts/monta-grafici.ts';
+	import 'lite-youtube-embed';
+</script>
 
 <style>
 	.field-article :global(h2) {
@@ -48,5 +60,60 @@
 
 	.field-article :global(li + li) {
 		margin-top: 0.25rem;
+	}
+
+	.field-article :global(figure.grafico),
+	.field-article :global(figure.figura),
+	.field-article :global(lite-youtube) {
+		margin-top: 2rem;
+	}
+
+	.field-article :global(figure.figura img) {
+		width: 100%;
+		height: auto;
+	}
+
+	.field-article :global(figure figcaption) {
+		margin-top: 0.5rem;
+		font-size: 0.8125rem;
+		line-height: 1.5;
+		opacity: 0.7;
+	}
+
+	.field-article :global(lite-youtube) {
+		max-width: 100%;
+	}
+
+	/* Le formule display possono eccedere la colonna: scorrono da sole, la pagina no. */
+	.field-article :global(.katex-display) {
+		overflow-x: auto;
+		overflow-y: hidden;
+		padding-bottom: 0.25rem;
+	}
+
+	/* Scheletro: visibile finché React non monta, e per sempre senza JS. */
+	.field-article :global(.grafico-scheletro) {
+		height: 100%;
+		border: 1px solid color-mix(in srgb, var(--color-ink) 15%, transparent);
+		background: linear-gradient(
+			100deg,
+			transparent 20%,
+			color-mix(in srgb, var(--color-ink) 6%, transparent) 50%,
+			transparent 80%
+		);
+		background-size: 300% 100%;
+		animation: grafico-luccichio 1.6s linear infinite;
+	}
+
+	@keyframes grafico-luccichio {
+		to {
+			background-position: -150% 0;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.field-article :global(.grafico-scheletro) {
+			animation: none;
+		}
 	}
 </style>

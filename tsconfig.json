@@ -9,6 +9,15 @@
   ],
   "compilerOptions": {
     "jsx": "react-jsx",
-    "jsxImportSource": "react"
+    "jsxImportSource": "react",
+    "baseUrl": ".",
+    "paths": {
+      "@/lib/*": [
+        "src/vendor/bklit/lib/*"
+      ],
+      "@/components/*": [
+        "src/vendor/bklit/components/*"
+      ]
+    }
   }
 }

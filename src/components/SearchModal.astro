@@ -51,15 +51,13 @@ const { lingua = 'en' } = Astro.props;
     </div>
 
     <!-- Status Bar / Engine Info -->
-    <div id="search-status" class="flex items-center justify-between border-b border-ink/5 bg-ink/[0.02] px-4 py-1.5 text-[11px] text-ink/60">
-      <div class="flex items-center gap-2">
-        <span id="status-indicator" class="h-2 w-2 rounded-full bg-ink/20"></span>
-        <span id="status-text">{t('search.caricamentoModello', lingua)}</span>
-      </div>
+    <div id="search-status" class="flex items-center justify-end gap-3 border-b border-ink/5 bg-ink/[0.02] px-4 py-1.5 text-[11px] text-ink/60">
+      <span id="status-text" class="mr-auto truncate">{t('search.caricamentoModello', lingua)}</span>
       <div class="flex items-center gap-2 font-mono text-[10px] opacity-60">
         <span>↑↓ navigate</span>
         <span>↵ select</span>
       </div>
+      <span id="status-sr" class="sr-only" role="status" aria-live="polite"></span>
     </div>
 
     <!-- Results List -->
@@ -88,7 +86,7 @@ const { lingua = 'en' } = Astro.props;
       closeBtn: document.getElementById('search-close-btn'),
       resultsContainer: document.getElementById('search-results'),
       statusText: document.getElementById('status-text'),
-      statusIndicator: document.getElementById('status-indicator'),
+      statusBar: document.getElementById('search-status'),
       lingua: document.documentElement.lang || 'en',
     };
   }
@@ -125,16 +123,27 @@ const { lingua = 'en' } = Astro.props;
     renderResults([]);
   }
 
-  function updateStatusUI(stato: { modelloPronto: boolean; caricamento: boolean; percentuale: number }) {
-    const { statusText, statusIndicator, lingua } = getElements();
-    if (!statusText || !statusIndicator) return;
-    if (stato.modelloPronto) {
-      statusIndicator.className = 'h-2 w-2 rounded-full bg-ink';
-      statusText.textContent = lingua === 'it' ? 'Motore semantico vettoriale pronto' : 'Vector semantic engine active';
+  function updateStatusUI(stato: { modelloPronto: boolean; caricamento: boolean; percentuale: number; errore: string | null }) {
+    const { statusText, statusBar, lingua } = getElements();
+    const statusSr = document.getElementById('status-sr');
+    if (!statusText || !statusBar) return;
+
+    // Lo stato del motore interessa poco all'utente: si mostra da solo finche'
+    // la ricerca e' degradata, poi sbiadisce e riappare solo al passaggio del mouse.
+    const mostra = (etichetta: string, persistente: boolean) => {
+      statusText.textContent = etichetta;
+      statusBar.classList.toggle('status-quiet', !persistente);
+      if (statusSr) statusSr.textContent = etichetta;
+    };
+
+    if (stato.errore) {
+      mostra(lingua === 'it' ? 'Solo ricerca testuale' : 'Text search only', true);
+      statusText.title = stato.errore;
+    } else if (stato.modelloPronto) {
+      mostra(lingua === 'it' ? 'Motore semantico vettoriale pronto' : 'Vector semantic engine active', false);
     } else if (stato.caricamento) {
-      statusIndicator.className = 'h-2 w-2 rounded-full bg-ink/30 animate-pulse';
       const pct = stato.percentuale > 0 ? ` (${stato.percentuale}%)` : '';
-      statusText.textContent = (lingua === 'it' ? 'Inizializzazione motore neurale' : 'Loading neural model') + pct;
+      mostra((lingua === 'it' ? 'Inizializzazione motore neurale' : 'Loading neural model') + pct, true);
     }
   }
 
@@ -310,3 +319,23 @@ const { lingua = 'en' } = Astro.props;
     bindInputListeners();
   });
 </script>
+
+<style>
+  /* Stato "risolto": la scritta resta nel DOM ma sparisce, e torna leggibile
+     solo quando il mouse passa sulla barra o si naviga da tastiera. */
+  #search-status.status-quiet #status-text {
+    opacity: 0;
+    transition: opacity 200ms ease;
+  }
+
+  #search-status.status-quiet:hover #status-text,
+  #search-status.status-quiet:focus-within #status-text {
+    opacity: 0.7;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #search-status.status-quiet #status-text {
+      transition: none;
+    }
+  }
+</style>

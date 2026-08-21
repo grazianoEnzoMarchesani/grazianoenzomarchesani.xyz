@@ -13,11 +13,17 @@ export interface DocumentoRicerca {
   tipoMatch?: 'semantico' | 'testuale';
 }
 
-export type ListenerStato = (stato: {
+export interface StatoMotore {
   modelloPronto: boolean;
   caricamento: boolean;
   percentuale: number;
-}) => void;
+  errore: string | null;
+}
+
+export type ListenerStato = (stato: StatoMotore) => void;
+
+/** Minuscolo + rimozione diacritici: "Façade" -> "facade". */
+const norm = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
 
 export class MotoreRicerca {
   private indice: DocumentoRicerca[] = [];
@@ -26,6 +32,7 @@ export class MotoreRicerca {
   private modelloPronto = false;
   private caricamentoModello = false;
   private percentualeDownload = 0;
+  private erroreModello: string | null = null;
   private pendingRequests = new Map<number, (vector: number[]) => void>();
   private requestCounter = 0;
   private listeners: Set<ListenerStato> = new Set();
@@ -46,6 +53,7 @@ export class MotoreRicerca {
     if (this.worker || typeof Worker === 'undefined') return;
 
     this.caricamentoModello = true;
+    this.erroreModello = null;
     this.notificaStato();
 
     try {
@@ -71,25 +79,27 @@ export class MotoreRicerca {
             resolver(vector);
           }
         } else if (type === 'error') {
-          console.warn('[search-worker]', error);
-          this.caricamentoModello = false;
-          this.notificaStato();
+          this.segnalaErrore(error || 'errore sconosciuto nel worker');
         }
       };
 
+      // Senza questo, un fallimento di caricamento del modulo worker e' invisibile.
+      this.worker.onerror = (e) => {
+        this.segnalaErrore(e.message || 'il worker non si e\' avviato');
+      };
+
       this.worker.postMessage({ type: 'init' });
-    } catch (err) {
-      console.warn('[search] Impossibile avviare Web Worker:', err);
-      this.caricamentoModello = false;
-      this.notificaStato();
+    } catch (err: any) {
+      this.segnalaErrore(err?.message || String(err));
     }
   }
 
-  getStato(): { modelloPronto: boolean; caricamento: boolean; percentuale: number } {
+  getStato(): StatoMotore {
     return {
       modelloPronto: this.modelloPronto,
       caricamento: this.caricamentoModello,
       percentuale: this.percentualeDownload,
+      errore: this.erroreModello,
     };
   }
 
@@ -99,23 +109,23 @@ export class MotoreRicerca {
 
   onStatoChange(fn: ListenerStato): () => void {
     this.listeners.add(fn);
-    fn({
-      modelloPronto: this.modelloPronto,
-      caricamento: this.caricamentoModello,
-      percentuale: this.percentualeDownload,
-    });
+    fn(this.getStato());
     return () => this.listeners.delete(fn);
   }
 
   private notificaStato(): void {
-    const stato = {
-      modelloPronto: this.modelloPronto,
-      caricamento: this.caricamentoModello,
-      percentuale: this.percentualeDownload,
-    };
+    const stato = this.getStato();
     for (const fn of this.listeners) {
       fn(stato);
     }
+  }
+
+  private segnalaErrore(messaggio: string): void {
+    console.warn('[search] motore semantico non disponibile:', messaggio);
+    this.erroreModello = messaggio;
+    this.caricamentoModello = false;
+    this.modelloPronto = false;
+    this.notificaStato();
   }
 
   private embedQuery(query: string): Promise<number[] | null> {
@@ -173,7 +183,8 @@ export class MotoreRicerca {
 
   async cerca(query: string, linguaAttiva?: string): Promise<DocumentoRicerca[]> {
     await this.inizializzaIndice();
-    const q = query.trim().toLowerCase();
+    const qOriginale = query.trim();
+    const q = norm(qOriginale);
     if (!q) return [];
 
     const lingua: 'en' | 'it' = linguaAttiva === 'it' ? 'it' : 'en';
@@ -185,10 +196,10 @@ export class MotoreRicerca {
 
     for (const doc of corpus) {
       let score = 0;
-      const titolo = doc.titolo.toLowerCase();
-      const sommario = doc.sommario.toLowerCase();
-      const tags = (doc.tag || []).map((t) => t.toLowerCase());
-      const categoria = (doc.categoria || '').toLowerCase();
+      const titolo = norm(doc.titolo);
+      const sommario = norm(doc.sommario);
+      const tags = (doc.tag || []).map(norm);
+      const categoria = norm(doc.categoria || '');
 
       // Esatto match sul titolo
       if (titolo.includes(q)) score += 10;
@@ -208,7 +219,7 @@ export class MotoreRicerca {
     // 2. Se il modello vettoriale è pronto, calcola similarità semantica
     let queryVector: number[] | null = null;
     if (this.modelloPronto) {
-      queryVector = await this.embedQuery(q);
+      queryVector = await this.embedQuery(qOriginale);
     }
 
     if (queryVector) {
