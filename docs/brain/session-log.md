@@ -219,3 +219,5 @@ Log cronologico, append-only: una voce breve per sessione. Per lo stato attuale 
     - **SearchModal**:
       - Integrata gestione di navigazione seamless (`eseguiNavigazione`): alla selezione di un risultato con hash sulla stessa pagina, la modale si chiude istantaneamente e attiva gli eventi di scroll/animazione senza ricaricare la pagina.
     - Rigenerato l'indice `public/search-index.json` (300 voci) e verificata la build con `npm run build` (102 pagine generate senza errori).
+  - **Rimozione Conteggi Competenze e Categorie (`PaginaSkills.astro`)**:
+    - Rimossi i conteggi numerici ("36 COMPETENZE · 11 CATEGORIE") dall'intestazione della pagina Skills/Competenze per mantenere l'interfaccia focalizzata e pulita, preservando la sola didascalia con le indicazioni di navigazione del mazzo interattivo.

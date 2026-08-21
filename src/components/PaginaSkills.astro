@@ -4,7 +4,7 @@ import '../styles/global.css';
 import Nav from './Nav.astro';
 import Footer from './Footer.astro';
 import MazzoCompetenze from './MazzoCompetenze.astro';
-import { perCategoria, quante, sintesi, inLingua } from '../lib/competenze';
+import { perCategoria, sintesi, inLingua } from '../lib/competenze';
 import { type Lingua, linguaDefault, t } from '../i18n/testi';
 
 interface Props {
@@ -45,15 +45,9 @@ const descrizioneSintesi = inLingua(sintesi.descrizione, lingua);
             {descrizioneSintesi}
           </p>
 
-          <div class="flex flex-wrap items-center gap-x-6 gap-y-1.5 pt-2 font-mono text-xs text-ink/50 uppercase tracking-wider">
-            <span>
-              {quante.competenze} {isIt ? 'Competenze' : 'Competences'} · {quante.categorie} {isIt ? 'Categorie' : 'Categories'}
-            </span>
-            <span class="text-ink/30 hidden sm:inline">|</span>
-            <span class="text-[0.72rem] text-ink/60">
-              {isIt ? "Scorri sul mazzo per esplorare · Clicca su una carta per visualizzare i collegamenti" : "Scroll over deck to browse · Click a card to explore connections"}
-            </span>
-          </div>
+          <p class="pt-2 font-mono text-xs text-ink/60 uppercase tracking-wider">
+            {isIt ? "Scorri sul mazzo per esplorare · Clicca su una carta per visualizzare i collegamenti" : "Scroll over deck to browse · Click a card to explore connections"}
+          </p>
         </header>
 
         {/* Palco Mazzo Interattivo a Tutta Larghezza */}
