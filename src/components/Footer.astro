@@ -1,9 +1,27 @@
 ---
+import { type Lingua, linguaDefault, t } from '../i18n/testi';
+import { identita, profiliRicerca, profiliSocial } from '../lib/identita';
+
 interface Props {
+	lingua?: Lingua;
 	showRss?: boolean;
 }
 
-const email = 'graziano.marchesani@unicam.it';
+const lingua: Lingua = Astro.props.lingua || (Astro.currentLocale as Lingua) || (Astro.url.pathname.startsWith('/it') ? 'it' : linguaDefault);
+const isIt = lingua === 'it';
+
+// Profili da mostrare nei contatti: LinkedIn, Instagram, GitHub
+const profiliContatto = [
+	profiliSocial.find((p) => p.id === 'linkedin'),
+	profiliSocial.find((p) => p.id === 'instagram'),
+	profiliRicerca.find((p) => p.id === 'github'),
+].filter((p): p is NonNullable<typeof p> => Boolean(p));
+
+// Offuscamento email: token base64 generato in build per evitare harvesting bot da HTML statico
+const emailUser = 'graziano.marchesani';
+const emailDomain = 'unicam.it';
+const emailToken = Buffer.from(`${emailUser}@${emailDomain}`).toString('base64');
+
 const pathname = Astro.url.pathname;
 const isFields = pathname === '/fields' || pathname.startsWith('/fields/') || pathname === '/it/fields' || pathname.startsWith('/it/fields/');
 const { showRss = isFields } = Astro.props;
@@ -11,8 +29,8 @@ const { showRss = isFields } = Astro.props;
 
 <footer
 	class:list={[
-		'pointer-events-none fixed inset-x-0 bottom-0 z-20 flex items-center px-6 py-4 text-xs uppercase tracking-widest sm:px-10',
-		showRss ? 'justify-between' : 'justify-center sm:justify-end',
+		'pointer-events-none fixed inset-x-0 bottom-0 z-30 flex items-center px-4 py-3 sm:px-10 sm:py-4 text-xs uppercase tracking-widest',
+		showRss ? 'justify-between' : 'justify-end',
 	]}
 >
 	{
@@ -22,8 +40,8 @@ const { showRss = isFields } = Astro.props;
 				target="_blank"
 				rel="alternate"
 				type="application/rss+xml"
-				title="RSS Feed"
-				class="pointer-events-auto flex items-center gap-1.5 opacity-70 hover:opacity-100 transition-opacity"
+				title={t('footer.rss', lingua)}
+				class="pointer-events-auto flex items-center gap-1.5 rounded-full bg-paper/60 px-3 py-1 text-[11px] font-mono tracking-wider backdrop-blur-sm text-ink/70 hover:text-ink hover:bg-paper transition-all"
 			>
 				<svg
 					viewBox="0 0 24 24"
@@ -43,7 +61,253 @@ const { showRss = isFields } = Astro.props;
 			</a>
 		)
 	}
-	<a href={`mailto:${email}`} class="pointer-events-auto hover:opacity-60 transition-opacity">
-		{email}
-	</a>
+
+	{/* Trigger Contatti */}
+	<div class="relative pointer-events-auto">
+		<button
+			id="footer-contact-btn"
+			type="button"
+			class="flex items-center gap-1.5 rounded-full bg-paper/60 px-3 py-1 text-[11px] font-mono tracking-wider backdrop-blur-sm text-ink/80 hover:text-ink hover:bg-paper transition-all cursor-pointer"
+			aria-expanded="false"
+			aria-controls="footer-contact-popover"
+			aria-label={t('footer.contatti', lingua)}
+		>
+			<svg class="h-3.5 w-3.5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<rect width="20" height="16" x="2" y="4" rx="2"/>
+				<path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+			</svg>
+			<span>{t('footer.contatti', lingua)}</span>
+		</button>
+
+		{/* Contact Popover Card */}
+		<div
+			id="footer-contact-popover"
+			class="absolute bottom-full right-0 mb-3 w-[calc(100vw-2rem)] sm:w-80 max-w-sm overflow-hidden rounded-2xl border border-ink/15 bg-paper/95 p-5 shadow-[0_-20px_45px_-10px_rgba(28,25,23,0.12),0_-8px_20px_-6px_rgba(28,25,23,0.06)] backdrop-blur-md transition-all duration-200 ease-out origin-bottom-right opacity-0 pointer-events-none translate-y-2 scale-[0.98]"
+			aria-hidden="true"
+		>
+			<div class="flex items-start justify-between border-b border-ink/10 pb-3">
+				<div>
+					<p class="font-display text-sm font-semibold uppercase tracking-wider text-ink">
+						{identita.nome}
+					</p>
+					<p class="font-mono text-[10px] tracking-normal text-ink/70 mt-0.5">
+						{isIt ? identita.ruolo.it : identita.ruolo.en}
+					</p>
+					<p class="font-mono text-[10px] tracking-normal text-ink/50">
+						{isIt ? identita.affiliazione.it : identita.affiliazione.en}
+					</p>
+				</div>
+				<button
+					id="footer-contact-close"
+					type="button"
+					class="p-1 text-ink/50 hover:text-ink rounded-full hover:bg-ink/5 transition-colors cursor-pointer"
+					aria-label={t('contatti.chiudi', lingua)}
+				>
+					<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+					</svg>
+				</button>
+			</div>
+
+			{/* Email Section with Obfuscation and Copy */}
+			<div class="mt-4 flex items-center justify-between gap-3">
+				<button
+					id="footer-email-link"
+					type="button"
+					data-token={emailToken}
+					class="font-mono text-xs text-ink hover:underline truncate cursor-pointer text-left"
+					title={isIt ? 'Invia una mail' : 'Send an email'}
+				>
+					<span id="footer-email-display">{emailUser} [at] {emailDomain}</span>
+				</button>
+				<button
+					id="footer-copy-email-btn"
+					type="button"
+					data-token={emailToken}
+					data-label-copy={t('contatti.copia', lingua)}
+					data-label-copied={t('contatti.copiato', lingua)}
+					class="shrink-0 flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-ink/60 hover:text-ink hover:underline underline-offset-4 transition-all cursor-pointer"
+				>
+					<span id="footer-copy-text">{t('contatti.copia', lingua)}</span>
+				</button>
+			</div>
+
+			{/* Social & Professional Profiles */}
+			<div class="mt-4">
+				<p class="font-mono text-[10px] uppercase tracking-widest text-ink/50 mb-2">
+					{t('contatti.profili', lingua)}
+				</p>
+				<div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+					{profiliContatto.map((p) => (
+						<a
+							href={p.url}
+							target="_blank"
+							rel="noopener noreferrer"
+							class="inline-flex items-center gap-1 font-mono text-[11px] uppercase tracking-wider text-ink/70 hover:text-ink hover:underline underline-offset-4 transition-colors"
+						>
+							<span>{p.etichetta}</span>
+							<span class="text-ink/40 font-mono text-[10px]">↗</span>
+						</a>
+					))}
+				</div>
+			</div>
+		</div>
+	</div>
 </footer>
+
+<script>
+	const decodeEmail = (token: string): string => {
+		try {
+			return atob(token);
+		} catch {
+			return '';
+		}
+	};
+
+	const apriContactPopover = () => {
+		const btn = document.getElementById('footer-contact-btn');
+		const popover = document.getElementById('footer-contact-popover');
+		const emailDisplay = document.getElementById('footer-email-display');
+		const emailLink = document.getElementById('footer-email-link');
+		const copyBtn = document.getElementById('footer-copy-email-btn');
+		if (!btn || !popover) return;
+
+		const token = copyBtn?.getAttribute('data-token') || emailLink?.getAttribute('data-token') || '';
+		if (token && emailDisplay) {
+			const realEmail = decodeEmail(token);
+			if (realEmail) {
+				emailDisplay.textContent = realEmail;
+				if (emailLink) {
+					emailLink.setAttribute('data-resolved-email', realEmail);
+				}
+			}
+		}
+
+		popover.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-2', 'scale-[0.98]');
+		popover.classList.add('opacity-100', 'pointer-events-auto', 'translate-y-0', 'scale-100');
+		btn.setAttribute('aria-expanded', 'true');
+		popover.setAttribute('aria-hidden', 'false');
+	};
+
+	const chiudiContactPopover = () => {
+		const btn = document.getElementById('footer-contact-btn');
+		const popover = document.getElementById('footer-contact-popover');
+		if (!btn || !popover) return;
+
+		popover.classList.add('opacity-0', 'pointer-events-none', 'translate-y-2', 'scale-[0.98]');
+		popover.classList.remove('opacity-100', 'pointer-events-auto', 'translate-y-0', 'scale-100');
+		btn.setAttribute('aria-expanded', 'false');
+		popover.setAttribute('aria-hidden', 'true');
+	};
+
+	if (!(window as any).__footerContactHandlersAttached) {
+		(window as any).__footerContactHandlersAttached = true;
+
+		document.addEventListener('click', async (e) => {
+			const target = e.target as HTMLElement | null;
+			if (!target) return;
+
+			// Toggle contatti trigger
+			const btn = target.closest('#footer-contact-btn');
+			if (btn) {
+				e.preventDefault();
+				e.stopPropagation();
+				const isOpen = btn.getAttribute('aria-expanded') === 'true';
+				if (isOpen) chiudiContactPopover();
+				else apriContactPopover();
+				return;
+			}
+
+			// Chiudi con X
+			if (target.closest('#footer-contact-close')) {
+				e.preventDefault();
+				e.stopPropagation();
+				chiudiContactPopover();
+				return;
+			}
+
+			// Copia email
+			const copyBtn = target.closest('#footer-copy-email-btn');
+			if (copyBtn) {
+				e.preventDefault();
+				e.stopPropagation();
+				const token = copyBtn.getAttribute('data-token') || '';
+				const email = decodeEmail(token);
+				const copyText = document.getElementById('footer-copy-text');
+				const copiedLabel = copyBtn.getAttribute('data-label-copied') || 'Copied!';
+				const defaultLabel = copyBtn.getAttribute('data-label-copy') || 'Copy';
+
+				if (email) {
+					let copied = false;
+					if (navigator.clipboard && navigator.clipboard.writeText) {
+						try {
+							await navigator.clipboard.writeText(email);
+							copied = true;
+						} catch {
+							copied = false;
+						}
+					}
+					if (!copied) {
+						try {
+							const ta = document.createElement('textarea');
+							ta.value = email;
+							ta.style.position = 'fixed';
+							ta.style.opacity = '0';
+							document.body.appendChild(ta);
+							ta.focus();
+							ta.select();
+							document.execCommand('copy');
+							document.body.removeChild(ta);
+							copied = true;
+						} catch (err) {
+							console.error('Copy fallback failed:', err);
+						}
+					}
+
+					if (copied && copyText) {
+						copyText.textContent = copiedLabel;
+						copyBtn.classList.add('text-ink');
+						copyBtn.classList.remove('text-ink/60');
+						setTimeout(() => {
+							copyText.textContent = defaultLabel;
+							copyBtn.classList.remove('text-ink');
+							copyBtn.classList.add('text-ink/60');
+						}, 2000);
+					}
+				}
+				return;
+			}
+
+			// Click su email link (apre client email)
+			const emailLink = target.closest('#footer-email-link');
+			if (emailLink) {
+				e.preventDefault();
+				e.stopPropagation();
+				const token = emailLink.getAttribute('data-token') || '';
+				const email = emailLink.getAttribute('data-resolved-email') || decodeEmail(token);
+				if (email) {
+					window.location.href = `mailto:${email}`;
+				}
+				return;
+			}
+
+			// Click esterno -> chiudi se aperto
+			if (!target.closest('#footer-contact-popover')) {
+				const popover = document.getElementById('footer-contact-popover');
+				if (popover && !popover.classList.contains('opacity-0')) {
+					chiudiContactPopover();
+				}
+			}
+		});
+
+		document.addEventListener('keydown', (e) => {
+			if (e.key === 'Escape') {
+				chiudiContactPopover();
+			}
+		});
+	}
+
+	document.addEventListener('astro:page-load', () => {
+		chiudiContactPopover();
+	});
+</script>

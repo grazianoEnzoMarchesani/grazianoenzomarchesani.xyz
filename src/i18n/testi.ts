@@ -22,6 +22,8 @@ const en = {
   'nav.publications': 'Publications',
   'nav.skills': 'Skills',
   'nav.about': 'About',
+  'nav.menu': 'Menu',
+  'nav.chiudiMenu': 'Close menu',
   'nav.selettoreLingua': 'Change language',
   'nav.contatto': 'Get in touch',
 
@@ -96,9 +98,15 @@ const en = {
   'search.chiudi': 'Close',
   'search.similarita': 'match',
 
-  // Footer
+  // Footer & Contact
   'footer.diritti': 'All rights reserved.',
   'footer.rss': 'RSS Feed',
+  'footer.contatti': 'Contact',
+  'contatti.titolo': 'Contact & Connect',
+  'contatti.copia': 'Copy',
+  'contatti.copiato': 'Copied!',
+  'contatti.chiudi': 'Close',
+  'contatti.profili': 'Profiles',
 } as const;
 
 const it: Record<keyof typeof en, string> = {
@@ -108,6 +116,8 @@ const it: Record<keyof typeof en, string> = {
   'nav.publications': 'Pubblicazioni',
   'nav.skills': 'Competenze',
   'nav.about': 'Chi sono',
+  'nav.menu': 'Menu',
+  'nav.chiudiMenu': 'Chiudi menu',
   'nav.selettoreLingua': 'Cambia lingua',
   'nav.contatto': 'Contattami',
 
@@ -182,9 +192,15 @@ const it: Record<keyof typeof en, string> = {
   'search.chiudi': 'Chiudi',
   'search.similarita': 'affinità',
 
-  // Footer
+  // Footer & Contact
   'footer.diritti': 'Tutti i diritti riservati.',
   'footer.rss': 'Feed RSS',
+  'footer.contatti': 'Contatti',
+  'contatti.titolo': 'Contatti e Profili',
+  'contatti.copia': 'Copia',
+  'contatti.copiato': 'Copiato!',
+  'contatti.chiudi': 'Chiudi',
+  'contatti.profili': 'Profili',
 };
 
 export type ChiaveTesto = keyof typeof en;

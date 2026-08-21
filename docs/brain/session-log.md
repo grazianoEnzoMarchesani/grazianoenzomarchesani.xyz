@@ -221,3 +221,32 @@ Log cronologico, append-only: una voce breve per sessione. Per lo stato attuale 
     - Rigenerato l'indice `public/search-index.json` (300 voci) e verificata la build con `npm run build` (102 pagine generate senza errori).
   - **Rimozione Conteggi Competenze e Categorie (`PaginaSkills.astro`)**:
     - Rimossi i conteggi numerici ("36 COMPETENZE · 11 CATEGORIE") dall'intestazione della pagina Skills/Competenze per mantenere l'interfaccia focalizzata e pulita, preservando la sola didascalia con le indicazioni di navigazione del mazzo interattivo.
+
+## 2026-08-21
+
+- Sessione di `/grill-me` e `/ponytail` sull'ottimizzazione dell'interfaccia su smartphone (Navbar e Footer / Contatti / RSS):
+  - **Navbar Mobile (`src/components/Nav.astro`, `src/i18n/testi.ts`)**:
+    - Risolto l'affastellamento di logo, sezioni, ricerca e lingua su schermi compatti (< 768px).
+    - Logo scalato in modo fluido (`h-8 sm:h-12 w-auto`).
+    - Su desktop (≥ 768px) le sezioni rimangono orizzontali in linea (`hidden md:flex`).
+    - Su mobile (< 768px) è stato aggiunto un pulsante a pillola compatto `Menu` (`md:hidden`) che controlla una **dropdown card fluttuante a discesa** (`bg-paper/95 backdrop-blur-md border border-ink/15 rounded-2xl shadow-2xl`) con i link delle sezioni e freccia mono `↗`, dotata di chiusura automatica al tap, click all'esterno o pressione del tasto Escape.
+  - **Footer & Popover Contatti (`src/components/Footer.astro`, `src/i18n/testi.ts`, `Pagina*.astro`)**:
+    - Rimosso l'indirizzo email statico per esteso dal footer per evitare sovrapposizioni con l'RSS su mobile e migliorare la riservatezza.
+    - Sostituito con un pulsante pill elegante **"Contatti" / "Contact"** ancorato in basso a destra.
+    - Al click si apre un popover/pannello fluttuante semitrasparente (`bg-paper/95 backdrop-blur-md rounded-2xl border border-ink/15 shadow-2xl`) contenente:
+      - Intestazione con nome, qualifica e affiliazione accademica (Università di Camerino - SAAD).
+      - Email offuscata: nessun `mailto:` né testo in chiaro nell'HTML statico (token base64 decodificato lato client). Mostra `graziano.marchesani [at] unicam.it` nel markup iniziale e rivela la mail attiva al click / copia. Pulsante di copia istantanea negli appunti con feedback visivo ("Copia email" → "Copiato negli appunti!").
+      - Elenco dei soli profili selezionati nell'ordine richiesto: **LinkedIn**, **Instagram**, **GitHub** (esclusi ORCID e IRIS da questa vista).
+      - Design **puramente tipografico ed essenziale**: rimossi completamente tutti gli sfondi (sia il box grigio dell'email sia i background pillola dei link social e del tasto copia), lasciando solo testi puliti in monospace con frecce `↗` e sottolineatura su hover.
+      - **Ottimizzazione Mobile & Event Delegation**: implementata delegazione globale a livello di `document` con guardie di istanza sia per il menu navbar mobile sia per il popover contatti footer. Risolto ogni problema di binding/timing su mobile touch (iOS Safari e Chrome mobile), con fallback per `navigator.clipboard` (`document.execCommand('copy')`) per la massima compatibilità cross-device.
+      - Supporto per chiusura tramite pulsante dedicato, click all'esterno o tasto Escape.
+    - L'RSS rimane posizionato a sinistra (quando presente in `/fields`), garantendo separazione `justify-between` completa su smartphone senza alcuna interferenza.
+    - Transizioni fluide di **fade-in / fade-out** con leggera traslazione verticale e scala (`opacity-0 pointer-events-none scale-[0.98]` $\leftrightarrow$ `opacity-100 pointer-events-auto scale-100` con `transition-all duration-200 ease-out`) applicate sia al menu dropdown in navbar sia al popover dei contatti nel footer per la massima morbidezza visiva.
+    - **Ombra di elevazione verso l'alto ($-Y$)**: il popover dei contatti proietta un'ombra morbida verso l'alto (`shadow-[0_-20px_45px_-10px_rgba(28,25,23,0.12),0_-8px_20px_-6px_rgba(28,25,23,0.06)]`), coerente con la sua origine dal footer inferiore, staccandosi con naturalezza dai contenuti sottostanti.
+  - **Inibizione Overscroll Touch e Rimozione Indicatori Visivi negli Articoli di Fields ([FieldArticleNavigation.astro](file:///Users/grazianoenzomarchesani/Documents/GitHub/grazianoenzomarchesani.xyz/src/components/FieldArticleNavigation.astro))**:
+    - Rimossi i listener `touchstart`, `touchmove` e `touchend` negli articoli di Fields per eliminare interferenze e conflitti con i controlli nativi dei browser mobile (gesture pull-to-refresh, comparsa/scomparsa della barra degli indirizzi, swipe di navigazione della cronologia).
+    - Rimossi completamente dal DOM i badge/indicatori visivi di overscroll ("Release to return to Fields", "Release for next..."): su desktop il cambio pagina al superamento della soglia avviene in modo continuo, cinetico e per pura **serendipità**, senza spiegazioni didascaliche o elementi fluttuanti intermedi, mentre la navigazione standard rimane sempre disponibile tramite i link espliciti a fine articolo ("← Indietro" e "Successivo ↓").
+    - **Fix Memory Leak & Orphaned Listener su View Transitions**: il listener `wheel` agganciato a `window` persisteva durante la navigazione client (es. andando dall'articolo alla Home), causando navigazioni fantasma allo scorrimento della Home. Risolto implementando pulizia sistematica su `astro:before-swap` (`window.removeEventListener('wheel', handleWheel)`) e controllo di validità dell'elemento `#overscroll-root`.
+  - Verificato con `astro check` (0 errori) e `npm run build` (102 pagine statiche generate correttamente).
+
+

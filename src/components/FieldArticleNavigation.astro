@@ -16,17 +16,6 @@ const nextUrl = next ? (isIt ? `/it/fields/${next.id}` : `/fields/${next.id}`) :
 ---
 
 <div id="overscroll-root" data-current-id={currentId} data-fields-url={fieldsUrl} data-next-url={nextUrl} data-next-title={next?.title ?? ''}>
-	<!-- Pull to return top indicator -->
-	<div
-		id="pull-top-indicator"
-		class="pointer-events-none fixed top-16 inset-x-0 z-30 flex justify-center opacity-0 transition-all duration-150 transform -translate-y-2"
-		aria-hidden="true"
-	>
-		<span class="rounded-full border border-ink/20 bg-paper/95 px-4 py-1.5 text-xs uppercase tracking-widest text-ink shadow-sm backdrop-blur-sm">
-			{isIt ? '↑ Rilascia per tornare agli Ambiti' : '↑ Release to return to Fields'}
-		</span>
-	</div>
-
 	<!-- Bottom manual link / info -->
 	<div class="mt-14 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-t border-ink/10 pt-6">
 		<button
@@ -48,26 +37,21 @@ const nextUrl = next ? (isIt ? `/it/fields/${next.id}` : `/fields/${next.id}`) :
 			</a>
 		)}
 	</div>
-
-	<!-- Pull to next bottom indicator -->
-	{next && (
-		<div
-			id="pull-bottom-indicator"
-			class="pointer-events-none fixed bottom-10 inset-x-0 z-30 flex justify-center opacity-0 transition-all duration-150 transform translate-y-2"
-			aria-hidden="true"
-		>
-			<span class="rounded-full border border-ink/20 bg-paper/95 px-4 py-1.5 text-xs uppercase tracking-widest text-ink shadow-sm backdrop-blur-sm">
-				{isIt ? `↓ Rilascia per il successivo: ${next.title}` : `↓ Release for next: ${next.title}`}
-			</span>
-		</div>
-	)}
 </div>
 
 <script>
 	import { gsap } from 'gsap';
 	import { navigate } from 'astro:transitions/client';
 
+	let currentCleanup: (() => void) | null = null;
+
 	function setup() {
+		// Pulizia istanza precedente se presente
+		if (currentCleanup) {
+			currentCleanup();
+			currentCleanup = null;
+		}
+
 		const root = document.getElementById('overscroll-root');
 		if (!root) return;
 
@@ -76,8 +60,6 @@ const nextUrl = next ? (isIt ? `/it/fields/${next.id}` : `/fields/${next.id}`) :
 		const nextUrl = root.getAttribute('data-next-url') ?? '';
 		const backBtn = document.getElementById('back-to-fields-btn');
 		const nextLink = document.getElementById('next-article-link');
-		const topIndicator = document.getElementById('pull-top-indicator');
-		const bottomIndicator = document.getElementById('pull-bottom-indicator');
 
 		if (currentId) {
 			sessionStorage.setItem('fields-target-marker', currentId);
@@ -120,104 +102,59 @@ const nextUrl = next ? (isIt ? `/it/fields/${next.id}` : `/fields/${next.id}`) :
 			goToNext();
 		});
 
-		// Overscroll thresholds
-		const THRESHOLD = 80;
+		// Overscroll serendipità (desktop wheel/trackpad)
+		const THRESHOLD = 90;
 		let pullTopDistance = 0;
 		let pullBottomDistance = 0;
-		let isTrackingTouch = false;
-		let touchStartY = 0;
-
-		function updateTopIndicator(dist: number) {
-			if (!topIndicator) return;
-			const progress = Math.min(dist / THRESHOLD, 1);
-			topIndicator.style.opacity = progress.toString();
-			topIndicator.style.transform = `translateY(${progress * 12}px)`;
-		}
-
-		function updateBottomIndicator(dist: number) {
-			if (!bottomIndicator) return;
-			const progress = Math.min(dist / THRESHOLD, 1);
-			bottomIndicator.style.opacity = progress.toString();
-			bottomIndicator.style.transform = `translateY(-${progress * 12}px)`;
-		}
 
 		function handleWheel(e: WheelEvent) {
 			if (isNavigating) return;
+			// Guardia di sicurezza: verificare che siamo ancora sull'articolo
+			if (!document.getElementById('overscroll-root')) {
+				if (currentCleanup) {
+					currentCleanup();
+					currentCleanup = null;
+				}
+				return;
+			}
+
 			const scrollTop = window.scrollY || document.documentElement.scrollTop;
 			const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
 
 			// Top overscroll
 			if (scrollTop <= 1 && e.deltaY < 0) {
 				pullTopDistance += Math.abs(e.deltaY) * 0.4;
-				updateTopIndicator(pullTopDistance);
 				if (pullTopDistance >= THRESHOLD) {
 					goBackToFields();
 				}
 			} else if (pullTopDistance > 0 && e.deltaY > 0) {
 				pullTopDistance = Math.max(0, pullTopDistance - e.deltaY);
-				updateTopIndicator(pullTopDistance);
 			}
 
-			// Bottom overscroll (only if next article exists)
+			// Bottom overscroll (solo se esiste un articolo successivo)
 			if (nextUrl && scrollTop >= maxScroll - 2 && e.deltaY > 0) {
 				pullBottomDistance += e.deltaY * 0.4;
-				updateBottomIndicator(pullBottomDistance);
 				if (pullBottomDistance >= THRESHOLD) {
 					goToNext();
 				}
 			} else if (pullBottomDistance > 0 && e.deltaY < 0) {
 				pullBottomDistance = Math.max(0, pullBottomDistance + e.deltaY);
-				updateBottomIndicator(pullBottomDistance);
 			}
-		}
-
-		function handleTouchStart(e: TouchEvent) {
-			if (e.touches.length !== 1) return;
-			touchStartY = e.touches[0].clientY;
-			isTrackingTouch = true;
-			pullTopDistance = 0;
-			pullBottomDistance = 0;
-		}
-
-		function handleTouchMove(e: TouchEvent) {
-			if (!isTrackingTouch || isNavigating) return;
-			const touchY = e.touches[0].clientY;
-			const deltaY = touchY - touchStartY;
-			const scrollTop = window.scrollY || document.documentElement.scrollTop;
-			const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-
-			if (scrollTop <= 0 && deltaY > 0) {
-				pullTopDistance = deltaY * 0.5;
-				updateTopIndicator(pullTopDistance);
-			} else if (nextUrl && scrollTop >= maxScroll - 1 && deltaY < 0) {
-				pullBottomDistance = Math.abs(deltaY) * 0.5;
-				updateBottomIndicator(pullBottomDistance);
-			}
-		}
-
-		function handleTouchEnd() {
-			if (!isTrackingTouch) return;
-			isTrackingTouch = false;
-
-			if (pullTopDistance >= THRESHOLD) {
-				goBackToFields();
-			} else {
-				updateTopIndicator(0);
-			}
-
-			if (pullBottomDistance >= THRESHOLD && nextUrl) {
-				goToNext();
-			} else {
-				updateBottomIndicator(0);
-			}
-			pullTopDistance = 0;
-			pullBottomDistance = 0;
 		}
 
 		window.addEventListener('wheel', handleWheel, { passive: true });
-		window.addEventListener('touchstart', handleTouchStart, { passive: true });
-		window.addEventListener('touchmove', handleTouchMove, { passive: true });
-		window.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+		currentCleanup = () => {
+			window.removeEventListener('wheel', handleWheel);
+		};
+
+		// Rimuove il listener prima di cambiare pagina tramite View Transitions
+		document.addEventListener('astro:before-swap', () => {
+			if (currentCleanup) {
+				currentCleanup();
+				currentCleanup = null;
+			}
+		}, { once: true });
 
 		// Fade out overlay on page entry
 		const overlay = document.getElementById('field-transition-overlay');
