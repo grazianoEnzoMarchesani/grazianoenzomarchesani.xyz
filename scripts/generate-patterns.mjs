@@ -60,8 +60,10 @@ export const VARIANTS_PER_BUCKET = 4;
 // quando due forme si sovrappongono.
 const BIG_OPACITY = 0.035;
 const SMALL_OPACITY = 0.07;
+const PATTERN_INK_OPACITY = 0.12;
 const BIG_COLOR = blendOver(BIG_OPACITY);
 const SMALL_COLOR = blendOver(SMALL_OPACITY);
+const PATTERN_INK_COLOR = blendOver(PATTERN_INK_OPACITY);
 
 function sourceHash() {
   const hash = crypto.createHash('sha256');
@@ -69,7 +71,7 @@ function sourceHash() {
   for (const file of ICON_FILES) {
     hash.update(fs.readFileSync(path.join(assetsDir, file), 'utf8'));
   }
-  hash.update(JSON.stringify({ BUCKETS, VARIANTS_PER_BUCKET, BIG_COLOR, SMALL_COLOR }));
+  hash.update(JSON.stringify({ BUCKETS, VARIANTS_PER_BUCKET, BIG_COLOR, SMALL_COLOR, PATTERN_INK_COLOR }));
   return hash.digest('hex');
 }
 
@@ -103,14 +105,15 @@ export async function generaPatternSfondi({ force = false } = {}) {
       for (let variant = 1; variant <= VARIANTS_PER_BUCKET; variant++) {
         const seed = `${bucket.name}-${variant}`;
         const svg = await page.evaluate(
-          (W, H, iconsRaw, seed, bigColor, smallColor) =>
-            window.__generatePattern({ W, H, iconsRaw, seed, bigColor, smallColor }),
+          (W, H, iconsRaw, seed, bigColor, smallColor, patternInkColor) =>
+            window.__generatePattern({ W, H, iconsRaw, seed, bigColor, smallColor, patternInkColor }),
           bucket.w,
           bucket.h,
           iconsRaw,
           seed,
           BIG_COLOR,
-          SMALL_COLOR
+          SMALL_COLOR,
+          PATTERN_INK_COLOR
         );
         const file = `${bucket.name}-${variant}.svg`;
         fs.writeFileSync(path.join(outDir, file), svg, 'utf8');

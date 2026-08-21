@@ -79,9 +79,13 @@ const categoryLabels: Record<string, string> = {
 
 	let spiralHandle: { destroy: () => void } | undefined;
 
-	function setup() {
+	function cleanup() {
 		spiralHandle?.destroy();
 		spiralHandle = undefined;
+	}
+
+	function setup() {
+		cleanup();
 
 		const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 		const list = document.getElementById('fields-list');
@@ -125,5 +129,10 @@ const categoryLabels: Record<string, string> = {
 		}
 	}
 
+	if (document.getElementById('fields-pin') || document.getElementById('fields-list')) {
+		setup();
+	}
+
 	document.addEventListener('astro:page-load', setup);
+	document.addEventListener('astro:before-swap', cleanup);
 </script>

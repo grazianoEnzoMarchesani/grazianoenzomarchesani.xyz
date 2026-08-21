@@ -182,7 +182,7 @@
 
   async function generatePattern(opts) {
     const W = opts.W, H = opts.H, iconsRaw = opts.iconsRaw, seed = opts.seed;
-    const bigColor = opts.bigColor, smallColor = opts.smallColor;
+    const bigColor = opts.bigColor, smallColor = opts.smallColor, patternInkColor = opts.patternInkColor;
 
     const shapes = await Promise.all(
       iconsRaw.map(async (raw) => ({
@@ -195,30 +195,65 @@
     const rng = mulberry32(hashSeed(seed));
     const occupancy = new Uint8Array(W * H);
     const maskCache = new Map();
-    const placed = [];
     const shortSide = Math.min(W, H);
+    const isMobile = shortSide < 500;
+    const bigAttempts = isMobile ? 250 : 600;
+    const bigMaxFails = isMobile ? 35 : 80;
+    const smallAttempts = isMobile ? 1200 : 6000;
+    const smallMaxFails = isMobile ? 40 : 150;
+    const placed = [];
 
-    runPass(rng, maskCache, occupancy, W, H, shapes, shortSide * 0.22, shortSide * 0.34, bigColor, 600, 80, placed);
-    runPass(rng, maskCache, occupancy, W, H, shapes, shortSide * 0.045, shortSide * 0.09, smallColor, 6000, 150, placed);
+    runPass(rng, maskCache, occupancy, W, H, shapes, shortSide * 0.22, shortSide * 0.34, 'big', bigAttempts, bigMaxFails, placed);
+    runPass(rng, maskCache, occupancy, W, H, shapes, shortSide * 0.045, shortSide * 0.09, smallColor, smallAttempts, smallMaxFails, placed);
+
+    // Pattern geometrici delicati per le forme grandi (passata big):
+    // rimangono persistenti sia a riposo nelle sezioni sia durante il morphing.
+    const patterns = `
+      <pattern id="pat-0" width="20" height="20" patternUnits="userSpaceOnUse">
+        <rect width="20" height="20" fill="${bigColor}"/>
+        <circle cx="10" cy="10" r="2" fill="${patternInkColor}"/>
+      </pattern>
+      <pattern id="pat-1" width="24" height="24" patternUnits="userSpaceOnUse">
+        <rect width="24" height="24" fill="${bigColor}"/>
+        <circle cx="6" cy="6" r="1.8" fill="${patternInkColor}"/>
+        <circle cx="18" cy="18" r="1.8" fill="${patternInkColor}"/>
+      </pattern>
+      <pattern id="pat-2" width="16" height="16" patternUnits="userSpaceOnUse">
+        <rect width="16" height="16" fill="${bigColor}"/>
+        <line x1="0" y1="16" x2="16" y2="0" stroke="${patternInkColor}" stroke-width="1.5" stroke-linecap="square"/>
+        <line x1="-4" y1="4" x2="4" y2="-4" stroke="${patternInkColor}" stroke-width="1.5" stroke-linecap="square"/>
+        <line x1="12" y1="20" x2="20" y2="12" stroke="${patternInkColor}" stroke-width="1.5" stroke-linecap="square"/>
+      </pattern>
+      <pattern id="pat-3" width="16" height="16" patternUnits="userSpaceOnUse">
+        <rect width="16" height="16" fill="${bigColor}"/>
+        <line x1="0" y1="0" x2="16" y2="16" stroke="${patternInkColor}" stroke-width="1.5" stroke-linecap="square"/>
+        <line x1="12" y1="-4" x2="20" y2="4" stroke="${patternInkColor}" stroke-width="1.5" stroke-linecap="square"/>
+        <line x1="-4" y1="12" x2="4" y2="20" stroke="${patternInkColor}" stroke-width="1.5" stroke-linecap="square"/>
+      </pattern>
+    `;
 
     // Ogni forma è definita UNA volta in <defs> e richiamata con <use>
     // per ogni piazzamento: la seconda passata arriva a piazzare
     // migliaia di copie piccole, e duplicare il markup del path a ogni
     // copia gonfiava il file di ordini di grandezza (500KB+ a bucket)
     // per niente, dato che le 4 forme sono sempre le stesse 4.
-    const defs = shapes.map((shape, i) => '<g id="s' + i + '">' + shape.inner + '</g>').join('');
-    // Colore pieno per-forma invece di fill-opacity: la trasparenza
-    // sommava le forme che si sovrappongono (tra loro e con il clone
-    // volante di section-morph.ts) producendo un salto di colore
-    // percepibile in scroll. bigColor/smallColor sono già il colore
-    // risultante dal blend ink-su-paper alla stessa opacità di prima
-    // (vedi scripts/colors.mjs), quindi l'aspetto resta identico tranne
-    // nei punti di overlap, dove ora vince la forma disegnata sopra
-    // invece di scurirsi.
+    const defs = patterns + shapes.map((shape, i) => '<g id="s' + i + '">' + shape.inner + '</g>').join('');
+    // Coordinate arrotondate prima di finire nel markup. Due motivi,
+    // entrambi concreti: a piena precisione ogni <use> porta ~80
+    // caratteri di cifre che non spostano niente (le unità sono viewBox,
+    // 4 decimali sono ben sotto il subpixel a qualunque scala), e
+    // l'accumulo di errore in virgola mobile produceva ogni tanto
+    // notazione scientifica — `translate(1.4210854715202004e-14, 827.9)`
+    // invece di `translate(0, 827.9)` — che chi rilegge questi transform
+    // deve poi sapere interpretare (vedi NUM in src/scripts/section-morph.ts).
+    // toFixed la elimina alla fonte.
+    const n = (v) => +v.toFixed(4);
     const uses = placed
       .map(
-        (p) =>
-          '<use href="#s' + p.shapeIndex + '" transform="translate(' + p.tx + ',' + p.ty + ') rotate(' + p.thetaDeg + ') scale(' + p.s + ')" fill="' + p.color + '"/>'
+        (p) => {
+          const fill = p.color === 'big' ? 'url(#pat-' + p.shapeIndex + ')' : p.color;
+          return '<use href="#s' + p.shapeIndex + '" transform="translate(' + n(p.tx) + ',' + n(p.ty) + ') rotate(' + n(p.thetaDeg) + ') scale(' + n(p.s) + ')" fill="' + fill + '"/>';
+        }
       )
       .join('');
 

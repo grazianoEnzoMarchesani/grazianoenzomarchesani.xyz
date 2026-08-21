@@ -74,14 +74,14 @@ const titolo = t('publications.titolo', lingua);
         </p>
 
         {/* Profili esterni */}
-        <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2">
-          <span class="font-mono text-xs uppercase tracking-wider text-ink/50">{isIt ? 'Profili:' : 'Profiles:'}</span>
+        <div class="mt-8 flex flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-6 text-[11px] sm:text-xs">
+          <span class="font-mono uppercase tracking-normal sm:tracking-wider text-ink/50">{isIt ? 'Profili:' : 'Profiles:'}</span>
           {collegamentiProfili.map((p) => (
             <a
               href={p.url}
               target="_blank"
               rel="noopener noreferrer"
-              class="font-mono text-xs uppercase tracking-wider text-ink/70 transition-colors hover:text-ink hover:underline underline-offset-4"
+              class="font-mono uppercase tracking-normal sm:tracking-wider text-ink/70 transition-colors hover:text-ink hover:underline underline-offset-4"
             >
               {p.etichetta} ↗
             </a>
@@ -440,6 +440,11 @@ const titolo = t('publications.titolo', lingua);
     display: none !important;
   }
 
+  .filtri {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
   .filtri [data-filtro] {
     transition:
       opacity 250ms ease-out,
@@ -533,6 +538,8 @@ const titolo = t('publications.titolo', lingua);
 
 <script>
   let staccaResize: (() => void) | undefined;
+  let staccaScrollFiltri: (() => void) | undefined;
+  let aggiornaMascheraFiltri: (() => void) | undefined;
   let riapplicaFiltroTipo: (() => void) | undefined;
   let vociFuoriTipo: (() => HTMLElement[]) | undefined;
   let bottoniFiltroTipo: HTMLButtonElement[] | undefined;
@@ -552,6 +559,7 @@ const titolo = t('publications.titolo', lingua);
       b.classList.toggle('filtro--nascosto-anno', b !== tutti);
     });
     posizionaPernoTipo(tutti);
+    aggiornaMascheraFiltri?.();
   }
 
   function esciModalitaAnno() {
@@ -565,6 +573,7 @@ const titolo = t('publications.titolo', lingua);
     setTimeout(() => {
       if (mioTurno !== turnoRipristinoPerno) return;
       posizionaPernoTipo?.(scelto);
+      aggiornaMascheraFiltri?.();
     }, DURATA_ESPANSIONE_FILTRO_TIPO);
     tipoSalvatoPerAnno = null;
   }
@@ -577,6 +586,34 @@ const titolo = t('publications.titolo', lingua);
     if (!barra || !perno || !voci.length) return;
 
     const bottoni = Array.from(barra.querySelectorAll<HTMLButtonElement>('[data-filtro]'));
+
+    function aggiornaMaschera() {
+      if (!barra) return;
+      const maxScroll = barra.scrollWidth - barra.clientWidth;
+      if (maxScroll <= 2) {
+        barra.style.webkitMaskImage = '';
+        barra.style.maskImage = '';
+        return;
+      }
+
+      const puoSinistra = barra.scrollLeft > 2;
+      const puoDestra = barra.scrollLeft < maxScroll - 2;
+
+      let mask = '';
+      if (puoSinistra && puoDestra) {
+        mask = 'linear-gradient(to right, transparent 0%, black 2.75rem, black calc(100% - 2.75rem), transparent 100%)';
+      } else if (puoDestra) {
+        mask = 'linear-gradient(to right, black 0%, black calc(100% - 2.75rem), transparent 100%)';
+      } else if (puoSinistra) {
+        mask = 'linear-gradient(to right, transparent 0%, black 2.75rem, black 100%)';
+      } else {
+        mask = '';
+      }
+
+      barra.style.webkitMaskImage = mask;
+      barra.style.maskImage = mask;
+    }
+    aggiornaMascheraFiltri = aggiornaMaschera;
 
     function posizionaPerno(bottone: HTMLButtonElement) {
       perno!.style.left = `${bottone.offsetLeft}px`;
@@ -603,6 +640,7 @@ const titolo = t('publications.titolo', lingua);
 
         bottoni.forEach((b) => b.setAttribute('aria-pressed', String(b === bottone)));
         posizionaPerno(bottone);
+        bottone.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
 
         const mostrate: HTMLElement[] = [];
         voci.forEach((voce) => {
@@ -632,17 +670,34 @@ const titolo = t('publications.titolo', lingua);
       return scelto === 'tutti' ? [] : voci.filter((voce) => voce.dataset.tipo !== scelto);
     };
 
+    staccaScrollFiltri?.();
+    barra.addEventListener('scroll', aggiornaMaschera, { passive: true });
+    staccaScrollFiltri = () => barra.removeEventListener('scroll', aggiornaMaschera);
+
     staccaResize?.();
     const alRedimensionamento = () => {
       const attivo = bottoni.find((b) => b.getAttribute('aria-pressed') === 'true');
       if (attivo) posizionaPerno(attivo);
+      aggiornaMaschera();
     };
     window.addEventListener('resize', alRedimensionamento);
     staccaResize = () => window.removeEventListener('resize', alRedimensionamento);
+
+    aggiornaMaschera();
+  }
+
+  if (document.querySelector('.pubblicazioni-lista')) {
+    iniziaFiltri();
   }
 
   document.addEventListener('DOMContentLoaded', iniziaFiltri);
   document.addEventListener('astro:page-load', iniziaFiltri);
+  document.addEventListener('astro:before-swap', () => {
+    staccaResize?.();
+    staccaResize = undefined;
+    staccaScrollFiltri?.();
+    staccaScrollFiltri = undefined;
+  });
 
   let staccaClickAnno: (() => void) | undefined;
   const DURATA_USCITA = 150;
@@ -892,6 +947,11 @@ const titolo = t('publications.titolo', lingua);
     }, 120);
   }
 
+  if (document.getElementById('pubblicazioni-filtri-anno')) {
+    iniziaFiltroAnno();
+    evidenziaVoceDaHash();
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     iniziaFiltroAnno();
     evidenziaVoceDaHash();
@@ -899,6 +959,10 @@ const titolo = t('publications.titolo', lingua);
   document.addEventListener('astro:page-load', () => {
     iniziaFiltroAnno();
     evidenziaVoceDaHash();
+  });
+  document.addEventListener('astro:before-swap', () => {
+    staccaClickAnno?.();
+    staccaClickAnno = undefined;
   });
   window.addEventListener('hashchange', evidenziaVoceDaHash);
   document.addEventListener('evidenzia-pubblicazione', evidenziaVoceDaHash);

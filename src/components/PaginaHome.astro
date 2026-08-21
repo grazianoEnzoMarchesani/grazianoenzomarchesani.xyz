@@ -42,8 +42,8 @@ const sezioni = getSezioni(lingua);
 		</div>
 
 		<main id="scroll-container" class="h-dvh snap-y snap-mandatory overflow-y-scroll scroll-smooth">
-			<section class="relative z-0 flex h-dvh snap-start flex-col items-center justify-center px-6 text-center">
-				<svg data-pattern-bg class="pointer-events-none absolute inset-0 -z-10 h-full w-full opacity-0" aria-hidden="true"></svg>
+			<section class="relative z-0 flex h-dvh snap-start snap-always flex-col items-center justify-center px-6 text-center">
+				<svg data-pattern-bg class="pointer-events-none absolute inset-0 -z-10 h-full w-full opacity-0 [contain:strict]" aria-hidden="true"></svg>
 				<p class="mb-4 text-xs uppercase tracking-widest opacity-0 sm:text-sm">{identita.ruolo}</p>
 				<h1 class="font-display text-[12vw] leading-[0.95] opacity-0 sm:text-[8vw]">{identita.nome}</h1>
 				<p class="mt-4 text-xs uppercase tracking-widest opacity-0 sm:text-sm">{identita.affiliazione}</p>
@@ -52,10 +52,10 @@ const sezioni = getSezioni(lingua);
 			{sezioni.map((s, i) => (
 				<a
 					href={s.href}
-					class="group relative z-0 flex h-dvh snap-start flex-col items-center justify-center gap-6 px-6 text-center"
+					class="group relative z-0 flex h-dvh snap-start snap-always flex-col items-center justify-center gap-6 px-6 text-center"
 					aria-label={`${t('home.vaiA', lingua)} ${s.titolo}`}
 				>
-					<svg data-pattern-bg class="pointer-events-none absolute inset-0 -z-10 h-full w-full opacity-0" aria-hidden="true"></svg>
+					<svg data-pattern-bg class="pointer-events-none absolute inset-0 -z-10 h-full w-full opacity-0 [contain:strict]" aria-hidden="true"></svg>
 					<h2 class="font-display text-[14vw] leading-[0.95] opacity-0 sm:text-[9vw]">{s.titolo}</h2>
 					<span
 						id={`scroll-arrow-${i + 1}`}
@@ -80,25 +80,41 @@ const sezioni = getSezioni(lingua);
 	import { gsap } from 'gsap';
 	import { ScrollTrigger } from 'gsap/ScrollTrigger';
 	import { initSectionPatterns } from '../scripts/section-patterns';
-	import { initSectionMorph } from '../scripts/section-morph';
+	import { initSectionMorph, teardownPreviousMorph } from '../scripts/section-morph';
 
 	gsap.registerPlugin(ScrollTrigger);
 
 	let currentCleanup: (() => void) | null = null;
 
-	function setupHome() {
+	function cleanupHome() {
 		if (currentCleanup) {
 			currentCleanup();
 			currentCleanup = null;
 		}
+		teardownPreviousMorph();
+	}
+
+	function setupHome() {
+		cleanupHome();
 
 		const scroller = document.getElementById('scroll-container');
 		if (!scroller) return;
 
-		initSectionPatterns().then(() => initSectionMorph());
+		let currentTitleTimeline: gsap.core.Timeline | null = null;
 
+		initSectionPatterns().then(() => {
+			initSectionMorph();
+			ScrollTrigger.refresh();
+		});
+
+		let lastWidth = window.innerWidth;
 		const handleResize = () => {
-			initSectionPatterns().then(() => initSectionMorph());
+			if (window.innerWidth === lastWidth) return;
+			lastWidth = window.innerWidth;
+			initSectionPatterns().then(() => {
+				initSectionMorph();
+				ScrollTrigger.refresh();
+			});
 		};
 		let resizeTimeout: ReturnType<typeof setTimeout>;
 		const onResize = () => {
@@ -155,7 +171,7 @@ const sezioni = getSezioni(lingua);
 						trigger: el,
 						scroller,
 						start: 'top top',
-						end: 'bottom top',
+						end: 'bottom center',
 						onLeave: () => showBadge(true),
 						onEnterBack: () => showBadge(false),
 					});
@@ -238,15 +254,26 @@ const sezioni = getSezioni(lingua);
 			renderInstant(0);
 
 			const enterStep = (index: number, direction: 1 | -1) => {
+				if (currentTitleTimeline) {
+					currentTitleTimeline.kill();
+					currentTitleTimeline = null;
+				}
 				const step = steps[index];
 				applyChrome(step);
 				const els = buildFragmentEls(step);
+				const tl = gsap.timeline({
+					onComplete: () => {
+						currentTitleTimeline = null;
+					},
+				});
+				currentTitleTimeline = tl;
 				els.forEach((el, i) => {
-					const eff = effDirection(step.fragments[i].role, direction);
-					gsap.fromTo(
+					const eff = effDirection(step.fragments[i]?.role ?? 'up', direction);
+					tl.fromTo(
 						el,
 						{ yPercent: eff === 1 ? 120 : -120, opacity: 0 },
-						{ yPercent: 0, opacity: 1, duration: 0.45, ease: 'power3.out' }
+						{ yPercent: 0, opacity: 1, duration: 0.45, ease: 'power3.out' },
+						0
 					);
 				});
 			};
@@ -261,14 +288,20 @@ const sezioni = getSezioni(lingua);
 					return;
 				}
 
+				if (currentTitleTimeline) {
+					currentTitleTimeline.kill();
+					currentTitleTimeline = null;
+				}
+
 				const fromStep = steps[fromIndex];
 				const outgoing = Array.from(overlayInner.children) as HTMLElement[];
 				const tl = gsap.timeline({
 					defaults: { duration: 0.45, ease: 'power3.in' },
 					onComplete: () => enterStep(index, direction),
 				});
+				currentTitleTimeline = tl;
 				outgoing.forEach((el, i) => {
-					const eff = effDirection(fromStep.fragments[i].role, direction);
+					const eff = effDirection(fromStep?.fragments[i]?.role ?? (i % 2 === 0 ? 'up' : 'down'), direction);
 					tl.to(el, { yPercent: eff === 1 ? -120 : 120, opacity: 0 }, 0);
 				});
 			};
@@ -279,7 +312,7 @@ const sezioni = getSezioni(lingua);
 						trigger: el,
 						scroller,
 						start: 'top top',
-						end: 'bottom top',
+						end: 'bottom center',
 						onEnterBack: () => goToTitleStep(0, -1),
 					});
 					localTriggers.push(st);
@@ -384,9 +417,19 @@ const sezioni = getSezioni(lingua);
 		currentCleanup = () => {
 			window.removeEventListener('resize', onResize);
 			if (scrollListener) scroller.removeEventListener('scroll', scrollListener);
+			if (currentTitleTimeline) currentTitleTimeline.kill();
 			localTriggers.forEach((t) => t.kill());
+			teardownPreviousMorph();
 		};
+
+		ScrollTrigger.refresh();
+	}
+
+	// Esecuzione immediata (import del modulo durante la navigazione client)
+	if (document.getElementById('scroll-container')) {
+		setupHome();
 	}
 
 	document.addEventListener('astro:page-load', setupHome);
+	document.addEventListener('astro:before-swap', cleanupHome);
 </script>

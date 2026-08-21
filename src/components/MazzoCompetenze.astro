@@ -796,5 +796,13 @@ const competenze = mazzoCompetenze(lingua);
     document.querySelectorAll<HTMLElement>('[data-mazzo]').forEach((mazzo) => avvia(mazzo, signal));
   }
 
+  if (document.querySelector('[data-mazzo]')) {
+    iniziaMazzi();
+  }
+
   document.addEventListener('astro:page-load', iniziaMazzi);
+  document.addEventListener('astro:before-swap', () => {
+    controllerMazzi?.abort();
+    controllerMazzi = undefined;
+  });
 </script>

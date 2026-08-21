@@ -18,17 +18,17 @@ const etichettaCopied = t('publications.copiato', lingua);
   <div
     class="cita__capsula relative inline-flex items-center rounded-full bg-paper/80 p-0.5 text-xs uppercase tracking-widest transition-all duration-300 ease-out"
   >
-    {/* Stili espandibili a sinistra */}
+    {/* Stili citazione: su mobile popover fluttuante ancorato a destra, su desktop fisarmonica orizzontale */}
     <div
-      class="cita__stili grid grid-cols-[0fr] opacity-0 transition-[grid-template-columns,opacity] duration-300 ease-out pointer-events-none"
+      class="cita__stili"
       data-cita-stili
     >
-      <div class="flex items-center gap-0.5 overflow-hidden whitespace-nowrap px-1">
+      <div class="cita__lista flex items-center gap-0.5 px-1">
         {
           stiliCitazione.map((stile) => (
             <button
               type="button"
-              class="cita__voce rounded-full px-2.5 py-1 text-[11px] uppercase tracking-wider text-ink/60 transition-colors hover:bg-ink hover:text-paper cursor-pointer outline-none focus:outline-none select-none"
+              class="cita__voce rounded-full px-2 sm:px-2.5 py-1 text-[10px] sm:text-[11px] uppercase tracking-wider text-ink/70 transition-colors hover:bg-ink hover:text-paper active:bg-ink active:text-paper cursor-pointer outline-none focus:outline-none select-none font-sans"
               data-cita-testo={citazioni[stile]}
               title={`Copy ${etichettaStile[stile]} format`}
             >
@@ -54,7 +54,7 @@ const etichettaCopied = t('publications.copiato', lingua);
 
   {/* Tooltip feedback di copia */}
   <span
-    class="cita__feedback font-sans text-[10px] uppercase tracking-widest pointer-events-none absolute top-full z-30 mt-1.5 whitespace-nowrap rounded-full bg-ink px-2.5 py-0.5 text-paper opacity-0 transition-all duration-200"
+    class="cita__feedback font-sans text-[10px] uppercase tracking-widest pointer-events-none absolute z-40 whitespace-nowrap rounded-full bg-ink px-2.5 py-0.5 text-paper opacity-0 transition-all duration-200 shadow-md"
     data-cita-feedback
     role="status"
     aria-live="polite"
@@ -64,10 +64,66 @@ const etichettaCopied = t('publications.copiato', lingua);
 </div>
 
 <style>
+  /* Base / Mobile (<640px): Popover fluttuante posizionato sotto al trigger */
+  .cita__stili {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    z-index: 30;
+    background-color: color-mix(in srgb, var(--color-paper) 95%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid color-mix(in srgb, var(--color-ink) 14%, transparent);
+    border-radius: 9999px;
+    box-shadow: 0 10px 25px -5px rgba(28, 25, 23, 0.12), 0 8px 10px -6px rgba(28, 25, 23, 0.06);
+    padding: 3px 4px;
+    opacity: 0;
+    transform: translateY(-4px) scale(0.96);
+    transform-origin: top right;
+    pointer-events: none;
+    visibility: hidden;
+    transition: opacity 200ms ease-out, transform 200ms ease-out, visibility 200ms;
+  }
+
   .cita[data-open="true"] .cita__stili {
-    grid-template-columns: 1fr;
     opacity: 1;
+    transform: translateY(0) scale(1);
     pointer-events: auto;
+    visibility: visible;
+  }
+
+  /* Desktop (>= 640px): Inline accordion a sinistra del trigger */
+  @media (min-width: 640px) {
+    .cita__stili {
+      position: static;
+      z-index: auto;
+      background: transparent;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      padding: 0;
+      transform: none;
+      visibility: visible;
+      display: grid;
+      grid-template-columns: 0fr;
+      opacity: 0;
+      pointer-events: none;
+      transition: grid-template-columns 300ms ease-out, opacity 300ms ease-out;
+    }
+
+    .cita__stili .cita__lista {
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .cita[data-open="true"] .cita__stili {
+      grid-template-columns: 1fr;
+      opacity: 1;
+      pointer-events: auto;
+      transform: none;
+    }
   }
 
   .cita[data-open="true"] .cita__icon {
@@ -79,10 +135,69 @@ const etichettaCopied = t('publications.copiato', lingua);
     color: var(--color-ink);
     font-weight: 500;
   }
+
+  /* Feedback tooltip */
+  .cita__feedback {
+    bottom: calc(100% + 6px);
+    transform: translate(-50%, 4px);
+  }
+
+  .cita__feedback[data-show="true"] {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
 </style>
 
 <script>
   let staccaGlobali: (() => void) | undefined;
+
+  async function copiaTesto(testo: string): Promise<boolean> {
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      try {
+        await navigator.clipboard.writeText(testo);
+        return true;
+      } catch {
+        // Fallback su execCommand
+      }
+    }
+
+    try {
+      const textarea = document.createElement('textarea');
+      textarea.value = testo;
+      textarea.style.position = 'fixed';
+      textarea.style.top = '0';
+      textarea.style.left = '0';
+      textarea.style.width = '2em';
+      textarea.style.height = '2em';
+      textarea.style.padding = '0';
+      textarea.style.border = 'none';
+      textarea.style.outline = 'none';
+      textarea.style.boxShadow = 'none';
+      textarea.style.background = 'transparent';
+      textarea.style.opacity = '0';
+      textarea.style.pointerEvents = 'none';
+      textarea.setAttribute('readonly', '');
+      document.body.appendChild(textarea);
+
+      if (navigator.userAgent.match(/ipad|ipod|iphone/i)) {
+        const range = document.createRange();
+        range.selectNodeContents(textarea);
+        const sel = window.getSelection();
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+        textarea.setSelectionRange(0, 999999);
+      } else {
+        textarea.select();
+      }
+
+      const esito = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      return esito;
+    } catch (err) {
+      console.error('Copia non riuscita:', err);
+      return false;
+    }
+  }
 
   function chiudiTuttiTranne(aperto?: HTMLElement | null) {
     document.querySelectorAll<HTMLElement>('[data-cita][data-open="true"]').forEach((c) => {
@@ -102,43 +217,44 @@ const etichettaCopied = t('publications.copiato', lingua);
     const centro = rectBottone.left - rectCita.left + rectBottone.width / 2;
 
     feedback.style.left = `${centro}px`;
-    feedback.style.opacity = '1';
-    feedback.style.transform = 'translate(-50%, 0)';
+    feedback.setAttribute('data-show', 'true');
 
     window.setTimeout(() => {
-      feedback.style.opacity = '0';
-      feedback.style.transform = 'translate(-50%, 4px)';
+      feedback.removeAttribute('data-show');
     }, 1000);
   }
 
   function iniziaCitazioni() {
     staccaGlobali?.();
 
-    const alClick = (evento: MouseEvent) => {
+    const alClick = async (evento: MouseEvent) => {
       const target = evento.target as HTMLElement;
 
       // Click su voce formato (APA, MLA, ecc.)
       const voce = target.closest<HTMLButtonElement>('[data-cita-testo]');
       if (voce) {
+        evento.preventDefault();
+        evento.stopPropagation();
         const cita = voce.closest<HTMLElement>('[data-cita]');
         const testo = voce.dataset.citaTesto ?? '';
-        navigator.clipboard?.writeText(testo).then(() => {
-          if (cita) {
-            mostraFeedback(cita, voce);
-            // Richiude morbidamente dopo la copia
-            window.setTimeout(() => {
-              cita.removeAttribute('data-open');
-              const trigger = cita.querySelector<HTMLButtonElement>('[data-cita-trigger]');
-              if (trigger) trigger.setAttribute('aria-expanded', 'false');
-            }, 750);
-          }
-        });
+        const riuscito = await copiaTesto(testo);
+        if (cita && riuscito) {
+          mostraFeedback(cita, voce);
+          // Richiude morbidamente dopo la copia
+          window.setTimeout(() => {
+            cita.removeAttribute('data-open');
+            const trigger = cita.querySelector<HTMLButtonElement>('[data-cita-trigger]');
+            if (trigger) trigger.setAttribute('aria-expanded', 'false');
+          }, 750);
+        }
         return;
       }
 
       // Click su trigger (CITE +)
       const trigger = target.closest<HTMLButtonElement>('[data-cita-trigger]');
       if (trigger) {
+        evento.preventDefault();
+        evento.stopPropagation();
         const cita = trigger.closest<HTMLElement>('[data-cita]');
         if (!cita) return;
         const eAperto = cita.getAttribute('data-open') === 'true';
@@ -174,6 +290,15 @@ const etichettaCopied = t('publications.copiato', lingua);
     };
   }
 
+  if (document.querySelector('[data-tasto-citazione]')) {
+    iniziaCitazioni();
+  }
+
   document.addEventListener('DOMContentLoaded', iniziaCitazioni);
   document.addEventListener('astro:page-load', iniziaCitazioni);
+  document.addEventListener('astro:before-swap', () => {
+    staccaGlobali?.();
+    staccaGlobali = undefined;
+  });
 </script>
+

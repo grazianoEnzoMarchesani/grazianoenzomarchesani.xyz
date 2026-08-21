@@ -52,8 +52,7 @@ una sessione dedicata — non ancora fatto.
 ## Home page (v1, implementata)
 
 - **5 schermate a tutta altezza** (`100dvh`) con `scroll-snap` CSS
-  nativo per la navigazione tra sezioni: Hero + Fields + Publications +
-  Skills + About. Ridotte da 8 a 5 nella sessione di `/grill-me` del
+  nativo (`snap-y snap-mandatory` con `scroll-snap-stop: always` / classe `snap-always` su ciascuna sezione, sessione 2026-08-21 `/ponytail`) per forzare lo stop su ogni singola sezione a ogni gesto di swipe o scroll sia su mobile che su desktop, prevenendo salti multi-pagina. Ridotte da 8 a 5 nella sessione di `/grill-me` del
   2026-08-18, quando Research/Tools/Teaching/Projects sono state fuse
   nella sezione unica **Fields** (vedi [content-plan.md](content-plan.md)
   per il perché del nome e lo stato della fusione). Lo scroll-snap resta
@@ -228,6 +227,15 @@ generato e piazzato indipendentemente dalle altre.
     ogni copia): necessario perché la seconda passata piazza migliaia
     di copie piccole, e duplicare il path ovunque gonfiava ogni file a
     450KB+; con `<use>` ogni bucket/variante pesa 40-70KB.
+  - **Coordinate arrotondate a 4 decimali** in fase di stampa del markup
+    (sessione 2026-08-21): in unità viewBox 4 decimali sono ben sotto il
+    subpixel a qualunque scala, quindi la resa non cambia, ma i 20 SVG
+    passano da 952K a 800K complessivi (−16%). Elimina anche alla fonte
+    la **notazione scientifica** che l'accumulo di errore in virgola
+    mobile produceva ogni tanto (`translate(1.4210854715202004e-14,
+    827.9)` invece di `translate(0, 827.9)`) — vedi il difetto
+    corrispondente in "Morphing" sotto. Il piazzamento non cambia: il
+    PRNG è seedato per bucket+variante e l'arrotondamento avviene dopo.
 - **Solo le 4 forme del brand** già usate nella spirale di Fields
   (`src/assets/research|tools|projects|teaching.svg`, vedi
   [fields-spiral.md](fields-spiral.md)) — stesso mix, stesso peso (25%
@@ -307,6 +315,17 @@ della home (non solo Hero→prima sezione), non solo un sottoinsieme di
 icone: `src/scripts/section-morph.ts`, richiamato da `index.astro`
 dopo `initSectionPatterns()` (deve leggere le icone già piazzate).
 
+- **Attivo solo su desktop** (deciso in sessione 2026-08-21, su
+  richiesta esplicita dell'utente dopo tre tentativi di correzione dei
+  difetti su mobile). Il guard è `(prefers-reduced-motion: reduce),
+  (pointer: coarse)`: `pointer: coarse` distingue il **dispositivo**,
+  non la finestra, così un desktop con la finestra stretta conserva
+  l'animazione mentre telefoni **e tablet** ne restano fuori. Su touch
+  non viene creato nessun overlay e le icone di sfondo restano tutte
+  visibili: la grafica statica è identica, manca solo il volo. Motivo:
+  su touch il costo per frame è più alto e la barra URL che appare e
+  scompare cambia `dvh` durante lo scroll, quindi le icone volanti
+  rischiano di non combaciare con quelle statiche all'arrivo.
 - Solo la passata **"big"** dei pattern (~30-50 icone a sezione),
   **tutte**, non un campione fisso: includere
   anche la passata "small" (250-400 icone a sezione) è stato provato e
@@ -314,20 +333,36 @@ dopo `initSectionPatterns()` (deve leggere le icone già piazzate).
   volo sommano opacità e trasformano lo sfondo in una nebbia grigia che
   rende illeggibile il testo sopra.
 - Le icone volanti vivono in un **overlay `position:fixed`** separato
-  dalle sezioni (un `<svg>` unico, `<use>` che referenziano le 4 forme
-  in `<defs>` — stessa tecnica defs+use del generatore), non annidate
-  nell'SVG di sezione: un elemento lì scrollerebbe via insieme alla
-  sezione invece di restare in scena durante la transizione.
+  dalle sezioni, non annidate nell'SVG di sezione: un elemento lì
+  scrollerebbe via insieme alla sezione invece di restare in scena
+  durante la transizione.
+- **I cloni sono `<div>` HTML, non `<use>` SVG** (cambiato in sessione
+  2026-08-21, per il vincolo di fluidità): forma data da `mask-image`
+  del file icona (`?url`, quindi 4 file veri in cache di browser e
+  niente markup inline) e trama da `background-image` con la tile del
+  pattern come data-URI. Un `fill="url(#pattern)"` dentro una forma che
+  ruota e scala è il caso peggiore per il rasterizer — ri-tiling
+  completo a ogni frame, nessuna composizione GPU — mentre
+  maschera + background lascia comporre al browser un layer già
+  rasterizzato, rendendo il transform sostanzialmente gratuito. GSAP
+  anima direttamente `x/y/rotation/scale` con `transformOrigin: '0 0'`
+  invece di riscrivere l'attributo `transform` dell'SVG a ogni frame.
+  La grafica non cambia: la maschera **è** l'icona sorgente e le tile
+  sono le stesse di prima.
 - **Bug trovato e corretto**: la posizione di arrivo non si può
   leggere con `getBoundingClientRect()` sull'icona di destinazione,
   perché al momento del setup quella sezione è ancora fuori viewport —
-  il rect letto sarebbe quello "scrollato via". La posizione si deriva
-  invece **analiticamente** dal transform dell'icona
-  (translate/rotate/scale già presente nell'SVG generato) convertito
-  in pixel-space via il rapporto viewBox/viewport (`xMidYMid slice`),
-  stessa composizione di trasformazione di `pattern-algorithm.js`
-  replicata bit a bit — nessun `getBoundingClientRect()` per singola
-  icona.
+  il rect letto sarebbe quello "scrollato via". Si legge invece il
+  `transform` già presente nell'SVG generato e lo si usa **tale e
+  quale, in unità viewBox**: la conversione in pixel non avviene mai
+  per icona, la fa **una volta sola** il transform di un `<div>`
+  "stage" che riproduce `xMidYMid slice` (scala per coprire, poi
+  centra). Struttura scelta in sessione 2026-08-21 al posto delle
+  coordinate in pixel congelate al setup: un cambio di viewport ora
+  aggiorna una sola scrittura di stile invece di invalidare decine di
+  coordinate. Lo stage ascolta `resize` **e** `visualViewport.resize`,
+  quindi anche le variazioni di sola altezza. Verificato con Puppeteer:
+  scarto clone↔icona di destinazione 0.0-0.5px.
 - **Bug trovato e corretto**: ruotare il clone "attorno al centro"
   (default CSS/GSAP) lo disallinea dal resto del pattern a ogni angolo
   diverso da 0°/180°, perché l'algoritmo ruota ogni icona attorno alla
@@ -340,29 +375,70 @@ dopo `initSectionPatterns()` (deve leggere le icone già piazzate).
   (finestra attiva `0 < progress < 1`), non staticamente al setup —
   altrimenti ogni clone restava visibile sovrapposto a qualunque
   sezione si stesse guardando in quel momento.
-- **Correlato**: un'icona può essere "arrivo" del confine *i* e
-  "partenza" del confine *i+1* (stessa sezione, target di uno e source
-  dell'altro) — un `Set` globale (`claimed`) assegna ogni icona a un
-  solo confine, altrimenti i due confini scrivevano opacità in
-  conflitto sullo stesso elemento.
-- **Colore della forma volante = colore di riposo, sempre**: primo
-  tentativo con opacità boostata (0.18, quando il meccanismo era
-  ancora `fill-opacity`) durante il volo per leggersi meglio in
-  movimento, **respinto dall'utente** — non è una questione di quanto
-  morbidamente cambia il livello (era già stata aggiunta una
-  transizione CSS), il punto è che non deve cambiare affatto: un'icona
-  che nasce a un livello e vola a un livello diverso resta un cambio di
-  stato percepibile, non un semplice spostamento. Vale identico ora che
-  il meccanismo è colore pieno: `FLYING_COLOR` è lo stesso `BIG_COLOR`
-  con cui l'icona nasce e atterra, nessun secondo valore per lo stato
-  "in volo".
-- Transizione CSS (`opacity 200ms ease`, opacità dell'elemento — show/
-  hide del clone ai bordi della finestra attiva, non più legata al
-  colore/`fill-opacity` della forma) sul passaggio di consegne
-  originale↔clone, per evitare uno scatto secco nell'istante in cui la
-  finestra si apre/chiude.
+- **Bug trovato e corretto — notazione scientifica nei transform**
+  (sessione 2026-08-21): un `transform` su 181 usava la forma
+  `translate(1.4210854715202004e-14, 827.98…)`. Il pattern di numero
+  usato per rileggerli (`[-\d.]+`) non riconosce l'esponente, e
+  `parseTransform` in quel caso **non falliva**: restituiva
+  `tx: 0, ty: 0`, buttando via anche la coordinata valida e spedendo
+  quell'icona a volare da/verso l'angolo in alto a sinistra. Poiché la
+  variante di ogni sezione è scelta con offset casuale a ogni reload,
+  l'icona rotta cambiava sezione a ogni caricamento. Corretto su due
+  fronti: il pattern di numero ora accetta l'esponente e un transform
+  illeggibile fa **saltare la coppia** invece di restituire uno zero
+  silenzioso; e il generatore non produce più notazione scientifica
+  (vedi "Coordinate arrotondate" in "Sfondi decorativi" sopra).
+- **Proprietà unica della visibilità degli originali** (rifatta in
+  sessione 2026-08-21). Un'icona è "arrivo" del confine *i* e
+  "partenza" del confine *i+1*: finché ogni confine scriveva l'opacità
+  dei propri originali, a riposo i due si contraddicevano (uno le
+  voleva a 0, l'altro a 1) e vinceva chi aggiornava per ultimo —
+  difetto intermittente, dipendente dal verso dello scroll e mai
+  visibile sull'ultimo confine, che non ha un vicino a destra. Ora gli
+  originali sono **visibili di default** e un solo indice `flying` a
+  livello di pagina dice quale confine sta volando; solo quello
+  nasconde le sue due schiere e mostra i suoi cloni. Ne vola uno alla
+  volta, perché le finestre dei confini sono contigue e non si
+  sovrappongono.
+- **Texture a pattern vettoriali delicati persistenti sulle forme grandi (sia a riposo che in volo)** (sessione 2026-08-21, su richiesta dell'utente per dare tridimensionalità, texture e visibilità agli elementi dello sfondo senza appiattirli):
+  - Invece di un riempimento solido piatto, tutte le forme grandi (sia negli SVG di sfondo statici pregenerati sia nei cloni in volo) adottano una trama geometrica discreta e finissima definita in `<defs>` con pattern SVG:
+    - **Shape 0 (Research)**: pois regolari a griglia (`pat-0` / `morph-pat-0`, passo 20px, cerchi `r=2`).
+    - **Shape 1 (Teaching)**: puntini sfalsati a quinconce (`pat-1` / `morph-pat-1`, passo 24px, cerchi `r=1.8`).
+    - **Shape 2 (Projects)**: righette oblique a 45° (`pat-2` / `morph-pat-2`, passo 16px, spessore `1.5px`).
+    - **Shape 3 (Tools)**: righette oblique a -45° (`pat-3` / `morph-pat-3`, passo 16px, spessore `1.5px`).
+  - Dalla sessione 2026-08-21 le tile dei **cloni in volo** non sono più
+    `<pattern>` SVG in `<defs>` ma le stesse tile serializzate come
+    `background-image` data-URI dei `<div>` mascherati (vedi `TILES` in
+    `section-morph.ts`): markup identico, resa identica, ma nessun
+    ri-tiling per frame. Gli SVG di sfondo **statici** continuano a usare
+    i `<pattern>` `pat-0..pat-3`, che lì non costano nulla perché non si
+    muovono.
+  - **Colori calibrati sulla palette paper/ink**: sfondo del pattern sul colore di base `BIG_COLOR` (`blendOver(0.035)`) e tratti/puntini in inchiostro tenue (`PATTERN_INK_COLOR = blendOver(0.12)`). Il risultato stacca le forme con raffinatezza ed eleganza senza appesantire visivamente il testo soprastante né creare discontinuità a fine animazione.
+- **Nessuna transizione sullo scambio originale↔clone** (tolta in
+  sessione 2026-08-21). La dissolvenza di 200ms serviva a camuffare il
+  salto prodotto dalle soglie larghe, ma peggiorava le cose: due copie
+  della stessa forma al 50% di opacità **non** compongono la copia
+  piena (queste forme stanno a 0.035 di alpha), quindi si vedeva un
+  doppio fantasma più chiaro, e su scroll veloce una dissolvenza veniva
+  interrotta dalla successiva lasciando le icone a opacità intermedia.
+  Con le soglie strette il clone parte esattamente sopra l'icona che
+  sostituisce e lo scambio istantaneo è invisibile.
+- **Soglie di scambio strette** (`START_THRESHOLD = 0.004`,
+  `END_THRESHOLD = 0.996`). Servono a non lasciare i cloni visibili a
+  riposo quando lo scroll-snap subpixel (mobile, Brave su Android) fa
+  fermare il progress a 0.0001 invece che a 0 — ma vanno tenute
+  **piccole**, perché nell'istante dello scambio il clone è già
+  `soglia × lunghezza del volo` lontano dall'icona che sostituisce.
+  Le soglie larghe usate prima (0.04/0.96) erano la causa del difetto
+  più vistoso: misurato con Puppeteer su schermo 412×915, volo mediano
+  ~300-390px e massimo ~800px, quindi **ogni icona saltava di 11-16px,
+  fino a 32px, in un frame, due volte per confine**. Una sezione di
+  mezzo subiva lo scatto d'arrivo e subito dopo quello di partenza,
+  mentre la prima ha solo la partenza e l'ultima solo l'arrivo — da cui
+  il sintomo riportato dall'utente, "rotto su tutte tranne la prima e
+  l'ultima". A 0.004 il salto è di 1-3px.
 - Rispetta `prefers-reduced-motion` (nessun morph, pattern statici
-  come oggi).
+  come oggi); stesso guard di `pointer: coarse`, vedi sopra.
 - **Da `fill-opacity` a colore pieno pre-mescolato** (sessione
   2026-08-19, segnalato dall'utente: "salto di colore" percepito
   durante lo scroll): centinaia di icone semitrasparenti (sia le due
@@ -389,35 +465,44 @@ icona) calcolavano tutto **una sola volta** su `window.innerWidth/Height`
 al setup, senza alcun listener di resize.
 
 - **Strategia scelta**: reinizializzazione completa e debounced (200ms)
-  su `resize`, non ricalcolo live in-place — `index.astro` richiama di
+  su `resize`, non ricalcolo live in-place — `PaginaHome.astro` richiama di
   nuovo `initSectionPatterns()` + `initSectionMorph()` da zero invece di
   duplicare la matematica delle trasformazioni in un secondo percorso
   "update". Costo di ricreare gli SVG giudicato basso (pochi elementi).
+- **Guardia anti-falso resize su mobile** (sessione 2026-08-21): sui browser mobili (es. Chrome Android su Pixel 7), lo scorrimento verso l'alto fa riapparire la barra degli indirizzi espandendo il viewport in altezza e scatenando un evento `resize` spurio che distruggeva e ricreava il morph e i pattern a metà swipe. Aggiunto controllo `if (window.innerWidth === lastWidth) return;` che ignora le variazioni di sola altezza dovute alla barra URL e scatta solo su reale ridimensionamento orizzontale o cambio orientamento (portrait ↔ landscape). Dalla sessione 2026-08-21 questa guardia resta com'è — la ricostruzione completa è cara e va evitata — ma il morph non dipende più da lei per la geometria: lo stage ha un proprio listener che ascolta anche i cambi di sola altezza e costa una scrittura di stile (vedi "Morphing" sopra).
 - **`initSectionMorph()` reso self-cleaning** per rendere sicura la
   richiamata ripetuta: rimuove il proprio overlay precedente
   (`[data-section-morph-overlay]`) e uccide i propri `ScrollTrigger`
   precedenti (id `section-morph-${i}`) prima di ricostruire — altrimenti
   ogni resize accumulava overlay/trigger fantasma che continuavano a
   scrivere transform su elementi ormai rimossi dal DOM.
+- **Gestione robusta timeline titoli e trigger simmetrici** (sessione 2026-08-21):
+  - Uccisione sistematica della timeline `currentTitleTimeline.kill()` a ogni cambio di passo per evitare che animazioni uscenti ed entranti si sovrappongano o lascino frammenti troncati a scatto durante swipe rapidi o cambi direzione.
+  - Sincronizzati i confini di `ScrollTrigger` tra Hero (sezione 0, impostato a `start: 'top top', end: 'bottom center'`) e le altre sezioni (`start: 'top center', end: 'bottom center'`), rendendo il punto di scatto verso l'alto perfettamente simmetrico (a metà schermata) rispetto allo scorrimento verso il basso.
 
 ## Publications page (v1, implementata)
 
 - **Layout a colonna singola con Watermark Sticky, su tutte e 5 le liste della pagina** (Publications, Software, Datasets & Reports, Dissemination & Outreach, Peer Review Activities — estesa alle ultime 4 in sessione 2026-08-20, inizialmente solo sulla prima): per ogni anno, la cifra monumentale in font Anton (`clamp(10.5rem, 34vw, 24rem)` a `text-ink/[0.045]`) è ancorata come **sticky background** a `top-16` (tramite CSS Grid overlap `col-start-1 row-start-1`). Rimane fissa in secondo piano durante lo scorrimento delle voci di quell'anno, per poi essere spinta verso l'alto dall'arrivo dell'anno successivo. Il piccolo anno testuale a sinistra di ogni voce (colonna `md:grid-cols-[7rem_1fr]`) è stato rimosso ovunque, sostituito dalla filigrana. Raggruppamento per anno centralizzato in `raggruppaPerAnno()` (`src/lib/pubblicazioni.ts`), con una funzione `*PerAnno()` dedicata per ciascuna lista (`perAnno`, `revisioniPerAnno`, `softwarePerAnno`, `datasetPerAnno`, `attivitaPerAnno`). Nota tecnica: i wrapper anno di queste 4 liste extra usano la classe `anno-rev` (non `anno`), perché la regola CSS che nasconde un anno completamente filtrato è legata a `.voce` e si applica solo alla prima lista (che ha i filtri per tipo pubblicazione).
-- **Barra Filtri borderless nel flusso**: posizionata sotto l'header (non sticky, scorre via con la pagina per non rubare spazio su smartphone), priva di bordi rigidi (`bg-paper/80`), tipografia unificata alla nav/contatore (`text-xs uppercase tracking-widest tabular-nums font-sans`) e perno dinamico scuro a scorrimento fluido (`data-filtri-perno`).
+- **Barra Filtri borderless nel flusso con Maschera a Sfumatura Dinamica**: posizionata sotto l'header (non sticky, scorre via con la pagina per non rubare spazio su smartphone), priva di bordi rigidi (`bg-paper/80`), tipografia unificata alla nav/contatore (`text-xs uppercase tracking-widest tabular-nums font-sans`) e perno dinamico scuro a scorrimento fluido (`data-filtri-perno`).
+  - **Affordance di scorrimento orizzontale su mobile**: la barra applica una maschera CSS `linear-gradient` (`webkitMaskImage` / `maskImage`) con dissolvenza di `2.75rem` calcolata dinamicamente sullo scroll (`scrollLeft > 2px`). All'inizio sfuma solo a destra indicando la presenza di altri filtri; durante lo scorrimento sfuma speculare sia a sinistra che a destra; a fine corsa la sfumatura destra si dissipa. Al tap su un filtro parzialmente visibile viene eseguito lo scroll automatico (`scrollIntoView({ inline: 'nearest' })`).
+- **Profili esterni compatti su mobile**: la riga dei profili ("PROFILES: ORCID ↗ IRIS UNICAM ↗ GITHUB ↗") adotta spaziatura e tipografia dedicate (`text-[11px] sm:text-xs`, `gap-x-2 sm:gap-x-6`, `tracking-normal sm:tracking-wider`) per garantire che l'intera sequenza resti sempre su una sola riga senza andare a capo su qualsiasi smartphone (inclusi Pixel 7 e dispositivi con viewport stretto fino a 340px).
 - **Filtro trasversale per anno via clic sulla filigrana** (implementato sessione 2026-08-20, `/ponytail`): cliccare la cifra monumentale di un anno filtra **tutte e 5 le liste** a quell'anno soltanto, ignorando temporaneamente il filtro per categoria (che viene ripristinato tale e quale all'uscita). Le sezioni senza alcun record in quell'anno (es. Software se non ha nulla nel 2021) spariscono per intero, titolo compreso — non solo i loro blocchi-anno, per non lasciare intestazioni vuote a schermo. Uscita: ricliccare lo stesso anno, cliccare un anno diverso, o cliccare in un'area vuota della pagina.
   - **Il filtro per tipo si mostra sempre come "All" mentre quello per anno è attivo** (fix sessione 2026-08-20, su segnalazione dell'utente con screenshot: un tipo restava visivamente premuto — es. "Monographs" — pur essendo ignorato sotto, un paradosso percepibile). All'entrata in modalità anno: il perno scivola su "All" e gli altri bottoni tipo si ritraggono fluidamente (`opacity`/`max-width` in transizione CSS, classe `filtro--nascosto-anno`), restano inerti al click. All'uscita: si ripristina il tipo selezionato in precedenza (`tipoSalvatoPerAnno`), i bottoni si riespandono e il perno li raggiunge solo a espansione completata (delay temporizzato sulla stessa durata della transizione CSS, altrimenti `offsetWidth` letto a metà transizione dà una larghezza provvisoria e il perno collassa a 0). Verificato con Puppeteer: stato finale corretto anche con doppio toggle rapido, nessun errore console.
   - Nessuna nuova struttura dati: i blocchi `.anno`/`.anno-rev` già raggruppati per anno bastano, si nascondono/mostrano via `classList` + `hidden` diretto sull'elemento (mai un secondo trucco CSS `!important` in conflitto con quello di Tailwind, vedi bug sotto).
   - **Fallthrough del clic verso la filigrana**: i blocchi `<li>` delle voci sono elementi block-level a piena larghezza (coprono anche lo spazio "vuoto" a fianco del testo breve), quindi intercettavano il clic anche dove visivamente sembrava esserci solo lo sfondo. Fix standard: contenuto delle voci a `pointer-events: none`, riattivato solo su `a`/`button` reali — non serve alcun `elementFromPoint` custom, il normale hit-testing del browser fa il resto.
   - **Bug trovato e corretto**: un primo tentativo forzava la ri-visibilità delle voci nascoste dal filtro-categoria con una regola CSS `!important` (`body[data-filtro-anno] .voce[hidden]{display:list-item!important}`), che perdeva sempre contro `[hidden]{display:none!important}` di Tailwind. Causa: quella regola di Tailwind vive dentro un `@layer`, e per le dichiarazioni `!important` gli stili *non* layerizzati hanno priorità **più bassa** di quelli in layer (l'inverso della cascata normale) — uno stile scoped Astro fuori da qualunque `@layer` perde sempre contro un `!important` layerizzato, indipendentemente da specificità/ordine. Fix: gestita la visibilità via JS diretto sull'attributo `hidden` (stessa funzione di riapplicazione del filtro-categoria, riusata sia dal bottone di categoria sia all'uscita dal filtro-anno), niente più trucchi `!important` per questo scopo.
-  - **Bug del tasto Cite (trovato e corretto in sessione 2026-08-20)**: il `pointer-events: none` del fallthrough qui sopra riabilita i clic con una regola `... button { pointer-events: auto }` scritta nel `<style>` di `publications.astro`. Ma gli stili scoped Astro appendono l'hash di scope a **ogni** segmento del selettore: quel `button` compila a `button[data-astro-cid-<pagina>]` e non può mai raggiungere i bottoni resi da un **componente figlio**, che portano l'hash del componente. Risultato: tutti i tasti Cite (resi da `TastoCitazione.astro`) restavano a `pointer-events: none` e la filigrana dell'anno, ora cliccabile, si mangiava ogni loro clic. Fix: varianti `:global(a)` / `:global(button)` affiancate a quelle scoped nella stessa regola. **Regola generale**: una regola scoped che deve colpire markup di un altro componente va sempre in `:global()`, altrimenti fallisce in silenzio.
-  - Verificato con Playwright headless ad-hoc (installato in scratchpad, non aggiunto come dipendenza): attivazione/disattivazione, coesistenza col filtro categoria, click su link sovrapposto che naviga regolarmente invece di attivare il filtro, sezioni vuote nascoste per intero.
-
 - **Transizione morbida del filtro per anno** (sessione 2026-08-20, su richiesta dell'utente: lo scurimento dell'anno e la ricostruzione della pagina non dovevano più avvenire "di scatto"). Nessuna dipendenza aggiunta: Web Animations API a mano, non GSAP — `/publications` non carica GSAP e va tenuta leggera. Tre ingredienti:
   - **Morphing di colore** della filigrana selezionata: transizione CSS `color 480ms` su `.anno__watermark` (lo stato premuto resta `color-mix(... 12% ...)`, cambia solo il modo in cui ci si arriva).
-  - **Due battute, non una**: prima ciò che esce si dissolve (150ms) mentre è **ancora in flusso** — così non si sovrappone mai testo a testo — poi si muta il DOM e i superstiti scivolano al nuovo posto in **FLIP** (400ms, `cubic-bezier(0.22,1,0.36,1)`), mentre chi entra compare in dissolvenza. Totale ~550ms. Ciò che esce va saputo *prima* di toccare il DOM (un elemento già `display:none` non si può più dissolvere): la previsione ricalca la stessa regola che applica poi la mutazione.
-  - **Ancoraggio dello scorrimento**: dopo la mutazione la pagina si accorcia di molto e il browser tronca lo `scrollY`, facendo saltare tutto sotto il cursore. Si ri-ancora il blocco dell'anno in gioco alla sua posizione a schermo precedente (misurata a `scrollBy` istantaneo, prima di misurare le posizioni finali del FLIP). Senza questo qualunque animazione risulta illeggibile: verificato che il blocco cliccato resta entro 1px mentre lo `scrollY` passa da 5361 a 302.
-  - Dettagli d'implementazione che non sono ovvi: i figli in FLIP scontano lo spostamento già reso dal genitore (altrimenti lo compiono due volte); uno spostamento oltre 1.5 volte l'altezza del viewport non viene animato ma **sostituito da una dissolvenza** se l'elemento finisce comunque a schermo (senza questo ramo restava uno scatto proprio dove si sta guardando); `prefers-reduced-motion` salta l'intera orchestrazione e applica lo stato finale; un token di transizione fa abbandonare quella vecchia se si riclicca a metà.
-  - Verificato con Playwright headless: 5 elementi visibili in animazione continua per tutta la ricomposizione, colore campionato frame per frame (0.045 → 0.12 di alpha), zero `transform`/`opacity` residui e zero animazioni orfane a fine transizione, doppio clic rapido che converge sullo stato giusto, e frame deterministici catturati congelando `document.getAnimations()`.
+  - **Due battute, non una**: prima ciò che esce si dissolve (150ms) mentre è **ancora in flusso** — così non si sovrappone mai testo a testo — poi si muta il DOM e i superstiti scivolano al nuovo posto in **FLIP** (400ms, `cubic-bezier(0.22,1,0.36,1)`), mentre chi entra compare in dissolvenza. Totale ~550ms.
+  - **Ancoraggio dello scorrimento**: dopo la mutazione la pagina si accorcia di molto e il browser tronca lo `scrollY`, facendo saltare tutto sotto il cursore. Si ri-ancora il blocco dell'anno in gioco alla sua posizione a schermo precedente (misurata a `scrollBy` istantaneo).
+  - Verificato con Playwright headless: nessun residuo di transform/opacity, transizione deterministica con fallback per `prefers-reduced-motion`.
+
+- **Tasto Citazione (TastoCitazione.astro)**:
+  - Su **desktop** (≥ 640px): capsula pillola che all'espansione cresce orizzontalmente verso sinistra a fisarmonica (`grid-template-columns: 0fr ↔ 1fr`), rivelando i 5 stili (APA, MLA, Harvard, Chicago, BibTeX) accanto al trigger.
+  - Su **mobile** (< 640px): per evitare troncamento o overflow a sinistra oltre il bordo dello schermo, i 5 formati compaiono in un popover fluttuante pill-shaped ancorato a destra sotto al trigger (`position: absolute; right: 0; top: calc(100% + 6px); bg-paper/95 backdrop-blur-md border border-ink/14 shadow-lg`).
+  - **Copia universale & Fallback HTTP LAN**: fallback `document.execCommand('copy')` con textarea off-screen temporanea per garantire la copia anche in contesti non sicuri (es. test via LAN Wi-Fi `http://<ip>:4321` con `--host` su iOS/Android dove `navigator.clipboard` è `undefined`). Tooltip di feedback posizionato superiormente al pulsante cliccato.
+
+
 
 ## About page (v1, implementata)
 
