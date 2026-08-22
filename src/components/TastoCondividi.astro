@@ -1,0 +1,151 @@
+---
+/**
+ * IL TASTO CONDIVIDI DI UN ARTICOLO
+ * =================================
+ *
+ * Un solo bottone, due comportamenti decisi dal dispositivo:
+ * sui touch (Android, iOS) si apre il foglio di condivisione di sistema via
+ * Web Share API e sarà l'utente a scegliere l'app di destinazione; sul
+ * desktop si copia il link negli appunti e si dà un riscontro visivo.
+ *
+ * La discriminante è il puntatore, non la presenza di `navigator.share`:
+ * Chrome e Safari espongono l'API anche su macOS e Windows, dove aprirebbe
+ * un pannello di sistema che non è quello che serve qui.
+ *
+ * L'URL non viene calcolato qui ma letto da `location.href` a runtime:
+ * così resta corretto per entrambe le lingue senza passare props di rotta.
+ */
+import { type Lingua, linguaDefault, t } from '../i18n/testi';
+
+interface Props {
+  titolo: string;
+  sommario?: string;
+  lingua?: Lingua;
+  class?: string;
+}
+
+const { titolo, sommario, lingua = linguaDefault, class: classe = '' } = Astro.props;
+---
+
+<div class:list={['condividi relative inline-flex items-center', classe]} data-condividi>
+  <button
+    type="button"
+    class="condividi__trigger inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs uppercase tracking-widest text-ink/60 transition-colors hover:text-ink cursor-pointer outline-none focus:outline-none select-none"
+    data-condividi-trigger
+    data-titolo={titolo}
+    data-testo={sommario}
+    aria-label={`${t('fields.condividi', lingua)}: ${titolo}`}
+  >
+    <svg class="condividi__icona h-3 w-3 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="18" cy="5" r="2.6"></circle>
+      <circle cx="6" cy="12" r="2.6"></circle>
+      <circle cx="18" cy="19" r="2.6"></circle>
+      <line x1="8.3" y1="10.8" x2="15.7" y2="6.2"></line>
+      <line x1="8.3" y1="13.2" x2="15.7" y2="17.8"></line>
+    </svg>
+    <span>{t('fields.condividi', lingua)}</span>
+  </button>
+
+  <span
+    class="condividi__feedback font-sans text-[10px] uppercase tracking-widest pointer-events-none absolute left-1/2 z-40 whitespace-nowrap rounded-full bg-ink px-2.5 py-0.5 text-paper opacity-0 shadow-md transition-all duration-200"
+    data-condividi-feedback
+    role="status"
+    aria-live="polite"
+  >
+    {t('fields.linkCopiato', lingua)}
+  </span>
+</div>
+
+<style>
+  .condividi__feedback {
+    bottom: calc(100% + 6px);
+    transform: translate(-50%, 4px);
+  }
+
+  .condividi__feedback[data-show='true'] {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+</style>
+
+<script>
+  let stacca: (() => void) | undefined;
+
+  async function copiaNegliAppunti(testo: string): Promise<boolean> {
+    // `navigator.clipboard` esiste solo in secure context: sul dev server
+    // raggiunto via IP di LAN non c'è, quindi serve il ripiego storico.
+    if (navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(testo);
+        return true;
+      } catch {
+        /* si prova con execCommand */
+      }
+    }
+
+    try {
+      const area = document.createElement('textarea');
+      area.value = testo;
+      area.setAttribute('readonly', '');
+      area.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none;';
+      document.body.appendChild(area);
+      area.select();
+      const esito = document.execCommand('copy');
+      document.body.removeChild(area);
+      return esito;
+    } catch {
+      return false;
+    }
+  }
+
+  function mostraFeedback(contenitore: HTMLElement) {
+    const feedback = contenitore.querySelector<HTMLElement>('[data-condividi-feedback]');
+    if (!feedback) return;
+    feedback.setAttribute('data-show', 'true');
+    window.setTimeout(() => feedback.removeAttribute('data-show'), 1400);
+  }
+
+  function iniziaCondivisione() {
+    stacca?.();
+
+    const alClick = async (evento: MouseEvent) => {
+      const trigger = (evento.target as HTMLElement).closest<HTMLButtonElement>('[data-condividi-trigger]');
+      if (!trigger) return;
+      evento.preventDefault();
+
+      const contenitore = trigger.closest<HTMLElement>('[data-condividi]');
+      if (!contenitore) return;
+
+      const dati: ShareData = {
+        title: trigger.dataset.titolo || document.title,
+        text: trigger.dataset.testo || undefined,
+        url: location.href,
+      };
+
+      // Puntatore grossolano = dito: è lì che il foglio di condivisione
+      // di sistema ha senso. `canShare` evita di invocarlo con dati rifiutati.
+      const suTouch = window.matchMedia?.('(pointer: coarse)').matches ?? false;
+      if (suTouch && navigator.share && (!navigator.canShare || navigator.canShare(dati))) {
+        try {
+          await navigator.share(dati);
+          return;
+        } catch (errore) {
+          // Annullare la condivisione è un esito normale, non un errore da rimediare.
+          if ((errore as DOMException)?.name === 'AbortError') return;
+        }
+      }
+
+      if (await copiaNegliAppunti(location.href)) mostraFeedback(contenitore);
+    };
+
+    document.addEventListener('click', alClick);
+    stacca = () => document.removeEventListener('click', alClick);
+  }
+
+  iniziaCondivisione();
+  document.addEventListener('astro:page-load', iniziaCondivisione);
+  document.addEventListener('astro:before-swap', () => {
+    stacca?.();
+    stacca = undefined;
+  });
+</script>

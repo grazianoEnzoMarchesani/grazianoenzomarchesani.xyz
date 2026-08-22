@@ -59,6 +59,8 @@ const en = {
   'fields.ambiente': 'Environment',
   'fields.linguaggio': 'Language',
   'fields.nonTradotto': 'This article is currently available only in English.',
+  'fields.condividi': 'Share',
+  'fields.linkCopiato': 'Link copied!',
 
   // Tag di Fields
   'tag.occhiello': 'Tag',
@@ -108,6 +110,26 @@ const en = {
   'search.caricamentoModello': 'Loading neural engine...',
   'search.chiudi': 'Close',
   'search.similarita': 'match',
+  'search.affinitaAlta': 'Semantic match, high confidence',
+  'search.affinitaMedia': 'Semantic match, moderate confidence',
+  'search.affinitaBassa': 'Weak semantic match, likely noise',
+  'search.soloLetterale': 'Literal match',
+
+  // Privacy
+  'privacy.pillola': 'Privacy',
+  'privacy.titolo': 'Preferences',
+  'privacy.statoCorrente': 'Current status',
+  'privacy.statoAttive': 'optional features enabled',
+  'privacy.statoDisattivate': 'optional features disabled',
+  'privacy.intro': 'This site uses no cookies, collects no analytics and does not profile you.',
+  'privacy.dettaglio':
+    'Two optional features can be enabled: semantic search, which downloads about 33 MB to your device from this site, and YouTube videos, which share your IP address with Google once played.',
+  'privacy.rifiuto':
+    'If you decline, nothing is downloaded and no data reaches Google: search still works in text mode and videos remain reachable via a link.',
+  'privacy.accetta': 'Accept',
+  'privacy.rifiuta': 'Decline',
+  'privacy.informativa': 'Full privacy notice',
+  'privacy.chiudi': 'Close without consenting',
 
   // Footer & Contact
   'footer.diritti': 'All rights reserved.',
@@ -164,6 +186,8 @@ const it: Record<keyof typeof en, string> = {
   'fields.ambiente': 'Ambiente',
   'fields.linguaggio': 'Linguaggio',
   'fields.nonTradotto': 'Questo articolo è attualmente disponibile solo in inglese.',
+  'fields.condividi': 'Condividi',
+  'fields.linkCopiato': 'Link copiato!',
 
   // Tag di Fields
   'tag.occhiello': 'Tag',
@@ -213,6 +237,26 @@ const it: Record<keyof typeof en, string> = {
   'search.caricamentoModello': 'Inizializzazione motore neurale...',
   'search.chiudi': 'Chiudi',
   'search.similarita': 'affinità',
+  'search.affinitaAlta': 'Affinità semantica alta',
+  'search.affinitaMedia': 'Affinità semantica moderata',
+  'search.affinitaBassa': 'Affinità semantica debole, probabile rumore',
+  'search.soloLetterale': 'Corrispondenza letterale',
+
+  // Privacy
+  'privacy.pillola': 'Privacy',
+  'privacy.titolo': 'Preferenze',
+  'privacy.statoCorrente': 'Stato attuale',
+  'privacy.statoAttive': 'funzioni facoltative attive',
+  'privacy.statoDisattivate': 'funzioni facoltative disattivate',
+  'privacy.intro': 'Questo sito non usa cookie, non raccoglie statistiche e non ti profila.',
+  'privacy.dettaglio':
+    'Due funzioni facoltative possono essere attivate: la ricerca semantica, che scarica sul tuo dispositivo circa 33 MB serviti da questo sito, e i video YouTube, che una volta avviati comunicano a Google il tuo indirizzo IP.',
+  'privacy.rifiuto':
+    'Se rifiuti, nulla viene scaricato e nessun dato raggiunge Google: la ricerca resta disponibile in modalità testuale e i video restano raggiungibili tramite collegamento.',
+  'privacy.accetta': 'Accetta',
+  'privacy.rifiuta': 'Rifiuta',
+  'privacy.informativa': 'Informativa completa',
+  'privacy.chiudi': 'Chiudi senza acconsentire',
 
   // Footer & Contact
   'footer.diritti': 'Tutti i diritti riservati.',

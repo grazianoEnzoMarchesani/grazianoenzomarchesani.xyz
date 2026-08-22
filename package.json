@@ -48,7 +48,6 @@
     "gsap": "^3.15.0",
     "js-yaml": "^5.3.0",
     "katex": "^0.18.4",
-    "lite-youtube-embed": "^0.3.4",
     "motion": "^13.1.1",
     "png-to-ico": "^3.0.2",
     "react": "^19.2.8",
@@ -72,6 +71,7 @@
     "@types/js-yaml": "^4.0.9",
     "@types/three": "^0.185.4",
     "@types/topojson-client": "^3.1.5",
+    "@vitejs/plugin-basic-ssl": "^2.3.0",
     "puppeteer": "^25.8.0",
     "svgo": "^4.0.2",
     "typescript": "^6.0.3"

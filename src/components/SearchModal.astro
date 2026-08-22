@@ -61,7 +61,13 @@ const { lingua = 'en' } = Astro.props;
     </div>
 
     <!-- Results List -->
-    <div id="search-results" class="flex-1 overflow-y-auto p-2 divide-y divide-ink/5">
+    <div
+      id="search-results"
+      class="flex-1 overflow-y-auto p-2 divide-y divide-ink/5"
+      data-affinita-alta={t('search.affinitaAlta', lingua)}
+      data-affinita-media={t('search.affinitaMedia', lingua)}
+      data-affinita-bassa={t('search.affinitaBassa', lingua)}
+    >
       <div id="search-empty-state" class="py-12 text-center text-xs text-ink/40">
         {t('search.placeholder', lingua)}
       </div>
@@ -70,7 +76,13 @@ const { lingua = 'en' } = Astro.props;
 </div>
 
 <script>
-  import { searchEngine, type DocumentoRicerca } from '../scripts/search-client';
+  import {
+    searchEngine,
+    AFFINITA_RUMORE,
+    AFFINITA_CERTA,
+    type DocumentoRicerca,
+  } from '../scripts/search-client';
+  import { alCambio, consensoDato } from '../scripts/consenso';
 
   let isOpen = false;
   let activeIndex = -1;
@@ -103,9 +115,11 @@ const { lingua = 'en' } = Astro.props;
     // Sincronizza subito lo stato visivo (se già pronto non mostra "inizializzazione")
     updateStatusUI(searchEngine.getStato());
 
-    // Inizializza indice e modello ONNX on-demand
+    // L'indice è un JSON servito da noi: nessun consenso, si carica sempre.
     searchEngine.inizializzaIndice();
-    searchEngine.inizializzaWorker();
+    // Il modello no: ~33 MB archiviati sul dispositivo dell'utente, quindi solo
+    // dopo un consenso esplicito. Senza, resta la ricerca testuale.
+    if (consensoDato()) searchEngine.inizializzaWorker();
 
     setTimeout(() => input?.focus(), 50);
   }
@@ -136,6 +150,22 @@ const { lingua = 'en' } = Astro.props;
       if (statusSr) statusSr.textContent = etichetta;
     };
 
+    if (!consensoDato() && !stato.modelloPronto && !stato.caricamento) {
+      const etichetta = lingua === 'it' ? 'Ricerca testuale attiva' : 'Text search active';
+      const azione = lingua === 'it' ? 'Attiva la ricerca semantica' : 'Enable semantic search';
+      statusText.innerHTML = '';
+      statusText.append(etichetta + ' · ');
+      const bottone = document.createElement('button');
+      bottone.type = 'button';
+      bottone.id = 'search-attiva-semantica';
+      bottone.className = 'underline underline-offset-2 hover:text-ink cursor-pointer';
+      bottone.textContent = azione;
+      statusText.append(bottone);
+      statusBar.classList.remove('status-quiet');
+      if (statusSr) statusSr.textContent = etichetta;
+      return;
+    }
+
     if (stato.errore) {
       mostra(lingua === 'it' ? 'Solo ricerca testuale' : 'Text search only', true);
       statusText.title = stato.errore;
@@ -151,6 +181,54 @@ const { lingua = 'en' } = Astro.props;
   searchEngine.onStatoChange((stato) => {
     updateStatusUI(stato);
   });
+
+  // Il consenso può cambiare a modale aperta: accettandolo il modello parte
+  // subito, revocandolo il worker va spento senza aspettare un reload.
+  alCambio((accettato) => {
+    if (accettato) {
+      if (isOpen) searchEngine.inizializzaWorker();
+    } else {
+      searchEngine.spegniWorker();
+    }
+    updateStatusUI(searchEngine.getStato());
+  });
+
+  /**
+   * Il pallino di affinita' semantica.
+   *
+   * Assente = il risultato viene da una corrispondenza letterale, il modello
+   * non ha avuto voce in capitolo. Presente = il modello ha riconosciuto il
+   * senso della domanda, e quanto e' pieno dice quanto ne era sicuro:
+   * pieno d'inchiostro sopra 0.55, a fil di ferro a 0.32, dove comincia il
+   * rumore. Le due soglie arrivano da `search-client.ts`, dove sono misurate.
+   *
+   * Lo spazio e' riservato anche quando il pallino non c'e': senza, i titoli
+   * si sposterebbero di 14px da una riga all'altra a seconda del motore che
+   * le ha trovate.
+   */
+  function segnoAffinita(doc: DocumentoRicerca, contenitore: HTMLElement): string {
+    const affinita = doc.affinita ?? 0;
+    const vuoto = '<span class="w-2 shrink-0" aria-hidden="true"></span>';
+    if (affinita < AFFINITA_RUMORE) return vuoto;
+
+    const scala = Math.min(1, (affinita - AFFINITA_RUMORE) / (AFFINITA_CERTA - AFFINITA_RUMORE));
+    const meta = (AFFINITA_RUMORE + AFFINITA_CERTA) / 2;
+    const etichetta =
+      affinita >= AFFINITA_CERTA
+        ? contenitore.dataset.affinitaAlta
+        : affinita >= meta
+          ? contenitore.dataset.affinitaMedia
+          : contenitore.dataset.affinitaBassa;
+    const percentuale = Math.round(affinita * 100);
+
+    return `<span class="shrink-0 text-ink leading-none" title="${etichetta} — ${percentuale}%">
+      <svg width="8" height="8" viewBox="0 0 8 8" aria-hidden="true" class="block">
+        <circle cx="4" cy="4" r="3" fill="currentColor" fill-opacity="${scala.toFixed(2)}"
+                stroke="currentColor" stroke-opacity="0.45" stroke-width="1" />
+      </svg>
+      <span class="sr-only">${etichetta}, ${percentuale}%.</span>
+    </span>`;
+  }
 
   function renderResults(results: DocumentoRicerca[]) {
     const { resultsContainer, input, lingua } = getElements();
@@ -186,6 +264,7 @@ const { lingua = 'en' } = Astro.props;
       >
         <div class="flex items-center justify-between gap-2">
           <div class="flex items-center gap-2 min-w-0">
+            ${segnoAffinita(r, resultsContainer)}
             <span class="rounded bg-ink/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ink/70 shrink-0">
               ${r.categoria}
             </span>
@@ -311,6 +390,18 @@ const { lingua = 'en' } = Astro.props;
     });
 
     document.addEventListener('open-search', openSearch);
+
+    // «Attiva la ricerca semantica» nella barra di stato: non attiva niente da
+    // sé, apre il pannello delle preferenze. Il consenso si presta lì, una volta
+    // sola, non sparso per l'interfaccia.
+    document.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement | null)?.closest('#search-attiva-semantica')) {
+        // Il pannello vive sotto l'overlay della ricerca: lasciando la modale
+        // aperta il consenso finirebbe oscurato e inutilizzabile.
+        if (isOpen) closeSearch();
+        document.dispatchEvent(new CustomEvent('privacy:apri'));
+      }
+    });
   }
 
   // Binding iniziale e ad ogni cambio pagina/lingua con Astro

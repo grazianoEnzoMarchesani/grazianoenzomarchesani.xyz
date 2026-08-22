@@ -24,7 +24,7 @@ sarebbe stata una dipendenza, tre plugin e una sintassi da ricordare in più.
 |---|---|
 | Grafico | blocco recintato ` ```grafico ` con dentro YAML |
 | Immagine | `![alt](./foto.jpg "Didascalia")` — sola nel paragrafo, il *title* diventa `<figcaption>` |
-| Video | `[Titolo](https://youtu.be/ID)` — solo nel paragrafo |
+| Video | `[Titolo](https://youtu.be/ID "Didascalia")` — solo nel paragrafo, il *title* diventa `<figcaption>` come per le immagini |
 | Matematica | `$…$` e `$$…$$` |
 
 Tutto in `src/lib/remark-articolo.ts`, a livello **remark** e non rehype: Shiki
@@ -86,10 +86,25 @@ linguaggio. Le immagini restano nodi mdast — diventando HTML grezzo perderebbe
   scarica il browser solo dove c'è davvero una formula.
 - **Collisione nota e accettata**: il separatore bilingue è una riga di soli `$$$` e la
   matematica display usa `$$`. Il rischio è basso (serve un `$$$` a inizio riga) ma esiste.
-- **YouTube**: `lite-youtube-embed` con **poster scaricato al build** in `public/yt/`.
-  Senza poster locale la facciata contatterebbe comunque `i.ytimg.com` al caricamento
-  della pagina, cioè prima di qualsiasi consenso — esattamente ciò che deve evitare.
-  Verificato con Puppeteer: zero host esterni finché non si preme play.
+- **YouTube**: facciata propria (nessuna libreria) e **nessuna immagine prima del consenso**.
+  L'HTML che esce da `remark-articolo.ts` è solo testo — «Click to play on YouTube» /
+  «Clicca per riprodurre su YouTube» — dentro un normale collegamento a youtube.com.
+  Il poster scaricato al build in `public/yt/` **è stato eliminato**: costava ~65 KB di
+  repo per video anche a chi il consenso lo nega, e il repo non è il posto dove tenere
+  i fotogrammi di Google. `src/scripts/video-yt.ts` mette la copertina vera da
+  `i.ytimg.com` **solo col consenso dato** (`maxresdefault`, con ripiego su
+  `mqdefault` per i video non HD: il segnaposto grigio 120×90 va trattato come un 404),
+  e al click monta il player `youtube-nocookie`. La revoca rimette tutto com'era.
+- **Sulla facciata non va nessun marchio altrui.** Il triangolo di play compare solo
+  sopra la copertina, ed è il triangolo nudo in `--color-paper` con un'ombra: la pillola
+  arrotondata dietro è il logo di YouTube e non è nostra. Sulla facciata testuale non c'è
+  nessun simbolo, solo la frase.
+- **La didascalia del video è dell'autore e di nessun altro.** Sta fuori dall'`<a>`, il JS
+  non la nomina mai, ed è identica nei tre stati (rifiutato, copertina, player) e dopo una
+  revoca. Non è il posto dove scrivere avvisi sul consenso: quelli stanno nel banner e
+  nell'informativa, dove si dicono una volta sola. Il testo bilingue della facciata è
+  scelto via `html[lang]` in CSS, perché senza JavaScript non ci sarebbe altro modo — e
+  senza JavaScript quella è comunque l'unica resa. Vedi [privacy.md](privacy.md).
 
 ## Pagina di regressione
 
@@ -101,4 +116,4 @@ un blocco per tipo. Si verifica con Puppeteer (peso JS, idratazione, resa a 375p
 Locale dell'asse X (scrive "Aug 14" anche in italiano) · `area`/`barre`/`dispersione`
 scritti ma mai eseguiti · caricamento `src:` da file sidecar · lightbox sulle immagini ·
 palette categoriale · tabella dati `sr-only` per gli screen reader (un `<svg>` visx non
-espone nulla) · banner di consenso.
+espone nulla).

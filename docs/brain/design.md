@@ -553,12 +553,39 @@ al setup, senza alcun listener di resize.
 ## Ricerca Semantica & Command Palette (v1, implementata)
 
 - **Palette monocromatica rigorosa (Ink/Paper)**: il modale (`SearchModal.astro`) rispetta integralmente la regola dei due soli colori senza alcun accento cromatico.
-  - Indicatore di stato: in caricamento un pallino grigio tenue pulsante (`bg-ink/30 animate-pulse`); a regime un pallino nero pieno (`bg-ink`).
+  - Nessun indicatore di stato del motore nella barra: rimosso il 2026-08-21 (tre tonalità di grigio senza legenda non comunicavano nulla). Lo stato compare solo quando la ricerca è degradata, vedi [stack.md](stack.md).
   - Nessun colore di stato verde/arancione: l'interfaccia resta coerente con la natura sobria ed elegante del resto del sito.
 - **Scorciatoia adattiva per OS**: rileva il sistema operativo lato client — mostra `⌘K` su macOS/iOS e `Ctrl K` su Windows/Linux, sia nel pulsante in navbar sia nella scorciatoia da tastiera.
 - **Minimizzazione del carico visivo (`/ponytail`)**:
-  - Nessuna percentuale numerica visibile a schermo nei risultati (la graduatoria è già intrinsecamente ordinata per rilevanza semantica/lessicale decrescente).
+  - Nessuna percentuale numerica visibile a schermo nei risultati (la graduatoria è già intrinsecamente ordinata per rilevanza semantica/lessicale decrescente). La percentuale esiste solo nel `title` e nel testo `sr-only` del pallino di affinità, qui sotto.
+- **Pallino di affinità semantica per risultato** (2026-08-22, proposto dall'utente): un cerchio di 8px a sinistra del badge di categoria. **Assente** = il risultato viene da una corrispondenza letterale, il modello non ha avuto voce in capitolo. **Presente** = il modello ha riconosciuto il senso della domanda, e quanto è pieno dice quanto ne era sicuro: inchiostro pieno sopra 0.55, a fil di ferro a 0.30 dove comincia il rumore (`fill-opacity` da 0 a 1, `stroke-opacity` fissa a 0.45 — solo `ink`, nessun accento, coerente con la regola dei due colori).
+  - **Misura l'affinità coseno assoluta, non il ranking**, contro la richiesta iniziale dell'utente e con il suo assenso: `punteggio` è relativo al miglior risultato, quindi il primo pallino sarebbe *sempre* nero, anche su una query che non ha trovato niente di buono — il segno dichiarerebbe certezza dove non ce n'è. Conseguenza accettata: un risultato in quarta posizione può avere il pallino più pieno del primo, perché il primo è in cima anche grazie all'evidenza letterale.
+  - **Lo spazio è riservato anche quando il pallino non c'è**, altrimenti i titoli slittano di 14px da una riga all'altra a seconda del motore che li ha trovati.
+  - **Accessibilità**: l'opacità da sola violerebbe WCAG 1.4.1, quindi ogni pallino porta `title` e testo `sr-only` con etichetta e percentuale. Le etichette stanno in `testi.ts` e arrivano al client via `data-*` sul contenitore dei risultati, per non imbarcare l'intero dizionario nel bundle.
+  - **Si è già ripagato**: è stato il pallino a rendere visibile che le query per anno pescavano sempre lo stesso documento dal semantico (vedi [stack.md](stack.md)). Senza il segno, quel risultato sembrava solo un po' strano.
   - Badge lingua solo in modalità fallback: quando l'utente naviga in italiano, le schede mostrano un discreto badge `EN` esclusivamente per quegli articoli che non hanno una traduzione italiana, mentre non mostrano alcun badge superfluo per i contenuti regolari.
+
+## Pagine articolo di Fields (v1, implementata)
+
+Sessione 2026-08-22 (`/grill-me` + `/ponytail`). Riguarda la *cornice* delle
+quattro pagine di dettaglio (research, tools, teaching, projects); per cosa
+può stare *dentro* il corpo dell'articolo vedi [blocchi-articoli.md](blocchi-articoli.md).
+
+- **Filigrana del simbolo di categoria a tutta pagina** (`FieldSimbolo.astro`): lo stesso SVG che la spirale usa in 3D (`src/assets/{research,tools,teaching,projects}.svg`) compare come sfondo dell'articolo, alto quanto il viewport e **tagliato** da un angolo dello schermo. È la traduzione, per Fields, della filigrana dell'anno di Publications: stessa opacità `0.045` su `--color-paper`, stesso `z-0` con il contenuto che sale a `z-10`. La differenza è che qui è `fixed`, non `sticky`: lo sticky di Publications serve perché gli anni si susseguono in colonna, mentre un articolo ha una sola categoria e niente da cui staccarsi.
+- **Un angolo per categoria**: research in basso a sinistra, tools in basso a destra, teaching in alto a destra, projects in alto a sinistra. È l'ordine di `FIELD_CATEGORY_ORDER` percorso in senso antiorario come in `helixPoint`, ancorato al basso-sinistra scelto dall'utente per research. Convenzione arbitraria ma ricostruibile: serviva perché nella spirale la posizione angolare di un marker viene dalla data (`yearFraction`), **non** dalla categoria — il modello a "quadranti fissi" descritto nel commento di `src/data/fields.ts` non è più quello che il codice applica.
+- **Puramente decorativa**: `aria-hidden`, `pointer-events: none`. A differenza dell'anno di Publications non è un filtro cliccabile — un bersaglio alto un viewport sopra il testo dell'article è una trappola, e il ritorno a Fields è già coperto da `BackToFieldsButton`.
+- **Nessuna animazione e nessuna variante mobile**: a `0.045` di opacità un fade-in non lo vedrebbe nessuno ma andrebbe tenuto sincronizzato per sempre con `FieldTransitionOverlay`; e la stessa regola vale identica sotto i 640px, dove la filigrana non compete con nulla. Essendo `fixed` resta dietro anche a nav e footer, accettato.
+- **Solo sulle quattro pagine di dettaglio**: non su `/fields` (dove la spirale mostra già gli stessi simboli in 3D, e sovrapporne una versione piatta è rumore), non sulle pagine di tag (multi-categoria: non esiste un simbolo giusto), non su Publications.
+- Gli SVG hanno proporzioni diverse (research e tools verticali, teaching e projects quadrati): dentro il box quadrato `h-screen w-[100vh]` i verticali sbordano un po' meno. A quell'opacità è invisibile e non è stato compensato.
+
+### Tasto condividi (`TastoCondividi.astro`, 2026-08-22)
+
+- **Un solo bottone, in fondo all'articolo**, allineato a destra sopra la navigazione prev/next, su tutte e quattro le pagine di dettaglio. Stessa capsula del tasto `CITE` di Publications (pill `rounded-full`, `text-xs uppercase tracking-widest`, `text-ink/60` → `text-ink` in hover) più un'icona a tre nodi collegati; il riscontro di copia riusa il tooltip nero `bg-ink`/`text-paper` di `TastoCitazione`.
+- **La discriminante fra condivisione e copia è il puntatore, non `navigator.share`.** Il feature detect è la scelta ovvia ed è sbagliata: Chrome e Safari espongono la Web Share API anche su macOS e Windows, dove aprirebbe un pannello di sistema desktop — mentre la richiesta era esplicitamente «su desktop la copia, perché un sistema di sharing vero lì non c'è». Il gate è `matchMedia('(pointer: coarse)')`: dito → foglio di sistema con titolo, sommario e URL; mouse → URL negli appunti e tooltip «Link copied!/Link copiato!». Chi in futuro vedesse quel gate e lo "correggesse" in un feature detect reintrodurrebbe il comportamento che l'utente non voleva.
+- **`AbortError` non è un errore**: annullare il foglio di condivisione è un esito normale e non deve far scattare la copia di ripiego. Ogni altro rigetto invece ricade sulla copia.
+- **La copia ha il ripiego su `execCommand`** perché `navigator.clipboard` non esiste fuori dal secure context.
+- **L'URL si legge da `location.href` a runtime**, non si costruisce da props: resta corretto in entrambe le lingue senza passare informazioni di rotta al componente.
+- Verificato con Puppeteer su entrambi i rami: puntatore fine → `navigator.share` mai invocato e tooltip di copia mostrato; Pixel 5 emulato → il foglio riceve titolo, sommario e URL corretti e nessun tooltip.
 
 ## Sospeso (da riprendere in sessioni future)
 

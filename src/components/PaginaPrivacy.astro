@@ -1,0 +1,228 @@
+---
+import BaseHead from './BaseHead.astro';
+import '../styles/global.css';
+import Nav from './Nav.astro';
+import Footer from './Footer.astro';
+import { getInformativa, aggiornamento } from '../data/privacy';
+import { type Lingua, linguaDefault, t } from '../i18n/testi';
+
+interface Props {
+  lingua?: Lingua;
+}
+
+const { lingua = (Astro.currentLocale as Lingua) || linguaDefault } = Astro.props;
+const isIt = lingua === 'it';
+const sezioni = getInformativa(lingua);
+
+// Stesso offuscamento del footer: la pagina privacy è il punto del sito dove uno
+// scraper si aspetta con certezza un indirizzo, quindi in pagina non finisce né
+// un `mailto:` né una stringa con la chiocciola. La forma «nome [at] dominio»
+// resta però leggibile a occhio anche senza JavaScript: il recapito deve essere
+// un contatto effettivo ai sensi dell'art. 13(1)(a) GDPR, non un rebus.
+const emailUser = 'graziano.marchesani';
+const emailDomain = 'unicam.it';
+const emailToken = Buffer.from(`${emailUser}@${emailDomain}`).toString('base64');
+
+// Granularita' mensile: l'informativa non cambia da un giorno all'altro e una data
+// al giorno invecchia male; conta il mese della revisione.
+const dataLeggibile = new Date(aggiornamento).toLocaleDateString(isIt ? 'it-IT' : 'en-GB', {
+  month: 'long',
+  year: 'numeric',
+});
+---
+
+<html lang={lingua}>
+  <head>
+    <BaseHead
+      title={`${isIt ? 'Privacy' : 'Privacy'} — Graziano Enzo Marchesani`}
+      description={isIt
+        ? 'Informativa sul trattamento dei dati personali: cosa questo sito raccoglie, cosa non raccoglie, e come revocare il consenso.'
+        : 'Privacy notice: what this site collects, what it does not, and how to withdraw consent.'}
+      alternate={{ en: '/privacy/', it: '/it/privacy/' }}
+    />
+  </head>
+  <body class="bg-paper text-ink font-sans antialiased selection:bg-ink selection:text-paper">
+    <Nav lingua={lingua} />
+
+    <main class="mx-auto max-w-3xl px-6 pt-32 pb-32 sm:px-10">
+      <header class="border-b border-ink/15 pb-10">
+        <p class="font-mono text-xs uppercase tracking-widest text-ink/60">
+          {isIt ? 'Informativa' : 'Privacy notice'}
+        </p>
+        <h1 class="font-display mt-3 text-[clamp(2.5rem,6vw,4.5rem)] leading-none tracking-normal uppercase">
+          Privacy
+        </h1>
+        <p class="mt-5 font-mono text-xs uppercase tracking-wider text-ink/50">
+          {isIt ? 'Ultimo aggiornamento' : 'Last updated'}: {dataLeggibile}
+        </p>
+      </header>
+
+      <div class="informativa">
+        {
+          sezioni.map((sezione) => (
+            <section id={sezione.id} class="mt-12">
+              <h2>{sezione.titolo}</h2>
+              {sezione.corpo.map((frammento) => (
+                <Fragment set:html={frammento} />
+              ))}
+
+              {sezione.id === 'titolare' && (
+                <p class="contatto-titolare">
+                  <span class="font-mono text-xs uppercase tracking-wider text-ink/50">Email:</span>{' '}
+                  <span id="privacy-email" data-token={emailToken}>
+                    {emailUser} [at] {emailDomain}
+                  </span>
+                  <button
+                    id="privacy-email-copia"
+                    type="button"
+                    class="ml-2 cursor-pointer rounded-full border border-ink/20 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-ink/60 transition-colors hover:bg-ink hover:text-paper"
+                    data-label-copia={t('contatti.copia', lingua)}
+                    data-label-copiato={t('contatti.copiato', lingua)}
+                  >
+                    {t('contatti.copia', lingua)}
+                  </button>
+                </p>
+              )}
+            </section>
+          ))
+        }
+      </div>
+
+      <div class="mt-16 border-t border-ink/15 pt-8">
+        <button
+          id="privacy-apri-preferenze"
+          type="button"
+          class="cursor-pointer rounded-full border border-ink/25 px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-ink transition-colors hover:bg-ink hover:text-paper"
+        >
+          {isIt ? 'Modifica le preferenze' : 'Change your preferences'}
+        </button>
+      </div>
+    </main>
+
+    <Footer lingua={lingua} />
+
+    <script>
+      // La decodifica avviene solo su gesto dell'utente: l'indirizzo completo non
+      // esiste nel DOM finché non serve davvero.
+      const decodifica = (token: string) => {
+        try {
+          return atob(token);
+        } catch {
+          return '';
+        }
+      };
+
+      document.addEventListener('click', async (evento) => {
+        const bersaglio = evento.target as HTMLElement | null;
+        if (!bersaglio) return;
+
+        if (bersaglio.closest('#privacy-apri-preferenze')) {
+          document.dispatchEvent(new CustomEvent('privacy:apri'));
+          return;
+        }
+
+        const copia = bersaglio.closest<HTMLButtonElement>('#privacy-email-copia');
+        if (!copia) return;
+
+        const token = document.getElementById('privacy-email')?.getAttribute('data-token') || '';
+        const indirizzo = decodifica(token);
+        if (!indirizzo) return;
+
+        try {
+          await navigator.clipboard.writeText(indirizzo);
+          const etichetta = copia.dataset.labelCopiato || 'Copied';
+          const originale = copia.dataset.labelCopia || 'Copy';
+          copia.textContent = etichetta;
+          setTimeout(() => {
+            copia.textContent = originale;
+          }, 2000);
+        } catch {
+          // Appunti negati: l'indirizzo resta comunque leggibile in pagina.
+        }
+      });
+    </script>
+
+    <style>
+      .informativa :global(h2) {
+        font-family: var(--font-display);
+        font-size: 1.375rem;
+        line-height: 1.15;
+        text-transform: uppercase;
+      }
+
+      .informativa :global(h3) {
+        margin-top: 2rem;
+        font-family: var(--font-mono, monospace);
+        font-size: 0.75rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        opacity: 0.6;
+      }
+
+      .informativa :global(p) {
+        margin-top: 1rem;
+        line-height: 1.7;
+      }
+
+      .informativa :global(ul) {
+        margin-top: 1rem;
+        padding-left: 1.25rem;
+        list-style: disc;
+      }
+
+      .informativa :global(li) {
+        margin-top: 0.5rem;
+        line-height: 1.6;
+      }
+
+      .informativa :global(a) {
+        text-decoration: underline;
+        text-underline-offset: 2px;
+      }
+
+      .informativa :global(a:hover) {
+        opacity: 0.6;
+      }
+
+      .informativa :global(code) {
+        font-family: var(--font-mono, monospace);
+        font-size: 0.9em;
+      }
+
+      /* La tabella dei trasferimenti scorre da sola su schermo stretto: la pagina no. */
+      .informativa :global(.tabella-privacy) {
+        margin-top: 1.25rem;
+        overflow-x: auto;
+      }
+
+      .informativa :global(.tabella-privacy table) {
+        width: 100%;
+        min-width: 34rem;
+        border-collapse: collapse;
+        font-size: 0.8125rem;
+      }
+
+      .informativa :global(.tabella-privacy th),
+      .informativa :global(.tabella-privacy td) {
+        border-bottom: 1px solid color-mix(in srgb, var(--color-ink) 15%, transparent);
+        padding: 0.6rem 0.75rem 0.6rem 0;
+        text-align: left;
+        vertical-align: top;
+        line-height: 1.5;
+      }
+
+      .informativa :global(.tabella-privacy th) {
+        font-family: var(--font-mono, monospace);
+        font-size: 0.6875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        opacity: 0.6;
+      }
+
+      .contatto-titolare {
+        margin-top: 1rem;
+        line-height: 1.7;
+      }
+    </style>
+  </body>
+</html>

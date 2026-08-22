@@ -27,3 +27,6 @@ pnpm-debug.log*
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
+
+# motore della ricerca semantica: scaricato al build, non versionato
+public/motore/

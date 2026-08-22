@@ -6,7 +6,6 @@
 // pagine articolo. I font KaTeX li scarica il browser solo se in pagina c'è
 // davvero una formula, quindi un articolo senza matematica non li paga.
 import 'katex/dist/katex.min.css';
-import 'lite-youtube-embed/src/lite-yt-embed.css';
 ---
 
 <div class="field-article">
@@ -15,7 +14,7 @@ import 'lite-youtube-embed/src/lite-yt-embed.css';
 
 <script>
 	import '../scripts/monta-grafici.ts';
-	import 'lite-youtube-embed';
+	import '../scripts/video-yt.ts';
 </script>
 
 <style>
@@ -64,7 +63,7 @@ import 'lite-youtube-embed/src/lite-yt-embed.css';
 
 	.field-article :global(figure.grafico),
 	.field-article :global(figure.figura),
-	.field-article :global(lite-youtube) {
+	.field-article :global(figure.video-yt) {
 		margin-top: 2rem;
 	}
 
@@ -80,8 +79,85 @@ import 'lite-youtube-embed/src/lite-yt-embed.css';
 		opacity: 0.7;
 	}
 
-	.field-article :global(lite-youtube) {
-		max-width: 100%;
+	/* --- Video YouTube -------------------------------------------------------
+	   Senza consenso la facciata è solo testo, senza marchi né simboli di YouTube.
+	   Col consenso video-yt.ts ci mette la copertina vera, e al click l'iframe.
+	   Le tre rese devono occupare lo stesso spazio, o cambiare stato farebbe
+	   saltare la pagina. */
+	.field-article :global(.video-yt-facciata),
+	.field-article :global(.video-yt-player) {
+		width: 100%;
+		aspect-ratio: 16 / 9;
+		border: 0;
+	}
+
+	.field-article :global(.video-yt-player) {
+		display: block;
+	}
+
+	.field-article :global(.video-yt-facciata) {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 1.5rem;
+		text-align: center;
+		text-decoration: underline;
+		text-underline-offset: 0.25em;
+		color: var(--color-ink);
+		background-color: color-mix(in srgb, var(--color-ink) 6%, transparent);
+		background-size: cover;
+		background-position: center;
+		transition: background-color 0.2s;
+	}
+
+	.field-article :global(.video-yt-facciata:hover) {
+		opacity: 1;
+		background-color: color-mix(in srgb, var(--color-ink) 12%, transparent);
+	}
+
+	/* Il testo è bilingue nell'HTML: senza JavaScript non c'è modo di sceglierlo
+	   a runtime, e senza JavaScript questa è comunque l'unica resa possibile. */
+	.field-article :global(.video-yt-facciata > [lang]) {
+		display: none;
+	}
+
+	:global(html[lang='en']) .field-article :global(.video-yt-facciata > [lang='en']),
+	:global(html[lang='it']) .field-article :global(.video-yt-facciata > [lang='it']) {
+		display: inline;
+	}
+
+	/* Con la copertura caricata la tinta di fondo sparisce, o velerebbe l'immagine. */
+	.field-article :global(.video-yt-conCopertina),
+	.field-article :global(.video-yt-conCopertina:hover) {
+		background-color: transparent;
+	}
+
+	/* Solo sopra la copertina: segnala dove cliccare. Il triangolo e basta — la
+	   pillola arrotondata dietro è il marchio di YouTube, non nostro. L'ombra lo
+	   tiene leggibile anche sui fotogrammi chiari. */
+	.field-article :global(.video-yt-play) {
+		flex: none;
+		width: 0;
+		height: 0;
+		border-style: solid;
+		border-width: 1.1rem 0 1.1rem 1.9rem;
+		border-color: transparent transparent transparent var(--color-paper);
+		filter: drop-shadow(0 0 0.5rem color-mix(in srgb, var(--color-ink) 65%, transparent));
+		transition: opacity 0.2s;
+	}
+
+	.field-article :global(.video-yt-facciata:hover .video-yt-play) {
+		opacity: 0.75;
+	}
+
+	/* Il titolo dà il nome accessibile al collegamento; a schermo lo mostra la copertina. */
+	.field-article :global(.video-yt-etichetta) {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
 	}
 
 	/* Le formule display possono eccedere la colonna: scorrono da sole, la pagina no. */

@@ -1,0 +1,32 @@
+---
+import type { FieldCategory } from '../data/fields';
+import research from '../assets/research.svg?raw';
+import tools from '../assets/tools.svg?raw';
+import teaching from '../assets/teaching.svg?raw';
+import projects from '../assets/projects.svg?raw';
+
+interface Props {
+  categoria: FieldCategory;
+}
+
+const { categoria } = Astro.props;
+
+const SVG: Record<FieldCategory, string> = { research, tools, teaching, projects };
+
+/** Angolo per categoria: l'ordine di `FIELD_CATEGORY_ORDER` percorso in
+ *  senso antiorario come in `helixPoint`, ancorato a research in basso a
+ *  sinistra. Deciso in sessione di `/grill-me` del 2026-08-22. */
+const ANGOLO: Record<FieldCategory, string> = {
+  research: 'bottom-[-25vh] left-[-25vh]',
+  tools: 'bottom-[-25vh] right-[-25vh]',
+  teaching: 'top-[-25vh] right-[-25vh]',
+  projects: 'top-[-25vh] left-[-25vh]',
+};
+---
+
+<div
+  class:list={['fixed z-0 h-screen w-[100vh] select-none', ANGOLO[categoria]]}
+  style="opacity: 0.045; pointer-events: none;"
+  aria-hidden="true"
+  set:html={SVG[categoria].replace(/<\?xml[\s\S]*?\?>|<!DOCTYPE[\s\S]*?>/g, '')}
+/>

@@ -78,6 +78,18 @@ function pulisciMarkdown(md) {
     .trim();
 }
 
+/**
+ * Il DOI e' l'unica stringa del sito che identifica un contenuto in modo
+ * univoco: chi lo incolla nella ricerca sa gia' cosa vuole. Va indicizzato
+ * come campo a se', perche' un modello semantico su "10.1016/j.buildenv..."
+ * non ha nulla da dire.
+ */
+function estraiDoi(valore) {
+  if (typeof valore !== 'string') return '';
+  const trovato = valore.match(/10\.\d{4,9}\/\S+/);
+  return trovato ? trovato[0].replace(/[.,;)]+$/, '') : '';
+}
+
 async function calcolaHashCartella() {
   const hash = crypto.createHash('sha256');
   async function visita(dir) {
@@ -190,6 +202,8 @@ export async function generaSearchIndex({ forza = false } = {}) {
           titolo,
           sommario,
           tag,
+          autori: '',
+          doi: estraiDoi(meta.fonteUrl) || estraiDoi(meta.fonte),
           url,
           testoPerEmbedding,
         });
@@ -231,6 +245,8 @@ export async function generaSearchIndex({ forza = false } = {}) {
               titolo,
               sommario: `${sede ? sede + ' ' : ''}(${anno}) — ${autori}`,
               tag: pub.tipo ? [pub.tipo] : [catNome],
+              autori,
+              doi: estraiDoi(pub.doi),
               url,
               testoPerEmbedding,
             });
@@ -268,6 +284,8 @@ export async function generaSearchIndex({ forza = false } = {}) {
             titolo: nome,
             sommario: descr,
             tag: [catNome],
+            autori: '',
+            doi: '',
             url,
             testoPerEmbedding,
           });
@@ -296,6 +314,10 @@ export async function generaSearchIndex({ forza = false } = {}) {
       titolo: doc.titolo,
       sommario: doc.sommario,
       tag: doc.tag,
+      // Omessi quando vuoti: moltiplicati per 300 documenti, due campi nulli
+      // pesano piu' di quanto sembri su un indice che il visitatore scarica.
+      ...(doc.autori ? { autori: doc.autori } : {}),
+      ...(doc.doi ? { doi: doc.doi } : {}),
       url: doc.url,
       vettore,
     });

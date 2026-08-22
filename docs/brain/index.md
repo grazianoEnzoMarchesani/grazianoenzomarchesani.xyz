@@ -15,4 +15,5 @@ Due tipi di file:
 - [blocchi-articoli.md](blocchi-articoli.md) — immagini, video, LaTeX e grafici dentro il corpo degli articoli di Fields. *Decisione.*
 - [tag.md](tag.md) — la tassonomia unificata di Fields: sorgenti dei tag, pagine statiche per tag, filtro a satelliti sulla spirale, regole per scriverli. *Decisione.*
 - [fields-spiral.md](fields-spiral.md) — l'animazione 3D della pagina Fields (la spirale scroll-driven). *Decisione.*
+- [privacy.md](privacy.md) — cosa esce dal browser del visitatore, basi giuridiche, consenso default-deny e come è implementato. *Decisione.*
 - [session-log.md](session-log.md) — cronologia breve, una voce per sessione. *Log.*

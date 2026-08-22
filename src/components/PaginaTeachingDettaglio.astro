@@ -6,9 +6,11 @@ import '../styles/global.css';
 import Nav from './Nav.astro';
 import Footer from './Footer.astro';
 import FieldTransitionOverlay from './FieldTransitionOverlay.astro';
+import FieldSimbolo from './FieldSimbolo.astro';
 import FieldArticleNavigation from './FieldArticleNavigation.astro';
 import FieldArticleBody from './FieldArticleBody.astro';
 import ElencoTag from './ElencoTag.astro';
+import TastoCondividi from './TastoCondividi.astro';
 import { type Lingua, linguaDefault, t } from '../i18n/testi';
 
 interface Props {
@@ -30,9 +32,10 @@ const { tipo, anni, attivo, istituzione, luogo, titolo, sommario } = entry.data;
   </head>
   <body class="bg-paper text-ink font-sans">
     <FieldTransitionOverlay />
+    <FieldSimbolo categoria="teaching" />
     <Nav lingua={lingua} />
 
-    <main class="mx-auto max-w-2xl px-6 pt-32 pb-24 sm:px-10">
+    <main class="relative z-10 mx-auto max-w-2xl px-6 pt-32 pb-24 sm:px-10">
       <p class="text-xs uppercase tracking-widest opacity-60">
         {t('fields.teaching', lingua)} · {tipo} · {anni}
         {attivo && ` · ${lingua === 'it' ? 'in corso' : 'active'}`}
@@ -51,6 +54,10 @@ const { tipo, anni, attivo, istituzione, luogo, titolo, sommario } = entry.data;
       <FieldArticleBody>
         <Content />
       </FieldArticleBody>
+
+      <div class="mt-12 flex justify-end">
+        <TastoCondividi titolo={titolo} sommario={sommario} lingua={lingua} />
+      </div>
 
       <FieldArticleNavigation currentId={currentId} next={next} prev={prev} lingua={lingua} />
     </main>

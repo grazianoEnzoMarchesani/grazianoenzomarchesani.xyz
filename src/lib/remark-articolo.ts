@@ -1,5 +1,3 @@
-import { existsSync } from "node:fs";
-import { mkdir, writeFile } from "node:fs/promises";
 import * as yaml from "js-yaml";
 import type { Code, Paragraph, Root, RootContent } from "mdast";
 
@@ -9,7 +7,7 @@ import type { Code, Paragraph, Root, RootContent } from "mdast";
  * NIENTE SINTASSI NUOVA: si usa quella che Markdown ha già.
  * - ```grafico                        → segnaposto per un'isola React (montata da monta-grafici.ts)
  * - ![alt](./foto.jpg "Didascalia")   → <figure> + <figcaption>, se l'immagine è sola nel paragrafo
- * - [Titolo](https://youtu.be/ID)     → <lite-youtube>, se il link è solo nel paragrafo
+ * - [Titolo](https://youtu.be/ID)     → facciata video, se il link è solo nel paragrafo
  *
  * Gira a livello remark, non rehype: Shiki evidenzia i blocchi recintati prima
  * che rehype li veda e ne butta via il nome del linguaggio. Le immagini restano
@@ -22,31 +20,10 @@ import type { Code, Paragraph, Root, RootContent } from "mdast";
 
 const escape = (testo: string) => testo.replace(/&/g, "&amp;").replace(/'/g, "&#39;").replace(/</g, "&lt;");
 
-const POSTER = new URL("../../public/yt/", import.meta.url);
-
 /** Estrae l'id video da un URL YouTube, o null se non è YouTube. */
 function idYoutube(url: string): string | null {
   const trovato = url.match(/^https?:\/\/(?:www\.)?(?:youtu\.be\/([\w-]{11})|youtube\.com\/(?:watch\?v=|embed\/)([\w-]{11}))/);
   return trovato ? (trovato[1] ?? trovato[2]) : null;
-}
-
-/**
- * Scarica la copertina in public/yt/ una volta sola.
- * Serve a non chiamare i.ytimg.com dal browser del visitatore: senza poster locale
- * la facciata `lite-youtube` contatterebbe comunque Google al caricamento della
- * pagina, cioè prima di qualsiasi consenso — esattamente ciò che deve evitare.
- */
-async function scaricaPoster(id: string): Promise<boolean> {
-  const destinazione = new URL(`${id}.jpg`, POSTER);
-  if (existsSync(destinazione)) return true;
-  for (const qualita of ["maxresdefault", "hqdefault"]) {
-    const risposta = await fetch(`https://i.ytimg.com/vi/${id}/${qualita}.jpg`).catch(() => null);
-    if (!risposta?.ok) continue;
-    await mkdir(POSTER, { recursive: true });
-    await writeFile(destinazione, Buffer.from(await risposta.arrayBuffer()));
-    return true;
-  }
-  return false;
 }
 
 /** Un paragrafo che contiene un solo nodo del tipo dato, e nient'altro. */
@@ -58,8 +35,6 @@ function figlioUnico<T extends RootContent["type"]>(nodo: RootContent, tipo: T) 
 
 export function remarkArticolo() {
   return async (tree: Root, file: { path?: string }) => {
-    const daScaricare: Promise<unknown>[] = [];
-
     const percorri = (nodi: RootContent[]) => {
       for (const [indice, nodo] of nodi.entries()) {
         // --- ```grafico → segnaposto per l'isola React
@@ -97,18 +72,33 @@ export function remarkArticolo() {
           continue;
         }
 
-        // --- link YouTube solo nel paragrafo → facciata lite-youtube con poster locale
+        // --- link YouTube solo nel paragrafo → facciata testuale, nessun contatto con Google
+        //
+        // Senza consenso non esce di qui NESSUNA immagine: né remota (chiamerebbe
+        // i.ytimg.com al caricamento, cioè prima di qualsiasi consenso) né locale
+        // (costava ~65 KB di repo per video anche a chi il consenso lo nega). Solo
+        // testo dentro un normale collegamento, che senza consenso — stato
+        // predefinito, e unico stato possibile senza JavaScript — porta su
+        // youtube.com. La copertina vera e il player incorporato li mette
+        // video-yt.ts, ma solo dopo un consenso esplicito.
+        //
+        // La didascalia è quella dell'autore, col title del link come per le
+        // immagini: [Titolo](https://youtu.be/ID "Didascalia"). Non dice niente su
+        // YouTube né sul consenso, e resta identica nei due stati.
         const collegamento = figlioUnico(nodo, "link");
         const id = collegamento && idYoutube(collegamento.url);
         if (collegamento && id) {
           const titolo = collegamento.children.map((f) => ("value" in f ? f.value : "")).join("") || "Video";
-          daScaricare.push(scaricaPoster(id));
+          const didascalia = collegamento.title ? `<figcaption>${escape(collegamento.title)}</figcaption>` : "";
           nodi[indice] = {
             type: "html",
             value:
-              `<lite-youtube videoid="${id}" style="background-image:url('/yt/${id}.jpg')" params="rel=0">` +
-              `<a class="lite-youtube-fallback" href="https://www.youtube.com/watch?v=${id}">${escape(titolo)}</a>` +
-              `</lite-youtube>`,
+              `<figure class="video-yt" data-videoid="${id}" data-titolo="${escape(titolo)}" data-consenso="no">` +
+              `<a class="video-yt-facciata" href="https://www.youtube.com/watch?v=${id}"` +
+              ` target="_blank" rel="noopener noreferrer">` +
+              `<span lang="en">Click to play on YouTube</span>` +
+              `<span lang="it">Clicca per riprodurre su YouTube</span>` +
+              `</a>${didascalia}</figure>`,
           };
           continue;
         }
@@ -118,6 +108,5 @@ export function remarkArticolo() {
     };
 
     percorri(tree.children);
-    await Promise.all(daScaricare);
   };
 }
