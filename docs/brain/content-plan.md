@@ -53,9 +53,9 @@ sulla spirale. Regole, sorgenti e motivazioni in [tag.md](tag.md).
 **`research-projects` non fa parte di Fields**: è una categoria a sé
 (progetti/grant finanziati — acronimo/programma/anni/ruolo/partner),
 concettualmente diversa da `research` (articoli divulgativi con
-fonte/tag). Il contenuto resta copiato in `src/content/` ma non
-collegato a nessuna pagina; dove posizionarlo (dentro About, sezione
-propria, altro) è da decidere in una sessione dedicata.
+fonte/tag). **Posizione decisa il 2026-08-22: sesta sezione di
+`/publications`**, in fondo dopo Peer Review — vedi «Progetti di ricerca
+finanziati» più sotto.
 
 **Animazione di Fields**: decisa e implementata in prima versione,
 sessione del 2026-08-18 — una spirale 3D scroll-driven (Three.js), vista
@@ -163,7 +163,118 @@ nessun tool headless (`chromium-cli`/Playwright) disponibile in questa
 sessione — il click sul marker della spirale che porta alla pagina reale
 non è stato confermato visivamente, solo per lettura del codice.
 
-- `research-projects` non fa parte di Fields: categoria a sé, non collegata ad alcun feed o pagina.
+- `research-projects` non fa parte di Fields né del feed RSS: vive solo come sesta sezione di `/publications`.
+
+## Progetti di ricerca finanziati
+
+Sette progetti (2018 → in corso) a cui l'utente ha partecipato **come
+membro dell'unità di ricerca, non come titolare del finanziamento** —
+non è strutturato in università e non può ricevere fondi direttamente.
+Ereditati dal vecchio sito `sitoBello2`, dove stavano in una pagina
+`/research-projects` deliberatamente fuori dalla nav.
+
+**Perché non restano nascosti**: l'obiettivo di conversione del sito è
+«collaborazioni di ricerca», e sette grant sotto Interreg / LIFE / PNRR /
+Erasmus+ con partner in Croazia, Cipro, Serbia e Portogallo sono la prova
+diretta di quel criterio. La correttezza dell'attribuzione si risolve nel
+formato, non nell'invisibilità: il ruolo è dichiarato per esteso su ogni
+voce e la sezione si apre con una riga esplicita («partecipazione come
+unità di ricerca, non come titolare del finanziamento»).
+
+**Dove** (deciso 2026-08-22, implementato): sesta sezione di
+`/publications` e `/it/publications`, dopo Peer Review. Scartate: About
+(quarta sezione del percorso — plausibile, ma la pagina è già lunga e
+questi sono track record più che biografia) e Fields (schema
+incompatibile, decisione già presa). Scartata anche una voce di nav
+propria: sette voci non reggono una quinta pagina in nav e diluiscono le
+altre quattro.
+
+**Formato**: righe compatte come Peer Review, non le card del vecchio
+sito (le liste sono il linguaggio del resto della pagina). Per ogni voce
+acronimo + anni + pallino «in corso», titolo esteso, poi programma /
+ruolo / partner in `<dl>`, più il link al sito se c'è. **Nessun pulsante
+Cite, di proposito**: è l'unica sezione della pagina che non è un output
+citabile. Il paragrafo descrittivo di 3-5 righe resta nei file `.md` ma
+non viene mostrato.
+
+**Watermark doppio, un blocco per progetto** (`.anno-prog`, 7 blocchi
+per 7 progetti — richiesta dell'utente, 2026-08-22). Le altre sezioni
+raggruppano per anno perché una pubblicazione cade in un anno solo; un
+progetto invece *dura*, quindi il suo watermark è la **coppia
+inizio/fine**: anno d'inizio in alto a destra, anno di fine sotto e
+leggermente a sinistra, sovrapposto al primo. Ne segue che il watermark
+appartiene al progetto e non a un gruppo d'anno — due progetti iniziati
+lo stesso anno ma finiti in anni diversi restano blocchi separati
+(CliCCHE 2022–2024 e A_GreeNET 2022–2023).
+
+**Stessa misura per i due numeri**, più piccola del watermark singolo
+delle altre sezioni visto che qui sono due. Un progetto **ancora
+aperto** ne mostra uno solo, alla stessa misura degli altri.
+
+**Il filtro per anno matcha l'INTERVALLO, non i due numeri scritti**
+(2026-08-22). Un progetto è uno *stato continuo*, non un evento datato
+come una pubblicazione: filtrare il 2022 vuol dire chiedere «cosa stavo
+facendo nel 2022», quindi un progetto 2021–2024 deve rispondere. Ogni
+blocco porta `data-da`/`data-a` (`9999` = ancora aperto, così i progetti
+in corso rispondono a qualsiasi anno recente); entrambi i numeri sono
+cliccabili e filtrano il proprio anno, ma il blocco si accende per
+qualunque anno compreso — anche uno che non compare in nessun watermark
+della sezione (filtro 2019 → CCUHRE 2018–2021).
+
+Lo script usa un predicato unico `sopravvive()`, condiviso fra
+`inUscita()` (che prevede cosa sparirà, per l'animazione) e
+`applicaFiltroAnno()` (che lo esegue): puro di proposito, non guarda lo
+stato del DOM. Nessun filtro a livello di riga — con un blocco per
+progetto non serve.
+
+**Come si aggiunge un progetto**: un nuovo file `.md` in
+`src/content/publications/research-projects/`, bilingue col token `$$$`
+come tutto il resto. Nient'altro — l'ordine si ricava dall'anno d'inizio
+nel campo `anni` (`src/lib/progetti-ricerca.ts`), il prefisso numerico
+nel nome file è ereditato dal vecchio sito e non conta.
+
+**Cartella spostata sotto `publications/`** (2026-08-22, richiesta
+dell'utente): prima era `src/content/research-projects/` a livello
+radice, come le quattro di Fields — ma non ne fa parte e vive solo dentro
+`/publications`, quindi la posizione sul filesystem ora lo riflette. Il
+loader bilingue accetta un percorso qualunque relativo a `src/content/`,
+quindi lo spostamento è solo `loaderBilingue("publications/research-projects")`
+invece di `loaderBilingue("research-projects")` — la CHIAVE della
+collection (`"research-projects"` in `collections`) resta invariata,
+così tutte le `getCollection("research-projects")` nel codice non
+cambiano. Verificato che il content layer non si confonda con gli altri
+file non-`.md` già dentro `publications/` (`.bib`, i tre `.json`): il
+loader legge solo `.md`/`.mdx` nella sua sottocartella.
+
+Codice: collection `research-projects` in `src/content.config.ts`
+(loader bilingue, file `.md` flat), `src/lib/progetti-ricerca.ts`
+(`progettiRicerca()`: lista piatta ordinata e parsing dell'intervallo),
+sezione + patch al filtro in
+`src/components/PaginaPublications.astro`.
+
+## Attività di Peer Review
+
+Stessa logica di Research Projects, applicata su richiesta dell'utente
+(2026-08-22): prima le 4 voci di peer review vivevano come unica chiave
+manuale (`revisioni`) dentro `pubblicazioni.manuale.json`, in mezzo a
+decine di voci di bibliografia generate dal `.bib` — l'unico contenuto
+scritto a mano lì in mezzo. Spostate in collection `peer-review`
+(`src/content.config.ts`, loader bilingue), un file `.md` per voce in
+`src/content/peer-review/NN-slug.md` (frontmatter `anno`, `rivista`,
+`editore` — niente da tradurre, ma il loader bilingue si usa comunque
+per uniformità col resto). `pubblicazioni.manuale.json` resta solo per
+`profili` e le note (`_nota*`); la chiave `revisioni` è stata rimossa.
+
+**Come si aggiunge una revisione**: un nuovo file `.md` in
+`src/content/publications/peer-review/` (spostata sotto `publications/`
+insieme a `research-projects`, stesso giorno e stesso motivo — vedi
+sopra). Il prefisso numerico nel nome file non conta, l'ordine è per
+`anno` decrescente.
+
+Codice: collection `peer-review` in `src/content.config.ts`,
+`revisioni()`/`revisioniPerAnno()` in `src/lib/pubblicazioni.ts` (ora
+async, leggono la collection invece del JSON manuale), invariata la
+sezione in `src/components/PaginaPublications.astro` a parte l'`await`.
 
 ## Feed RSS
 

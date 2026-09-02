@@ -363,6 +363,39 @@ rimossa. La transizione (zoom-to-fill + overlay ink) descritta sopra in
 "Transizione di apertura" resta invariata, ora punta a destinazioni
 reali.
 
+## Watermark dell'anno sullo sfondo (sessione 2026-08-28)
+
+In alto a sinistra della scena, l'**anno della spira in cui ci si trova**,
+gigante e tenue (`text-ink/[0.06]`, `font-display`), stessa idea dei
+watermark d'anno sotto le Pubblicazioni. Nella stessa posizione del
+rettangolo che l'utente aveva disegnato sullo screenshot.
+
+- **Meccanismo**: `initFieldsSpiral` espone `onYear(turnoFocale | null)`,
+  emesso da `emitYear()` a ogni frame con il giro effettivo al punto
+  focale (`focusTurn()`, non `u * turns` — vedi sezione sull'unfold).
+  `null` durante intro/transizioni → il watermark sfuma via.
+- **Animazione "scalza via"** (identica alle Pubblicazioni): l'anno resta
+  fermo per l'80% del giro; nell'ultimo tratto (`frac > 0.8`) il giro
+  successivo (l'anno più vecchio) sale dal basso e lo spinge fuori
+  dall'alto, 1:1 con lo scroll. Due `<span>` assoluti dentro un
+  contenitore `overflow-hidden` alto `1em`, `translateY` guidato dallo
+  scroll. Tutto in `onYear` dentro `PaginaFields.astro`, GSAP solo per il
+  fade di comparsa/uscita.
+- **Prima comparsa in coppia con l'intro**: durante l'animazione
+  d'ingresso `emitYear()` emette il giro d'atterraggio (`initialProgress`,
+  0) invece di `null`, e `PaginaFields.astro` fa una dissolvenza lenta
+  (`opacity 0→1`, 1.2s) alla prima comparsa — l'anno più recente appare
+  insieme alla spirale che si avvita / al flythrough della corda, non di
+  colpo al primo scroll. `emittedTurn` è `number | null` (prima `NaN`, e
+  `Math.abs(0 - NaN→0) < 0.002` sopprimeva l'emissione dell'anno 0 finché
+  lo scroll non lo spostava).
+- **Bug corretto nella stessa sessione**: il contenitore
+  `#fields-anno-watermark` era `position:absolute` con soli figli
+  assoluti → larghezza 0, e con `overflow-hidden` il testo veniva
+  ritagliato a una fettina invisibile (il watermark c'era nel DOM ma non
+  si vedeva). Fix: `w-[3.5em]` sul contenitore + `whitespace-nowrap` sui
+  due span.
+
 ## Rimandato
 
 - Filtri/facet per anno e tag (menzionati come tipologie previste, non

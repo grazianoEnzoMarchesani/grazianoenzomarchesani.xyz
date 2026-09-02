@@ -61,6 +61,13 @@ const en = {
   'fields.nonTradotto': 'This article is currently available only in English.',
   'fields.condividi': 'Share',
   'fields.linkCopiato': 'Link copied!',
+  'fields.indice': 'Contents',
+  'fields.figure': 'Figures',
+  'fields.figureTabelle': 'Figures & tables',
+  'fields.tabelle': 'Tables',
+  'fields.tabella': 'Table',
+  'fields.note': 'Notes',
+  'fields.figura': 'Fig.',
 
   // Tag di Fields
   'tag.occhiello': 'Tag',
@@ -188,6 +195,13 @@ const it: Record<keyof typeof en, string> = {
   'fields.nonTradotto': 'Questo articolo è attualmente disponibile solo in inglese.',
   'fields.condividi': 'Condividi',
   'fields.linkCopiato': 'Link copiato!',
+  'fields.indice': 'Indice',
+  'fields.figure': 'Figure',
+  'fields.figureTabelle': 'Figure e tabelle',
+  'fields.tabelle': 'Tabelle',
+  'fields.tabella': 'Tabella',
+  'fields.note': 'Note',
+  'fields.figura': 'Fig.',
 
   // Tag di Fields
   'tag.occhiello': 'Tag',

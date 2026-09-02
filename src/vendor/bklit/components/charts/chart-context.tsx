@@ -179,6 +179,10 @@ export interface ChartContextValue extends ChartHoverContextValue {
   // Pre-computed date labels for ticker animation
   dateLabels: string[];
 
+  /** Overrides the default month/day formatting of the x value in axis ticks
+   * and the tooltip title (e.g. year-only for a multi-year time series). */
+  xLabelFormat?: (d: Date) => string;
+
   /** Active brush zoom range — when set, axis ticks align to visible data rows. */
   xDomain?: [Date, Date];
   /** Full dataset length when brush zoom is enabled (for zoom vs full-range detection). */
@@ -273,6 +277,7 @@ export function ChartProvider({
       notifyLoadingPulseComplete: value.notifyLoadingPulseComplete,
       xAccessor: value.xAccessor,
       dateLabels: value.dateLabels,
+      xLabelFormat: value.xLabelFormat,
       xDomain: value.xDomain,
       xDomainSlotCount: value.xDomainSlotCount,
       barScale: value.barScale,
@@ -318,6 +323,7 @@ export function ChartProvider({
       value.notifyLoadingPulseComplete,
       value.xAccessor,
       value.dateLabels,
+      value.xLabelFormat,
       value.xDomain,
       value.xDomainSlotCount,
       value.barScale,

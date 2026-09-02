@@ -1,16 +1,9 @@
 ---
-import BaseHead from './BaseHead.astro';
 import { render, type CollectionEntry } from 'astro:content';
 import { getAdjacentFieldMarker } from '../data/fields-content';
-import '../styles/global.css';
-import Nav from './Nav.astro';
-import Footer from './Footer.astro';
-import FieldTransitionOverlay from './FieldTransitionOverlay.astro';
-import FieldSimbolo from './FieldSimbolo.astro';
-import FieldArticleNavigation from './FieldArticleNavigation.astro';
-import FieldArticleBody from './FieldArticleBody.astro';
+import FieldArticleLayout from './FieldArticleLayout.astro';
 import ElencoTag from './ElencoTag.astro';
-import TastoCondividi from './TastoCondividi.astro';
+import { miniatureFigure } from '../lib/miniature-figure';
 import { type Lingua, linguaDefault, t } from '../i18n/testi';
 
 interface Props {
@@ -21,59 +14,40 @@ interface Props {
 const { entry, lingua = (Astro.currentLocale as Lingua) || linguaDefault } = Astro.props;
 const currentId = `projects/${entry.chiave}`;
 const { next, prev } = await getAdjacentFieldMarker(currentId, lingua);
-const { Content } = await render(entry);
+const { Content, headings } = await render(entry);
+const figure = await miniatureFigure(entry);
 
 const { titolo, anni, luogo, ruolo, tipo, esito, url, sommario } = entry.data;
+const kicker = `${t('fields.projects', lingua)} · ${tipo} · ${anni}`;
 ---
 
-<html lang={lingua}>
-  <head>
-    <BaseHead title={`${titolo} — Graziano Enzo Marchesani`} description={sommario} />
-  </head>
-  <body class="bg-paper text-ink font-sans">
-    <FieldTransitionOverlay />
-    <FieldSimbolo categoria="projects" />
-    <Nav lingua={lingua} />
+<FieldArticleLayout
+  categoria="projects"
+  lingua={lingua}
+  titolo={titolo}
+  sommario={sommario}
+  kicker={kicker}
+  tradotto={entry.tradotto}
+  currentId={currentId}
+  next={next}
+  prev={prev}
+  headings={headings}
+  figure={figure}
+>
+  <ElencoTag slot="tag" id={currentId} lingua={lingua} grezzi={[luogo, ruolo]} />
 
-    <main class="relative z-10 mx-auto max-w-2xl px-6 pt-32 pb-24 sm:px-10">
-      <p class="text-xs uppercase tracking-widest opacity-60">
-        {t('fields.projects', lingua)} · {tipo} · {anni}
-      </p>
-      <h1 class="font-display mt-2 text-4xl">{titolo}</h1>
-      <p class="mt-4 opacity-80">{sommario}</p>
+  <Content />
 
-      {entry.tradotto === false && (
-        <p class="mt-3 text-xs italic opacity-60">
-          {t('fields.nonTradotto', lingua)}
-        </p>
+  {(esito || url) && (
+    <ul slot="meta" class="mt-10 space-y-2 text-sm">
+      {esito && <li class="opacity-70">{t('fields.esito', lingua)}: {esito}</li>}
+      {url && (
+        <li>
+          <a href={url} class="underline hover:opacity-60" target="_blank" rel="noopener noreferrer">
+            {t('fields.sito', lingua)}
+          </a>
+        </li>
       )}
-
-      <ElencoTag id={currentId} lingua={lingua} grezzi={[luogo, ruolo]} />
-
-      <FieldArticleBody>
-        <Content />
-      </FieldArticleBody>
-
-      {(esito || url) && (
-        <ul class="mt-10 space-y-2 text-sm">
-          {esito && <li class="opacity-70">{t('fields.esito', lingua)}: {esito}</li>}
-          {url && (
-            <li>
-              <a href={url} class="underline hover:opacity-60" target="_blank" rel="noopener noreferrer">
-                {t('fields.sito', lingua)}
-              </a>
-            </li>
-          )}
-        </ul>
-      )}
-
-      <div class="mt-12 flex justify-end">
-        <TastoCondividi titolo={titolo} sommario={sommario} lingua={lingua} />
-      </div>
-
-      <FieldArticleNavigation currentId={currentId} next={next} prev={prev} lingua={lingua} />
-    </main>
-
-    <Footer lingua={lingua} />
-  </body>
-</html>
+    </ul>
+  )}
+</FieldArticleLayout>

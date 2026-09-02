@@ -15,6 +15,7 @@ import 'katex/dist/katex.min.css';
 <script>
 	import '../scripts/monta-grafici.ts';
 	import '../scripts/video-yt.ts';
+	import '../scripts/impagina-articolo.ts';
 </script>
 
 <style>
@@ -23,6 +24,10 @@ import 'katex/dist/katex.min.css';
 		margin-top: 2.5rem;
 		font-size: 1.5rem;
 		line-height: 1.1;
+		/* stacco dalla nav fissa quando ci si arriva via indice */
+		scroll-margin-top: 6rem;
+		/* una nuova sezione libera sempre il float di un'eventuale figura @inset */
+		clear: both;
 	}
 
 	.field-article :global(p) {
@@ -61,15 +66,92 @@ import 'katex/dist/katex.min.css';
 		margin-top: 0.25rem;
 	}
 
+	.field-article {
+		min-width: 0;
+	}
+
 	.field-article :global(figure.grafico),
 	.field-article :global(figure.figura),
 	.field-article :global(figure.video-yt) {
 		margin-top: 2rem;
+		min-width: 0;
 	}
 
+	/* --- Tabelle Markdown ---------------------------------------------------
+	   Un solo stile per ogni tabella di ogni articolo (direzione "A" della
+	   fase di design): filetti orizzontali, intestazioni in font display,
+	   cifre a spaziatura fissa, nessuna zebratura né bordo esterno. Il
+	   contenitore .tabella-avvolta (da remark-articolo.ts) lascia scorrere
+	   le tabelle larghe in orizzontale su mobile senza sfondare la colonna. */
+	.field-article :global(.tabella-avvolta) {
+		margin-top: 2rem;
+		overflow-x: auto;
+		/* stacco dalla nav fissa quando ci si arriva dall'ancora nella rail */
+		scroll-margin-top: 6rem;
+	}
+
+	.field-article :global(.tabella-avvolta table) {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 0.9375rem;
+		line-height: 1.5;
+		font-variant-numeric: tabular-nums lining-nums;
+	}
+
+	.field-article :global(.tabella-avvolta th) {
+		font-family: var(--font-display);
+		font-weight: 400;
+		font-size: 0.6875rem;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		text-align: left;
+		padding: 0 1.25rem 0.625rem 0;
+		border-bottom: 1.5px solid var(--color-ink);
+		white-space: nowrap;
+	}
+
+	.field-article :global(.tabella-avvolta td) {
+		padding: 0.875rem 1.25rem 0.875rem 0;
+		border-bottom: 1px solid color-mix(in srgb, var(--color-ink) 13%, transparent);
+		vertical-align: top;
+	}
+
+	.field-article :global(.tabella-avvolta tbody tr:last-child td) {
+		border-bottom: 1.5px solid var(--color-ink);
+	}
+
+	.field-article :global(.tabella-avvolta th:last-child),
+	.field-article :global(.tabella-avvolta td:last-child) {
+		padding-right: 0;
+	}
+
+	/* Allineamenti dichiarati nel Markdown (`|---:|`, `|:--:|`): sono le colonne
+	   di numeri, che non devono mai spezzarsi a metà — se la tabella non ci sta,
+	   scorre in orizzontale nel contenitore. Senza marcatori le celle vanno a capo. */
+	.field-article :global(.tabella-avvolta th[align='right']),
+	.field-article :global(.tabella-avvolta td[align='right']) {
+		text-align: right;
+		white-space: nowrap;
+	}
+
+	.field-article :global(.tabella-avvolta th[align='center']),
+	.field-article :global(.tabella-avvolta td[align='center']) {
+		text-align: center;
+		white-space: nowrap;
+	}
+
+	/* Le immagini raster hanno spesso lo sfondo bianco e non sono scontornabili:
+	   angoli stondati e un'ombra ampia e morbida le staccano dal testo senza
+	   bisogno di un bordo. */
 	.field-article :global(figure.figura img) {
+		display: block;
 		width: 100%;
 		height: auto;
+		border-radius: 0.5rem;
+		box-shadow:
+			0 1px 2px color-mix(in srgb, var(--color-ink) 5%, transparent),
+			0 4px 10px color-mix(in srgb, var(--color-ink) 6%, transparent),
+			0 18px 36px -10px color-mix(in srgb, var(--color-ink) 20%, transparent);
 	}
 
 	.field-article :global(figure figcaption) {
@@ -77,6 +159,71 @@ import 'katex/dist/katex.min.css';
 		font-size: 0.8125rem;
 		line-height: 1.5;
 		opacity: 0.7;
+		text-align: left;
+	}
+
+	/* --- Numerazione: "Fig. N" sopra ogni figura, dal data-fig di remark-articolo.
+	   Una sola resa per tutti e tre i tipi (immagine, grafico, video). */
+	.field-article :global(figure[data-fig]) {
+		position: relative;
+	}
+
+	.field-article :global(figure[data-fig])::before {
+		content: 'Fig. ' attr(data-fig);
+		display: block;
+		margin-bottom: 0.5rem;
+		font-family: var(--font-display);
+		font-size: 0.6875rem;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		opacity: 0.5;
+	}
+
+	/* --- Tagli delle figure (solo desktop; sotto 1180px vanno tutte a piena
+	   larghezza). Il taglio arriva o dal marcatore @… nella didascalia
+	   (remark-articolo) o da impagina-articolo.ts che lo deduce dalle proporzioni. */
+	@media (min-width: 1180px) {
+		/* C — verticale: l'immagine resta ad altezza di lettura, la didascalia
+		   le sta a fianco e sconfina nella fascia delle note. */
+		.field-article :global(figure.fig--portrait) {
+			display: grid;
+			grid-template-columns: minmax(0, 240px) minmax(0, 1fr);
+			column-gap: 2.25rem;
+			align-items: start;
+		}
+		.field-article :global(figure.fig--portrait)::before {
+			grid-column: 1 / -1;
+		}
+		.field-article :global(figure.fig--portrait img) {
+			grid-column: 1;
+		}
+		.field-article :global(figure.fig--portrait figcaption) {
+			grid-column: 2;
+			margin-top: 0;
+		}
+
+		/* D — fascia: alla massima larghezza della colonna di testo, con più
+		   respiro verticale. Niente sconfinamento (le colonne laterali sono
+		   sticky: passarci sotto le fa sovrapporre — lezione della fase di design). */
+		.field-article :global(figure.fig--band) {
+			width: 100%;
+			margin-top: 2.75rem;
+			margin-bottom: 2.75rem;
+		}
+		.field-article :global(figure.fig--band img) {
+			width: 100%;
+		}
+
+		/* B — incorniciata nel testo: il testo del paragrafo le scorre attorno. */
+		.field-article :global(figure.fig--inset) {
+			float: right;
+			width: min(46%, 264px);
+			margin: 0.4rem 0 1rem 2rem;
+		}
+		.field-article :global(figure.fig--inset.fig--left) {
+			float: left;
+			margin: 0.4rem 2rem 1rem 0;
+		}
 	}
 
 	/* --- Video YouTube -------------------------------------------------------
@@ -191,5 +338,114 @@ import 'katex/dist/katex.min.css';
 		.field-article :global(.grafico-scheletro) {
 			animation: none;
 		}
+	}
+
+	/* Titoli degli assi. La Y è ruotata e vive nel margine sinistro; la X sta sotto. */
+	.field-article :global(.grafico-assi) {
+		position: relative;
+	}
+
+	.field-article :global(.grafico-assi-corpo) {
+		position: relative;
+	}
+
+	.field-article :global(.grafico-assi:has(.grafico-asse--y)) {
+		padding-left: 1.4rem;
+	}
+
+	.field-article :global(.grafico-assi:has(.grafico-asse--y-destra)) {
+		padding-right: 1.4rem;
+	}
+
+	.field-article :global(.grafico-assi:has(.grafico-asse--x)) {
+		padding-bottom: 1.3rem;
+	}
+
+	.field-article :global(.grafico-asse) {
+		position: absolute;
+		font-size: 0.75rem;
+		line-height: 1;
+		opacity: 0.75;
+	}
+
+	.field-article :global(.grafico-asse--y) {
+		left: -1.4rem;
+		top: 0;
+		bottom: 0;
+		display: flex;
+		/* writing-mode verticale: l'asse principale del flex è quello verticale,
+		   quindi è justify-content a centrare il testo lungo l'asse Y. */
+		justify-content: center;
+		align-items: center;
+		writing-mode: vertical-rl;
+		transform: rotate(180deg);
+		white-space: nowrap;
+	}
+
+	.field-article :global(.grafico-asse--y-destra) {
+		right: -1.4rem;
+		top: 0;
+		bottom: 0;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		writing-mode: vertical-rl;
+		white-space: nowrap;
+	}
+
+	.field-article :global(.grafico-asse--x) {
+		left: 1.4rem;
+		right: 0;
+		bottom: 0;
+		text-align: center;
+	}
+
+	.field-article :global(.grafico-assi:has(.grafico-asse--y-destra) .grafico-asse--x) {
+		right: 1.4rem;
+	}
+
+	/* Legenda del grafico: elenco di pastiglie sotto l'area di disegno. In un grafico
+	   monocromo è l'unico modo per legare ogni tono di grigio alla sua serie. */
+	.field-article :global(.grafico-legenda) {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.25rem 1rem;
+		margin: 0.75rem 0 0;
+		padding: 0;
+		list-style: none;
+		font-size: 0.75rem;
+		line-height: 1.4;
+		opacity: 0.75;
+	}
+
+	.field-article :global(.grafico-legenda li) {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		margin: 0;
+	}
+
+	.field-article :global(.grafico-legenda-segno) {
+		flex-shrink: 0;
+	}
+
+	.field-article :global(.grafico-legenda-segno--blocco) {
+		display: inline-block;
+		width: 0.75rem;
+		height: 0.75rem;
+		border-radius: 2px;
+	}
+
+	.field-article :global(.grafico-legenda-segno--linea),
+	.field-article :global(.grafico-legenda-segno--tratteggio) {
+		display: inline-block;
+		width: 1.4rem;
+		height: 0;
+		border-top-width: 2.5px;
+		border-top-style: solid;
+	}
+
+	.field-article :global(.grafico-legenda-segno--tratteggio) {
+		border-top-style: dashed;
 	}
 </style>

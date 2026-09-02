@@ -39,6 +39,8 @@ export interface LineChartProps {
   animationEasing?: string;
   enterTransition?: Transition;
   revealSignature?: string;
+  /** Overrides month/day formatting of the x value in axis ticks and tooltip title. */
+  xLabelFormat?: (d: Date) => string;
   /** Aspect ratio as "width / height". Default: "2 / 1". Omit to fill a sized parent. */
   aspectRatio?: string;
   /** Additional class name for the container */
@@ -57,6 +59,14 @@ export interface LineChartProps {
   xDomainSlotCount?: number;
   /** Tween y-domain when brush changes the visible x-range. Default: false */
   tweenYDomainOnXDomainChange?: boolean;
+  /** Pin the y-axis min instead of forcing a zero baseline. */
+  yScaleDomainMin?: number;
+  /** Pin the y-axis max instead of scanning the data. */
+  yScaleDomainMax?: number;
+  /** Pin the min of the secondary (right) y-axis, when a `yAxisId="right"` series exists. */
+  yScaleDomainMinRight?: number;
+  /** Pin the max of the secondary (right) y-axis. */
+  yScaleDomainMaxRight?: number;
   /** Inline container styles (e.g. fixed height for brush strip). */
   style?: CSSProperties;
   /** Fires when the internal chart phase changes (e.g. OG capture readiness). */
@@ -147,6 +157,7 @@ interface ChartInnerProps {
   animationEasing?: string;
   enterTransition?: Transition;
   revealSignature?: string;
+  xLabelFormat?: (d: Date) => string;
   chartStatus: ChartStatus;
   loadingLabel?: string;
   yDomainTweenDuration: number;
@@ -154,6 +165,10 @@ interface ChartInnerProps {
   xDomain?: [Date, Date];
   xDomainSlotCount?: number;
   tweenYDomainOnXDomainChange?: boolean;
+  yScaleDomainMin?: number;
+  yScaleDomainMax?: number;
+  yScaleDomainMinRight?: number;
+  yScaleDomainMaxRight?: number;
   children: ReactNode;
   containerRef: React.RefObject<HTMLDivElement | null>;
   onPhaseChange: (phase: ChartPhase) => void;
@@ -176,6 +191,11 @@ function ChartInner({
   xDomain,
   xDomainSlotCount,
   tweenYDomainOnXDomainChange,
+  yScaleDomainMin,
+  yScaleDomainMax,
+  yScaleDomainMinRight,
+  yScaleDomainMaxRight,
+  xLabelFormat,
   children,
   containerRef,
   onPhaseChange,
@@ -200,10 +220,15 @@ function ChartInner({
       tweenYDomainOnXDomainChange={tweenYDomainOnXDomainChange}
       width={width}
       xDataKey={xDataKey}
+      xLabelFormat={xLabelFormat}
       xDomain={xDomain}
       xDomainSlotCount={xDomainSlotCount}
       yDomainTween={yDomainTween}
       yDomainTweenDuration={yDomainTweenDuration}
+      yScaleDomainMax={yScaleDomainMax}
+      yScaleDomainMaxRight={yScaleDomainMaxRight}
+      yScaleDomainMin={yScaleDomainMin}
+      yScaleDomainMinRight={yScaleDomainMinRight}
     >
       {children}
     </TimeSeriesChartInner>
@@ -227,6 +252,11 @@ export function LineChart({
   xDomain,
   xDomainSlotCount,
   tweenYDomainOnXDomainChange = false,
+  yScaleDomainMin,
+  yScaleDomainMax,
+  yScaleDomainMinRight,
+  yScaleDomainMaxRight,
+  xLabelFormat,
   style,
   onPhaseChange,
   children,
@@ -279,10 +309,15 @@ export function LineChart({
             tweenYDomainOnXDomainChange={tweenYDomainOnXDomainChange}
             width={width}
             xDataKey={xDataKey}
+            xLabelFormat={xLabelFormat}
             xDomain={xDomain}
             xDomainSlotCount={xDomainSlotCount}
             yDomainTween={yDomainTween}
             yDomainTweenDuration={yDomainTweenDuration}
+            yScaleDomainMax={yScaleDomainMax}
+            yScaleDomainMaxRight={yScaleDomainMaxRight}
+            yScaleDomainMin={yScaleDomainMin}
+            yScaleDomainMinRight={yScaleDomainMinRight}
           >
             {children}
           </ChartInner>

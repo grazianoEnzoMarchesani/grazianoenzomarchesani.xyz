@@ -578,6 +578,60 @@ può stare *dentro* il corpo dell'articolo vedi [blocchi-articoli.md](blocchi-ar
 - **Solo sulle quattro pagine di dettaglio**: non su `/fields` (dove la spirale mostra già gli stessi simboli in 3D, e sovrapporne una versione piatta è rumore), non sulle pagine di tag (multi-categoria: non esiste un simbolo giusto), non su Publications.
 - Gli SVG hanno proporzioni diverse (research e tools verticali, teaching e projects quadrati): dentro il box quadrato `h-screen w-[100vh]` i verticali sbordano un po' meno. A quell'opacità è invisibile e non è stato compensato.
 
+### Impaginato editoriale "Marginalia scientifica" (2026-08-27)
+
+Il corpo dell'articolo non è più una colonna unica `max-w-2xl` con testo,
+immagine a piena larghezza, altro testo. Direzione validata in un canvas
+`/design` (cinque alternative editoriali esplorate, scelta la "E · Marginalia
+scientifica" — da rivista scientifica; le altre quattro — colonna e margine,
+doppia pagina, griglia modulare, fascia e figura — scartate).
+
+- **Nuovo guscio condiviso `FieldArticleLayout.astro`**: assorbe l'`<html>`
+  che prima era duplicato nelle quattro `PaginaXxxDettaglio.astro`, ora thin
+  wrapper che passano solo i pezzi category-specific via props + slot (`tag`,
+  `meta`, default = `<Content />`). `FieldSimbolo`, `Nav`, `Footer`,
+  `FieldTransitionOverlay`, `FieldArticleNavigation`, `TastoCondividi` vivono
+  qui una volta sola.
+- **Tre colonne su desktop (`@media (min-width: 1180px)`)**: indice sticky a
+  sinistra (176px) · corpo al centro (`minmax(0, 40rem)`) · note a margine a
+  destra (232px), `column-gap: 44px`, shell centrata. Sotto 1180px: colonna
+  unica, indice in un `<details class="field-toc">`, note in fondo
+  all'articolo. Articolo **senza `<h2>`** → `:has(.field-rail)` fa tornare la
+  shell a colonna unica centrata invece di lasciare le tracce laterali vuote.
+- **Indice** dagli `headings` di `render(entry)` (Astro inietta gli `id` sugli
+  `<h2>`; l'`<h2> Footnotes` di remark-gfm, slug `footnote-label`, è filtrato).
+  Scroll-spy via `IntersectionObserver` (classe `is-on`, `font-weight: 600`).
+  Sotto, **miniature** delle figure numerate, click → `scrollIntoView`. Per le
+  immagini il provino è un webp piccolo generato **a build time** (`getImage()`
+  in `src/lib/miniature-figure.ts`, disegnato lato server da
+  `FieldArticleLayout`) — così è visibile subito, senza aspettare che si
+  scrolli fino alla figura. Per i grafici Bklit (React montato tardi) resta un
+  segnaposto che `impagina-articolo.ts` riempie con un'istantanea SVG del path
+  della linea, ripulita di griglia/assi/clip e con tratto ispessito — vedi
+  `anteprimaGrafico()`. Dettagli in [blocchi-articoli.md](blocchi-articoli.md).
+  Dal 2026-08-28 anche le **tabelle** entrano nella rail: rettangoli `Tab N`
+  (nessun provino leggibile a quella scala) e titolo del gruppo che diventa
+  "Figure e tabelle" / "Figures & tables".
+- **Colonna note**: le footnote Markdown `[^1]` (vedi
+  [blocchi-articoli.md](blocchi-articoli.md)) vengono **spostate** nel margine
+  destro dallo script su desktop (con un segno-commento per rimetterli a posto
+  al cambio di breakpoint); su mobile restano nel flusso. v1: le note sono
+  impilate in ordine, **non** allineate verticalmente al loro riferimento.
+- Indice e note sono **trasparenti** (`z-index: 2`, nessun `background`): la
+  filigrana `FieldSimbolo` deve trasparire anche dietro le due colonne laterali
+  come fa dietro il corpo, non essere mascherata da un rettangolo color carta.
+- **Il taglio delle figure** (larghezza-testo / verticale / fascia / incorniciata)
+  è descritto in [blocchi-articoli.md](blocchi-articoli.md): parte è automatica
+  dalle proporzioni (script client), parte da marcatore `@…` nella didascalia.
+- Lo script client è `src/scripts/impagina-articolo.ts`, importato da
+  `FieldArticleBody.astro`; tutto agganciato a `astro:page-load`, idempotente,
+  smontato su `astro:before-swap`. Nessun plugin rehype: il taglio automatico
+  legge `width`/`height` che `astro:assets` mette sull'`<img>`, evitando
+  l'incertezza sull'ordine dei plugin rispetto all'ottimizzazione immagini —
+  quindi `astro.config.mjs` e `loader-bilingue.ts` non sono stati toccati.
+- Verificato: `astro check` 0 errori, build 152 pagine, screenshot Puppeteer a
+  1440 e 390 su facade (9 figure reali), banco di regressione e versione IT.
+
 ### Tasto condividi (`TastoCondividi.astro`, 2026-08-22)
 
 - **Un solo bottone, in fondo all'articolo**, allineato a destra sopra la navigazione prev/next, su tutte e quattro le pagine di dettaglio. Stessa capsula del tasto `CITE` di Publications (pill `rounded-full`, `text-xs uppercase tracking-widest`, `text-ink/60` → `text-ink` in hover) più un'icona a tre nodi collegati; il riscontro di copia riusa il tooltip nero `bg-ink`/`text-paper` di `TastoCitazione`.

@@ -8,17 +8,5 @@
   },
   "_notaDataset": "Dataset, report e output tecnico-scientifici: non sono pubblicazioni con revisione, e infatti non entrano nel conteggio. Stanno in fondo alla pagina /publications perché per un partner di ricerca «esiste il dato» vale quanto «esiste il paper».",
   "_notaSoftware": "Tool software rilasciati con DOI (Zenodo): non sono pubblicazioni con revisione, ma sono output citabili a pieno titolo, con il proprio pulsante Cite. Diversi da /tools, che presenta gli stessi strumenti come prodotti da usare, non come referenze bibliografiche.",
-  "_notaAttivita": "Attività e disseminazione: seminari, workshop, mostre, meeting di progetto. Non sono output di ricerca né dati tecnici — sono la parte pubblica e organizzativa del lavoro, utile a chi vuole vedere il contesto oltre alla bibliografia.",
-  "_notaRevisioni": "Peer review: riviste e volumi per cui ho fatto da revisore, non da autore — non viene dal .bib (non sono referenze bibliografiche mie), quindi resta qui invece che in src/data/pubblicazioni.json. Spostato da src/content/about/percorso.json il 2026-08-16: vive con il resto della bibliografia, in /publications, non in /about.",
-  "revisioni": [
-    { "id": "discover-cities", "anno": 2026, "rivista": "Discover Cities", "editore": "Springer Nature" },
-    { "id": "discover-water", "anno": 2025, "rivista": "Discover Water", "editore": "Springer Nature" },
-    { "id": "buildings", "anno": 2024, "rivista": "Buildings", "editore": "MDPI" },
-    {
-      "id": "asti",
-      "anno": 2022,
-      "rivista": "Urban and Transit Planning — 3rd edition",
-      "editore": "ASTI / IEREK — Springer"
-    }
-  ]
+  "_notaAttivita": "Attività e disseminazione: seminari, workshop, mostre, meeting di progetto. Non sono output di ricerca né dati tecnici — sono la parte pubblica e organizzativa del lavoro, utile a chi vuole vedere il contesto oltre alla bibliografia."
 }

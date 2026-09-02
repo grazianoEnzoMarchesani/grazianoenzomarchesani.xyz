@@ -1,0 +1,394 @@
+---
+titolo: "Green infrastructure, from master plan to buildable project" $$$ "Green infrastructure, dal piano al progetto cantierabile"
+data: 2026-02-06
+sommario: "A five-phase method that carries green infrastructure from city-scale analysis to a costed, buildable project, tested on one trafficked intersection in San Benedetto del Tronto." $$$ "Un metodo in cinque fasi che porta la green infrastructure dall'analisi di scala urbana a un progetto cantierabile e con un preventivo, provato su un incrocio trafficato di San Benedetto del Tronto."
+tag: ["Green infrastructure", "Climate adaptation", "Design process", "ENVI-met", "UTCI"]
+fonte: "Bridging the Theory–Practice Gap: A Design Methodology for Green Infrastructure Implementation in Mid-Adriatic Coastal Cities — Sustainability 18, 1690, 2026"
+fonteUrl: "https://doi.org/10.3390/su18031690"
+---
+
+
+The Sant'Antonio district of San Benedetto del Tronto was built almost entirely between the 1960s and 1970s: dense with buildings and residents, poor in green space and squares. The climate-vulnerability reports of the EU LIFE+ A_GreeNet project place the area, by 2050, in the "extremely strong heat stress" category of the UTCI index. It is the kind of place where everyone agrees green infrastructure is needed — the network of green and semi-natural areas a city uses to manage heat and rain — and where almost none ever gets built: space seems already taken, catalogues of green solutions are calibrated for other climates, and the intermediate piece between the strategic plan and the construction site — the detailed design — is missing.
+
+We tried to build that missing piece: a replicable method that takes the designer from city-scale analysis to a buildable project complete with a cost estimate. We tested it on a pilot case — the intersection of Viale De Gasperi and Via Lombardia, next to two secondary schools.
+
+## A five-phase method
+
+The backbone of the work is a sequence of five phases (**Figure 1**). It starts with the *identification of the detailed design area*, chosen through a multi-criteria analysis that crosses climate vulnerability, how recurrent the urban-fabric type is, and consultation with the municipal administration. Next comes the *ante operam analysis*, the survey of existing conditions on four fronts: use of space, soil permeability, tree stock and microclimate. The third phase, "from macro to micro", translates the city-scale strategic objectives into objectives specific to that site. The fourth converts them into measurable requirements and into the choice of Nature-Based Solutions, drawing on a predefined repertoire. The fifth is the detailed *post operam project*, accompanied by the validation analyses on permeability, plant species, microclimate and costs.
+
+![Diagram of the five phases of the method, with the LIFE+ preparatory phases shown as dashed lines and the validation checks on the left](images/fig01-workflow.png "The workflow: from the city-scale preparatory phases (dashed) to the identification of the area, the ante operam analysis, the definition of objectives and requirements, and finally the detailed design. The cycle is recursive: if the checks do not confirm the objectives, you go back and iterate.")
+
+The framework is deliberately a procedure, not a recipe book: technical solutions come at the end, as a consequence of the analysis, not as a catalogue to be applied regardless of the site.
+
+## What the ante operam analysis shows
+
+The picture of the existing state is stark (**Figure 2**). Most of the open space is given over to traffic and parking, and many carriageways are wider than the road category requires: the over-dimensioning is confirmed by the double row of parked cars at school dismissal. The soil is almost entirely impermeable — the only exceptions are the tree pits and a few isolated green areas — and the parking areas turn out to be completely impermeable. The existing trees, 39 in all, cover about 6.1% of the area[^1] and belong mainly to *Eucalyptus*, *Pinus halepensis* and *Pinus pinea*: species poorly suited to current conditions and even less to the projected ones, with shallow roots that in some cases lift the asphalt.
+
+![Plan of the intervention area before the project, with buildings in white and the open space hatched: carriageways and parking dominate, greenery is reduced to discontinuous tree lines](images/fig02-ante-operam.png "@wide Existing state at the intersection of Viale De Gasperi (running vertically) and Via Lombardia. The space between buildings is almost all grey: carriageways and parking. The tree lines along the main axis are fragmented and the strips of ground that host them are too narrow.")
+
+On the microclimate, our ENVI-MET simulation of the 2019 scenario indicates that on a typical summer day the UTCI index in the street reaches peaks of about 41 °C: a value that classifies the environment as a public-health risk, made worse by poor nighttime heat dissipation.
+
+## The design choices
+
+The project works almost entirely on reclaiming space from the oversized roadways (**Figure 3**). On Viale De Gasperi we bring the carriageways down to 3.80 m, carve out cycle lanes in both directions and widen the central flowerbed from 1.60 to 3.70 m, almost triple: the widened strip becomes a linear bioretention basin, connected to the existing rainwater collection network, and hosts new trees. On Via Lombardia the road becomes one-way with a 3.30 m carriageway and a vegetated bioretention basin along its entire frontage. The parking areas are rationalised by reducing manoeuvring spaces and redundant accesses, with the number of spaces practically unchanged[^2], and the reclaimed surfaces are de-sealed, that is freed of asphalt and repaved with draining materials. The main species chosen for the new plantings is *Morus alba*, the white mulberry: deciduous, traditionally used in the area, suited to temperate climates and, once mature, able to withstand prolonged droughts. High-albedo light-coloured paving (cool pavement) and green roofs on the flat roofs of public buildings, especially the schools, complete the picture.
+
+![Perspective sections of Viale De Gasperi before and after: on top the current dual-carriageway street, below the design one with reduced carriageways, cycle lanes, and the central flowerbed widened into a bioretention basin](images/fig03-sezioni-de-gasperi.png "@wide Viale De Gasperi, ante operam (top) and post operam (bottom). The permeable surface of the section goes from 13.5% to 47.3%. The codes indicate the NBS-repertoire solutions: de-sealing and permeable paving at the edges, rain garden in the widened central flowerbed.")
+
+## The simulations: ENVI-MET and i-Tree
+
+The validation relies on two different tools. **ENVI-MET** (version 5.6) is a thermo-fluid-dynamic model that, starting from terrain, vegetation, building geometry and weather data, reconstructs the local microclimate and derives the UTCI index from it. **i-Tree** (version 6) starts instead from the tree census and estimates the ecosystem services of the greenery: pollutant removal, carbon sequestration, oxygen production, avoided runoff.
+
+Our ENVI-MET simulations run on a *representative day*, 21 July 2019: a real 24-hour day chosen as the one that deviates least from all the other days in the period considered, with a deviation between 0.3% and 1% from the representative days of the four climatic groups into which we split the historical weather series (2011–2022, source WorldWeatherOnline).[^5] On that day the air temperature reaches 30.3 °C at midday (**Figure 4**), but the UTCI in the street touches 41 °C: the difference is the radiation from the hot surfaces, which the air alone does not tell you.
+
+```grafico
+tipo: linea
+x: ora
+yMin: 19
+yMax: 28
+yMinDestra: 10
+yMaxDestra: 14
+assi:
+  x: true
+  y: true
+  titoloY: Air temperature (°C)
+  titoloYDestra: Humidity (g/kg)
+serie:
+  - chiave: t
+    etichetta: Air temperature
+  - chiave: rh
+    etichetta: Humidity
+    asseY: destra
+    tratteggio: "5,4"
+dati:
+  - { ora: "2019-07-21T00:00", t: 21.4, rh: 11.14 }
+  - { ora: "2019-07-21T01:00", t: 21.3, rh: 11.13 }
+  - { ora: "2019-07-21T02:00", t: 21.4, rh: 11.14 }
+  - { ora: "2019-07-21T03:00", t: 20.4, rh: 10.32 }
+  - { ora: "2019-07-21T04:00", t: 22.4, rh: 11.11 }
+  - { ora: "2019-07-21T05:00", t: 23.4, rh: 11.79 }
+  - { ora: "2019-07-21T06:00", t: 24.4, rh: 13.34 }
+  - { ora: "2019-07-21T07:00", t: 26.3, rh: 12.68 }
+  - { ora: "2019-07-21T08:00", t: 27.3, rh: 12.71 }
+  - { ora: "2019-07-21T09:00", t: 28.3, rh: 11.91 }
+  - { ora: "2019-07-21T10:00", t: 29.3, rh: 11.79 }
+  - { ora: "2019-07-21T11:00", t: 29.3, rh: 11.79 }
+  - { ora: "2019-07-21T12:00", t: 30.3, rh: 11.9 }
+  - { ora: "2019-07-21T13:00", t: 29.3, rh: 11.79 }
+  - { ora: "2019-07-21T14:00", t: 29.4, rh: 12.63 }
+  - { ora: "2019-07-21T15:00", t: 28.4, rh: 13.48 }
+  - { ora: "2019-07-21T16:00", t: 27.4, rh: 13.45 }
+  - { ora: "2019-07-21T17:00", t: 26.4, rh: 14.31 }
+  - { ora: "2019-07-21T18:00", t: 25.4, rh: 14.37 }
+  - { ora: "2019-07-21T19:00", t: 24.4, rh: 13.34 }
+  - { ora: "2019-07-21T20:00", t: 23.4, rh: 12.57 }
+  - { ora: "2019-07-21T21:00", t: 22.3, rh: 12.55 }
+  - { ora: "2019-07-21T22:00", t: 22.3, rh: 11.1 }
+  - { ora: "2019-07-21T23:00", t: 22.3, rh: 10.37 }
+didascalia: "Air temperature (solid line, left axis) and specific humidity (dashed line, right axis) hour by hour for the representative day used as ENVI-MET input, from the values in Table 3 of the paper. Temperature peaks at 30.3 °C at midday; on the same day the simulated UTCI in the street reaches 41 °C."
+```
+
+We obtain the 2030 scenario by converting the 2019 data into an EPW climate file and modifying it according to the RCP 2.6 and 4.5 emission pathways, that is from a strong-mitigation trajectory to an intermediate one.[^3]
+
+It should be said clearly what this validation is and what it is not: it is a comparison between *simulated* scenarios — existing state versus design, today and in 2030 — not a comparison between simulation and field measurements. Verification against real data can only happen after construction, and that is the step we flag as necessary.
+
+## The after, in numbers
+
+On thermal comfort, the ENVI-MET simulations indicate an average UTCI reduction of 0.61 °C in the current scenario, with peaks of 4.45 °C,[^4] and of 1.17 °C in the 2030 scenario. At the reference point marked on the maps, at 2:00 PM, the UTCI goes from 41 to 37 °C in 2019 and from 47 to 43 °C in 2030 (**Table 1**, **Figure 5**). The 24-hour comparison shows the design curve below the existing-state one for all daytime hours, with the largest gap in the early afternoon (**Figure 6**).
+
+![ENVI-MET UTCI maps of the intersection at 2:00 PM on 21 July 2019, existing state and design compared](images/fig04-envimet-2019.png "UTCI maps at 2:00 PM on the 2019 representative day: without intervention (Scenario A) and with the project (Scenario B); cooler zones in blue. The cross-hair marks the reference point used for the hourly comparison. Data extrapolated with the EnviReader tool (v1.5).")
+
+```grafico
+tipo: linea
+x: ora
+yMin: 18
+yMax: 42
+assi:
+  x: true
+  y: true
+  titoloY: UTCI (°C)
+serie:
+  - chiave: a
+    etichetta: No intervention (Scenario A)
+  - chiave: b
+    etichetta: With project (Scenario B)
+    tratteggio: "5,4"
+dati:
+  - { ora: "2019-07-21T07:00", a: 22.8, b: 23.3 }
+  - { ora: "2019-07-21T08:00", a: 25.8, b: 26.0 }
+  - { ora: "2019-07-21T09:00", a: 28.2, b: 28.3 }
+  - { ora: "2019-07-21T10:00", a: 30.6, b: 30.6 }
+  - { ora: "2019-07-21T11:00", a: 33.6, b: 33.4 }
+  - { ora: "2019-07-21T12:00", a: 37.0, b: 34.6 }
+  - { ora: "2019-07-21T13:00", a: 39.2, b: 35.6 }
+  - { ora: "2019-07-21T14:00", a: 41.2, b: 36.6 }
+  - { ora: "2019-07-21T15:00", a: 39.4, b: 35.4 }
+  - { ora: "2019-07-21T16:00", a: 37.6, b: 36.3 }
+  - { ora: "2019-07-21T17:00", a: 34.6, b: 34.2 }
+  - { ora: "2019-07-21T18:00", a: 29.1, b: 29.2 }
+  - { ora: "2019-07-21T19:00", a: 26.2, b: 26.4 }
+  - { ora: "2019-07-21T20:00", a: 23.6, b: 23.9 }
+  - { ora: "2019-07-21T21:00", a: 22.1, b: 22.5 }
+  - { ora: "2019-07-21T22:00", a: 21.1, b: 21.6 }
+  - { ora: "2019-07-21T23:00", a: 20.1, b: 20.8 }
+  - { ora: "2019-07-22T00:00", a: 19.4, b: 20.3 }
+  - { ora: "2019-07-22T01:00", a: 19.5, b: 20.3 }
+  - { ora: "2019-07-22T02:00", a: 19.7, b: 20.4 }
+  - { ora: "2019-07-22T03:00", a: 20.2, b: 20.5 }
+  - { ora: "2019-07-22T04:00", a: 20.6, b: 21.0 }
+  - { ora: "2019-07-22T05:00", a: 21.6, b: 21.9 }
+  - { ora: "2019-07-22T06:00", a: 23.2, b: 23.5 }
+didascalia: "Hour-by-hour UTCI at the reference point marked on the maps, on the 2019 representative day: without intervention (solid line, Scenario A) and with the project (dashed line, Scenario B). The design curve stays below for every daytime hour — the gap is widest in the early afternoon, where the peak drops from about 41 to about 37 °C — and slightly above at night. Values read from Figure 6 of the paper."
+```
+
+On the greenery and its services, the number of trees goes from 39 to 59 and tree cover from 6.1% to 15.1% of the area. i-Tree estimates that pollutant-removal capacity doubles and that annual carbon sequestration rises from 1163 to 1849 kg (**Table 2**).
+
+***Table 1.** UTCI simulated with ENVI-MET at the reference point of the output maps, at 2:00 PM on the representative day, without intervention and with the project.*
+
+| Scenario | UTCI without intervention | UTCI with the project |
+|---|---|---|
+| 21 July 2019, 2:00 PM | 41 °C | 37 °C |
+| 21 July 2030, 2:00 PM | 47 °C | 43 °C |
+
+***Table 2.** Ecosystem services of the greenery estimated with i-Tree, before and after the intervention.*
+
+| Indicator | Ante operam | Post operam |
+|---|---|---|
+| Number of trees | 39 | 59 |
+| Tree cover | 6.1% | 15.1% |
+| Pollutant removal | 2.26 kg/year | 4.52 kg/year |
+| Carbon sequestration | 1163 kg/year | 1849 kg/year |
+| Oxygen production | 3101 kg/year | 4931 kg/year |
+| Avoided runoff | 1.82 m³/year | 3.47 m³/year |
+
+On water, over a total area of 21,100 m² the strictly permeable surface goes from 1750 to 2850 m², with a further 2300 m² of semi-permeable surface and about 1150 m² of green roofs on public buildings (**Figure 7**). Counting permeable and semi-permeable together, the increase in soil that lets water through is 194%. For completeness we also produced a rough estimate of construction costs, not binding in environmental terms but useful to the administration for budgeting: the indicative total is about €506,000, of which almost half is for the extensive green roofs, and it excludes substantial changes to sewers, electrical systems and road finishes.
+
+![Plans of the area before and after with permeable surfaces highlighted: on the left a few tree lines and fragments, on the right continuous strips, enlarged green areas and green roofs](images/fig05-superfici-permeabili.png "Surfaces that let water through, ante operam (left) and post operam (right). The strictly permeable surface goes from 1750 to 2850 m² out of 21,100 m² total; on the right a further 2300 m² of semi-permeable surfaces (hatched) and 1150 m² of green roofs are added.")
+
+## What the study does not cover
+
+The analysis presented here is one piece of a larger picture, and some things stay outside it. The method only works if all its phases are followed, including the city-scale preparatory ones not detailed here: it requires multidisciplinary coordination and time. The process is transferable to other Adriatic cities with similar fabric and climate, but the numerical results are not: they depend on the morphology, the species chosen and the local climate of the individual site, and a "copy and paste" of the solutions is not foreseen. The cost estimate considers only the initial construction costs: to assess sustainability over time a whole-life-cycle cost analysis would be needed, including operation and maintenance. And integrating the new NBS with the existing buried "grey" networks — often poorly documented and under-dimensioned — remains the open technical knot we flag as a priority for future research.
+
+## What to take from it
+
+The replicable part of this work is not the project for Sant'Antonio, but the path that gets there: an explicit, codified way of moving from risk maps to street sections, without relying solely on the individual designer's sensibility. The pilot case also shows where the space is in a city that looks full: in the carriageways and parking areas wider than necessary, which can be narrowed and given back to greenery and pedestrians without taking capacity away from traffic. The step now missing is to build: only construction will allow verification on the ground, and over time, of whether the simulated numbers hold.
+
+---
+
+**Bibliographic reference**
+T. D. Brownlee, S. Malavolta, G. E. Marchesani, *Bridging the Theory–Practice Gap: A Design Methodology for Green Infrastructure Implementation in Mid-Adriatic Coastal Cities*, Sustainability 18 (2026) 1690. <https://doi.org/10.3390/su18031690>
+
+**Data and code availability**
+A_GreeNet Explorer platform: <https://lifeagreenet-explorer.eu>. NBS Repertoire (Deliverable DA.1.1.2). Detailed volumes for the analysed areas, San Benedetto del Tronto included, with the ENVI-MET visualisations: <https://doi.org/10.5281/zenodo.14894783>. ENVI-MET v5.6.1 simulation dataset, years 2019 and 2030: <https://doi.org/10.5281/zenodo.14762492>. i-Tree Eco data and report: <https://doi.org/10.5281/zenodo.14811561>.
+
+**Short glossary**
+
+- *Green infrastructure*: a planned network of natural and semi-natural areas — trees, parks, permeable soils, green roofs — managed to deliver ecosystem services such as urban heat mitigation and rainwater regulation.
+- *Nature-Based Solutions (NBS)*: interventions inspired and supported by nature that address urban problems while building climate resilience; here chosen from a predefined repertoire (rain gardens, tree lines, green pergolas, permeable paving, de-sealing, green roofs).
+- *De-sealing*: removal of the impermeable layer — typically asphalt — from a surface, to restore its capacity to absorb water.
+- *UTCI (Universal Thermal Climate Index)*: an index that assesses thermal stress on the human body outdoors by combining air temperature, humidity, wind and solar radiation, on a scale of categories from "no stress" to "extreme heat stress".
+- *ENVI-MET*: thermo-fluid-dynamic simulation software for the urban microclimate, starting from building geometry, vegetation, soil and weather data.
+- *Representative day*: a real 24-hour day chosen as the one that deviates least from all the other days of a given period, used as a synthetic but realistic weather input for the simulations.
+
+[^1]: In the paper's text the ante operam tree cover appears once as "approximately 6.8%" (§3.2) and elsewhere — abstract, summary tables, conclusions — as 6.1%. Here 6.1% is adopted, consistent with most of the occurrences and with the 6.1% → 15.1% comparison.
+
+[^2]: 113 spaces before, 114 after (Table 4 of the paper): what changes is the manoeuvring space and the accesses, not the parking capacity.
+
+[^3]: The RCPs (Representative Concentration Pathways) are greenhouse-gas concentration trajectories: RCP 2.6 assumes strong mitigation, RCP 4.5 an intermediate emission pathway.
+
+[^4]: The average value (0.61 °C in 2019, 1.17 °C in 2030) is the reduction averaged over the simulated area; the "peak" of 4.45 °C is the maximum reduction recorded at a single point and instant, and does not coincide with the 4 °C gap read at 2:00 PM at the reference point of the maps (Table 1).
+
+[^5]: The paper gives the weather-data range once as 2011–2022 (§3.2, and in parentheses in §3.2) and once as 2017–2022 (§3.2). Here 2011–2022 is adopted, consistent with most of the occurrences.
+
+$$$
+
+
+Il quartiere Sant'Antonio di San Benedetto del Tronto è stato costruito quasi tutto tra gli anni Sessanta e Settanta: denso di edifici e di abitanti, povero di spazi verdi e di piazze. I rapporti di vulnerabilità climatica del progetto europeo LIFE+ A_GreeNet collocano l'area, entro il 2050, nella categoria di stress da caldo "estremamente forte" dell'indice UTCI. È il tipo di posto dove tutti concordano che servirebbe della green infrastructure — la rete di aree verdi e semi-naturali che una città usa per gestire calore e pioggia — e dove poi non se ne realizza quasi mai: lo spazio sembra già tutto occupato, i cataloghi di soluzioni verdi sono tarati su altri climi, e tra il piano strategico e il cantiere manca il pezzo intermedio, cioè il progetto di dettaglio.
+
+Abbiamo provato a costruire quel pezzo mancante: un metodo replicabile che accompagna il progettista dalle analisi di scala urbana fino a un progetto cantierabile e corredato di stima economica. Lo abbiamo messo alla prova su un caso pilota — l'incrocio tra Viale De Gasperi e Via Lombardia, accanto a due scuole superiori.
+
+## Un metodo in cinque fasi
+
+L'ossatura del lavoro è una sequenza di cinque fasi (**Figura 1**). Si parte dall'*identificazione dell'area di dettaglio*, scelta con un'analisi multi-criterio che incrocia vulnerabilità climatica, ricorrenza del tipo di tessuto urbano e consultazione con l'amministrazione comunale. Segue l'*analisi ante operam*, cioè la ricognizione delle condizioni esistenti su quattro fronti: uso dello spazio, permeabilità del suolo, patrimonio arboreo e microclima. La terza fase, "dal macro al micro", traduce gli obiettivi strategici di scala urbana in obiettivi specifici per quel sito. La quarta li converte in requisiti misurabili e nella scelta delle Nature-Based Solutions attingendo a un repertorio predefinito. La quinta è il *progetto post operam* di dettaglio, accompagnato dalle analisi di verifica su permeabilità, specie vegetali, microclima e costi.
+
+![Diagramma delle cinque fasi del metodo, con le fasi preparatorie del progetto LIFE+ indicate a tratteggio e i controlli di verifica sulla sinistra](images/fig01-workflow.png "Il flusso di lavoro: dalle fasi preparatorie di scala urbana (a tratteggio) all'identificazione dell'area, all'analisi ante operam, alla definizione di obiettivi e requisiti, fino al progetto di dettaglio. Il ciclo è ricorsivo: se le verifiche non confermano gli obiettivi, si torna indietro e si itera.")
+
+L'impianto è deliberatamente una procedura, non un ricettario: le soluzioni tecniche arrivano in fondo, come conseguenza dell'analisi, e non come catalogo da applicare a prescindere dal sito.
+
+## Cosa dice l'analisi ante operam
+
+La fotografia dello stato di fatto è netta (**Figura 2**). La gran parte dello spazio aperto è destinata a traffico e sosta, e molte carreggiate sono più larghe del necessario per la categoria stradale: il sovradimensionamento è confermato dalla doppia fila di auto in sosta all'uscita da scuola. Il suolo è quasi interamente impermeabile — le uniche eccezioni sono le aiuole degli alberi e poche aree verdi isolate — e i parcheggi risultano completamente impermeabili. Gli alberi esistenti, 39 in tutto, coprono circa il 6,1 % dell'area[^1] e appartengono soprattutto a *Eucalyptus*, *Pinus halepensis* e *Pinus pinea*: specie mal adattate alle condizioni attuali e ancora meno a quelle previste, con radici superficiali che in alcuni casi sollevano l'asfalto.
+
+![Pianta dell'area di intervento prima del progetto, con l'edificato in bianco e lo spazio aperto campito: predominano carreggiate e parcheggi, il verde è ridotto a filari discontinui](images/fig02-ante-operam.png "@wide Stato di fatto all'incrocio tra Viale De Gasperi (in verticale) e Via Lombardia. Lo spazio tra gli edifici è quasi tutto grigio: carreggiate e sosta. I filari alberati lungo l'asse principale sono frammentati e le fasce di terreno che li ospitano sono troppo strette.")
+
+Sul microclima, la nostra simulazione dello scenario 2019 con ENVI-MET indica che in un giorno estivo tipo l'indice UTCI in strada tocca punte di circa 41 °C: un valore che classifica l'ambiente come a rischio per la salute pubblica, aggravato dallo smaltimento notturno del calore poco efficace.
+
+## Le scelte di progetto
+
+Il progetto lavora quasi tutto sul recupero di spazio dalle sedi stradali sovradimensionate (**Figura 3**). Su Viale De Gasperi portiamo le carreggiate a 3,80 m, ricaviamo piste ciclabili nei due sensi e allarghiamo l'aiuola centrale da 1,60 a 3,70 m, quasi il triplo: la fascia allargata diventa un bacino di bioritenzione lineare, collegato alla rete di raccolta delle acque esistente, e ospita nuovi alberi. Su Via Lombardia la strada diventa a senso unico con carreggiata di 3,30 m e un bacino di bioritenzione vegetato lungo tutto il fronte. I parcheggi vengono razionalizzati riducendo gli spazi di manovra e gli accessi ridondanti, con il numero di stalli praticamente invariato[^2], e le superfici recuperate vengono de-sealed, cioè liberate dall'asfalto e ripavimentate con materiali drenanti. La specie principale scelta per i nuovi impianti è *Morus alba*, il gelso bianco: caducifoglia, di uso tradizionale nella zona, adatta ai climi temperati e, a maturità, resistente a siccità prolungate. Completano il quadro pavimentazioni chiare ad alta albedo (cool pavement) e tetti verdi sulle coperture piane degli edifici pubblici, in particolare le scuole.
+
+![Sezioni prospettiche di Viale De Gasperi prima e dopo: in alto la strada attuale a doppia carreggiata, in basso quella di progetto con carreggiate ridotte, ciclabili, aiuola centrale allargata a bacino di bioritenzione](images/fig03-sezioni-de-gasperi.png "@wide Viale De Gasperi, ante operam (in alto) e post operam (in basso). La superficie permeabile della sezione passa dal 13,5 % al 47,3 %. Le sigle indicano le soluzioni del repertorio NBS: de-sealing e pavimentazioni permeabili ai margini, rain garden nell'aiuola centrale allargata.")
+
+## Le simulazioni: ENVI-MET e i-Tree
+
+La verifica è affidata a due strumenti diversi. **ENVI-MET** (versione 5.6) è un modello termo-fluidodinamico che, a partire da terreno, vegetazione, geometria degli edifici e dati meteo, ricostruisce il microclima locale e ne ricava l'indice UTCI. **i-Tree** (versione 6) parte invece dal censimento degli alberi e stima i servizi ecosistemici del verde: rimozione di inquinanti, sequestro di carbonio, produzione di ossigeno, deflusso idrico evitato.
+
+Le nostre simulazioni ENVI-MET girano su un *giorno rappresentativo*, il 21 luglio 2019: un giorno reale di 24 ore scelto come quello che meno si discosta da tutti gli altri giorni del periodo considerato, con uno scarto compreso tra lo 0,3 % e l'1 % rispetto ai giorni rappresentativi dei quattro gruppi climatici in cui abbiamo suddiviso la serie storica di dati meteo (2011-2022, fonte WorldWeatherOnline).[^5] Su quel giorno la temperatura dell'aria arriva a 30,3 °C a mezzogiorno (**Figura 4**), ma l'UTCI in strada tocca 41 °C: la differenza è la radiazione delle superfici calde, che l'aria da sola non racconta.
+
+```grafico
+tipo: linea
+x: ora
+yMin: 19
+yMax: 28
+yMinDestra: 10
+yMaxDestra: 14
+assi:
+  x: true
+  y: true
+  titoloY: Air temperature (°C)
+  titoloYDestra: Humidity (g/kg)
+serie:
+  - chiave: t
+    etichetta: Air temperature
+  - chiave: rh
+    etichetta: Humidity
+    asseY: destra
+    tratteggio: "5,4"
+dati:
+  - { ora: "2019-07-21T00:00", t: 21.4, rh: 11.14 }
+  - { ora: "2019-07-21T01:00", t: 21.3, rh: 11.13 }
+  - { ora: "2019-07-21T02:00", t: 21.4, rh: 11.14 }
+  - { ora: "2019-07-21T03:00", t: 20.4, rh: 10.32 }
+  - { ora: "2019-07-21T04:00", t: 22.4, rh: 11.11 }
+  - { ora: "2019-07-21T05:00", t: 23.4, rh: 11.79 }
+  - { ora: "2019-07-21T06:00", t: 24.4, rh: 13.34 }
+  - { ora: "2019-07-21T07:00", t: 26.3, rh: 12.68 }
+  - { ora: "2019-07-21T08:00", t: 27.3, rh: 12.71 }
+  - { ora: "2019-07-21T09:00", t: 28.3, rh: 11.91 }
+  - { ora: "2019-07-21T10:00", t: 29.3, rh: 11.79 }
+  - { ora: "2019-07-21T11:00", t: 29.3, rh: 11.79 }
+  - { ora: "2019-07-21T12:00", t: 30.3, rh: 11.9 }
+  - { ora: "2019-07-21T13:00", t: 29.3, rh: 11.79 }
+  - { ora: "2019-07-21T14:00", t: 29.4, rh: 12.63 }
+  - { ora: "2019-07-21T15:00", t: 28.4, rh: 13.48 }
+  - { ora: "2019-07-21T16:00", t: 27.4, rh: 13.45 }
+  - { ora: "2019-07-21T17:00", t: 26.4, rh: 14.31 }
+  - { ora: "2019-07-21T18:00", t: 25.4, rh: 14.37 }
+  - { ora: "2019-07-21T19:00", t: 24.4, rh: 13.34 }
+  - { ora: "2019-07-21T20:00", t: 23.4, rh: 12.57 }
+  - { ora: "2019-07-21T21:00", t: 22.3, rh: 12.55 }
+  - { ora: "2019-07-21T22:00", t: 22.3, rh: 11.1 }
+  - { ora: "2019-07-21T23:00", t: 22.3, rh: 10.37 }
+didascalia: "Temperatura dell'aria (linea piena, asse sinistro) e umidità specifica (linea tratteggiata, asse destro) ora per ora del giorno rappresentativo usato come input per ENVI-MET, dai valori della Tabella 3 del paper. La temperatura arriva a 30,3 °C a mezzogiorno; nello stesso giorno l'UTCI simulato in strada tocca 41 °C."
+```
+
+Lo scenario 2030 lo otteniamo convertendo i dati 2019 in un file climatico EPW e modificandolo secondo i percorsi di emissione RCP 2.6 e 4.5, cioè da una traiettoria con forte mitigazione a una intermedia.[^3]
+
+Va detto con chiarezza cosa questa validazione è e cosa non è: è un confronto tra scenari *simulati* — stato di fatto contro progetto, oggi e al 2030 — non un confronto tra simulazione e misure sul campo. La verifica con dati reali potrà avvenire solo dopo la realizzazione, ed è il passo che indichiamo come necessario.
+
+## I numeri del dopo
+
+Sul comfort termico, le simulazioni ENVI-MET indicano una riduzione media dell'UTCI di 0,61 °C nello scenario attuale, con punte di 4,45 °C,[^4] e di 1,17 °C nello scenario 2030. Nel punto di riferimento indicato sulle mappe, alle 14:00, l'UTCI passa da 41 a 37 °C nel 2019 e da 47 a 43 °C nel 2030 (**Tabella 1**, **Figura 5**). Il confronto sulle 24 ore mostra la curva del progetto sotto quella dello stato di fatto per tutte le ore diurne, con lo scarto massimo nel primo pomeriggio (**Figura 6**).
+
+![Mappe ENVI-MET dell'UTCI dell'incrocio alle 14:00 del 21 luglio 2019, stato di fatto e progetto a confronto](images/fig04-envimet-2019.png "Mappe dell'UTCI alle 14:00 del giorno rappresentativo 2019: senza intervento (Scenario A) e con il progetto (Scenario B); in blu le zone più fresche. Il mirino segna il punto di riferimento usato per il confronto orario. Dati estrapolati con lo strumento EnviReader (v1.5).")
+
+```grafico
+tipo: linea
+x: ora
+yMin: 18
+yMax: 42
+assi:
+  x: true
+  y: true
+  titoloY: UTCI (°C)
+serie:
+  - chiave: a
+    etichetta: No intervention (Scenario A)
+  - chiave: b
+    etichetta: With project (Scenario B)
+    tratteggio: "5,4"
+dati:
+  - { ora: "2019-07-21T07:00", a: 22.8, b: 23.3 }
+  - { ora: "2019-07-21T08:00", a: 25.8, b: 26.0 }
+  - { ora: "2019-07-21T09:00", a: 28.2, b: 28.3 }
+  - { ora: "2019-07-21T10:00", a: 30.6, b: 30.6 }
+  - { ora: "2019-07-21T11:00", a: 33.6, b: 33.4 }
+  - { ora: "2019-07-21T12:00", a: 37.0, b: 34.6 }
+  - { ora: "2019-07-21T13:00", a: 39.2, b: 35.6 }
+  - { ora: "2019-07-21T14:00", a: 41.2, b: 36.6 }
+  - { ora: "2019-07-21T15:00", a: 39.4, b: 35.4 }
+  - { ora: "2019-07-21T16:00", a: 37.6, b: 36.3 }
+  - { ora: "2019-07-21T17:00", a: 34.6, b: 34.2 }
+  - { ora: "2019-07-21T18:00", a: 29.1, b: 29.2 }
+  - { ora: "2019-07-21T19:00", a: 26.2, b: 26.4 }
+  - { ora: "2019-07-21T20:00", a: 23.6, b: 23.9 }
+  - { ora: "2019-07-21T21:00", a: 22.1, b: 22.5 }
+  - { ora: "2019-07-21T22:00", a: 21.1, b: 21.6 }
+  - { ora: "2019-07-21T23:00", a: 20.1, b: 20.8 }
+  - { ora: "2019-07-22T00:00", a: 19.4, b: 20.3 }
+  - { ora: "2019-07-22T01:00", a: 19.5, b: 20.3 }
+  - { ora: "2019-07-22T02:00", a: 19.7, b: 20.4 }
+  - { ora: "2019-07-22T03:00", a: 20.2, b: 20.5 }
+  - { ora: "2019-07-22T04:00", a: 20.6, b: 21.0 }
+  - { ora: "2019-07-22T05:00", a: 21.6, b: 21.9 }
+  - { ora: "2019-07-22T06:00", a: 23.2, b: 23.5 }
+didascalia: "UTCI ora per ora nel punto di riferimento segnato sulle mappe, nel giorno rappresentativo 2019: senza intervento (linea piena, Scenario A) e con il progetto (linea tratteggiata, Scenario B). La curva di progetto resta sotto per tutte le ore diurne — lo scarto è massimo nel primo pomeriggio, dove il picco scende da circa 41 a circa 37 °C — e leggermente sopra di notte. Valori letti dalla Figura 6 del paper."
+```
+
+Sul verde e i suoi servizi, il numero di alberi passa da 39 a 59 e la copertura arborea dal 6,1 % al 15,1 % dell'area. i-Tree stima che la capacità di rimozione degli inquinanti raddoppi e che il sequestro annuo di carbonio salga da 1163 a 1849 kg (**Tabella 2**).
+
+***Tabella 1.** UTCI simulato con ENVI-MET nel punto di riferimento delle mappe di output, alle 14:00 del giorno rappresentativo, senza intervento e con il progetto.*
+
+| Scenario | UTCI senza intervento | UTCI con il progetto |
+|---|---|---|
+| 21 luglio 2019, ore 14:00 | 41 °C | 37 °C |
+| 21 luglio 2030, ore 14:00 | 47 °C | 43 °C |
+
+***Tabella 2.** Servizi ecosistemici del verde stimati con i-Tree, prima e dopo l'intervento.*
+
+| Indicatore | Ante operam | Post operam |
+|---|---|---|
+| Numero di alberi | 39 | 59 |
+| Copertura arborea | 6,1 % | 15,1 % |
+| Rimozione di inquinanti | 2,26 kg/anno | 4,52 kg/anno |
+| Sequestro di carbonio | 1163 kg/anno | 1849 kg/anno |
+| Produzione di ossigeno | 3101 kg/anno | 4931 kg/anno |
+| Deflusso idrico evitato | 1,82 m³/anno | 3,47 m³/anno |
+
+Sull'acqua, su un'area totale di 21 100 m² la superficie strettamente permeabile passa da 1750 a 2850 m², a cui si aggiungono 2300 m² di superficie semi-permeabile e circa 1150 m² di tetti verdi sugli edifici pubblici (**Figura 7**). Contando permeabile e semi-permeabile, l'aumento del suolo che lascia passare l'acqua è del 194 %. Per completezza abbiamo elaborato anche una stima sommaria dei costi di costruzione, non vincolante sul piano ambientale ma utile all'amministrazione per programmare la spesa: il totale indicativo è di circa 506 000 €, di cui quasi la metà per i tetti verdi estensivi, ed esclude modifiche sostanziali a fognature, impianti elettrici e finiture stradali.
+
+![Piante dell'area prima e dopo con le superfici permeabili evidenziate: a sinistra pochi filari e frammenti, a destra fasce continue, aree verdi ampliate e tetti verdi](images/fig05-superfici-permeabili.png "Superfici che lasciano passare l'acqua, ante operam (a sinistra) e post operam (a destra). La superficie strettamente permeabile passa da 1750 a 2850 m² su 21 100 m² totali; a destra si aggiungono 2300 m² di superfici semi-permeabili (tratteggio) e 1150 m² di tetti verdi.")
+
+## Cosa lo studio non copre
+
+L'analisi presentata è un pezzo di un quadro più ampio, e alcune cose restano fuori. Il metodo funziona solo se si percorrono tutte le sue fasi, comprese quelle preparatorie di scala urbana non dettagliate qui: richiede coordinamento multidisciplinare e tempo. Il processo è trasferibile ad altre città adriatiche con tessuto e clima simili, ma i risultati numerici no: dipendono dalla morfologia, dalle specie scelte e dal clima locale del singolo sito, e un "copia e incolla" delle soluzioni non è previsto. La stima economica considera solo i costi iniziali di realizzazione: per valutare la sostenibilità nel tempo servirebbe un'analisi di costo sull'intero ciclo di vita, con gestione e manutenzione. E l'integrazione delle nuove NBS con le reti "grigie" interrate esistenti — spesso poco documentate e sottodimensionate — resta il nodo tecnico aperto che indichiamo come priorità per la ricerca futura.
+
+## Cosa se ne ricava
+
+La parte replicabile di questo lavoro non è il progetto per Sant'Antonio, ma il percorso che ci arriva: un modo esplicito e codificato di passare dalle mappe di rischio alle sezioni stradali, senza affidarsi solo alla sensibilità del singolo progettista. Il caso pilota mostra anche dove sta lo spazio in una città che sembra piena: nelle carreggiate e nei parcheggi più larghi del necessario, che si possono restringere e restituire a verde e pedoni senza togliere capacità al traffico. Il passo che manca ora è costruire: solo la realizzazione permetterà di verificare sul campo, e nel tempo, se i numeri simulati tengono.
+
+---
+
+**Riferimento bibliografico**
+T. D. Brownlee, S. Malavolta, G. E. Marchesani, *Bridging the Theory–Practice Gap: A Design Methodology for Green Infrastructure Implementation in Mid-Adriatic Coastal Cities*, Sustainability 18 (2026) 1690. <https://doi.org/10.3390/su18031690>
+
+**Disponibilità di dati e codice**
+Piattaforma A_GreeNet Explorer: <https://lifeagreenet-explorer.eu>. Repertorio NBS (Deliverable DA.1.1.2). Volumi di dettaglio per le aree analizzate, San Benedetto del Tronto compresa, con le visualizzazioni ENVI-MET: <https://doi.org/10.5281/zenodo.14894783>. Dataset delle simulazioni ENVI-MET v5.6.1, anni 2019 e 2030: <https://doi.org/10.5281/zenodo.14762492>. Dati e report i-Tree Eco: <https://doi.org/10.5281/zenodo.14811561>.
+
+**Piccolo glossario**
+
+- *Green infrastructure*: rete pianificata di aree naturali e semi-naturali — alberature, parchi, suoli permeabili, tetti verdi — gestita per fornire servizi ecosistemici come la mitigazione del calore urbano e la regolazione delle acque piovane.
+- *Nature-Based Solutions (NBS)*: interventi ispirati e sostenuti dalla natura che affrontano problemi urbani costruendo al tempo stesso resilienza climatica; qui scelti da un repertorio predefinito (rain garden, filari, pergole verdi, pavimentazioni permeabili, de-sealing, tetti verdi).
+- *De-sealing*: rimozione dello strato impermeabile — tipicamente asfalto — da una superficie, per ripristinarne la capacità di assorbire acqua.
+- *UTCI (Universal Thermal Climate Index)*: indice che valuta lo stress termico sul corpo umano all'aperto combinando temperatura dell'aria, umidità, vento e radiazione solare, su una scala di categorie da "nessuno stress" a "stress da caldo estremo".
+- *ENVI-MET*: software di simulazione termo-fluidodinamica del microclima urbano, a partire da geometria degli edifici, vegetazione, suolo e dati meteo.
+- *Giorno rappresentativo*: giorno reale di 24 ore scelto come quello che meno si discosta da tutti gli altri giorni di un dato periodo, usato come input meteo sintetico ma realistico per le simulazioni.
+
+[^1]: Nel testo del paper la copertura arborea dello stato di fatto compare una volta come "circa il 6,8 %" (§3.2) e altrove — abstract, tabelle di sintesi, conclusioni — come 6,1 %. Qui si adotta il 6,1 %, coerente con la maggior parte delle occorrenze e con il confronto 6,1 % → 15,1 %.
+
+[^2]: 113 stalli prima, 114 dopo (Tabella 4 del paper): a cambiare sono gli spazi di manovra e gli accessi, non la capacità di sosta.
+
+[^3]: Gli RCP (Representative Concentration Pathways) sono traiettorie di concentrazione dei gas serra: RCP 2.6 assume una forte mitigazione, RCP 4.5 un percorso di emissioni intermedio.
+
+[^4]: Il valore medio (0,61 °C nel 2019, 1,17 °C nel 2030) è la riduzione mediata sull'area simulata; il "picco" di 4,45 °C è la riduzione massima registrata in un punto e in un istante, e non coincide con lo scarto di 4 °C letto alle 14:00 nel punto di riferimento delle mappe (Tabella 1).
+
+[^5]: Il paper indica l'intervallo dei dati meteo una volta come 2011-2022 (§3.2, e fra parentesi in §3.2) e una volta come 2017-2022 (§3.2). Qui si adotta il 2011-2022, coerente con la maggior parte delle occorrenze.

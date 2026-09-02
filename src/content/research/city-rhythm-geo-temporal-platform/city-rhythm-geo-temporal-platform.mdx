@@ -1,0 +1,194 @@
+---
+titolo: "A heat map that knows where people are" $$$ "Una mappa del calore che sa dove sono le persone"
+data: 2025-10-22
+sommario: "City Rhythm overlays a modelled, hour-by-hour estimate of human presence onto Local Climate Zone and urban heat island risk maps, turning a physical hazard into a real exposure: in Ascoli Piceno, older residents concentrate in the most overheated fabric on weekday mornings." $$$ "City Rhythm sovrappone una stima ora per ora della presenza umana alle mappe di Local Climate Zone e di rischio urban heat island: il pericolo fisico diventa esposizione reale. Ad Ascoli Piceno gli anziani si concentrano nel tessuto più surriscaldato nelle mattine feriali."
+tag: ["Urban heat island", "Local Climate Zone", "Human presence", "Geo-temporal analysis", "Simulation"]
+fonte: "City Rhythm: geo-temporal platform for integrated analysis of flows, microclimate and UHI risk — IOP Conf. Ser.: Earth Environ. Sci. 1568, 2025 (SBE25 WestMED, Seville)"
+fonteUrl: "https://doi.org/10.1088/1755-1315/1568/1/012039"
+---
+
+# A heat map that knows where people are
+
+In Ascoli Piceno the five points where urban heat island (UHI) risk is highest come as no surprise to anyone who knows the city: the university premises at Sant'Angelo Magno, Via del Trivio, Piazza del Popolo and two stretches at the far end of Corso Mazzini. All five fall into the same class of urban fabric, LCZ 2 — compact mid-rise built-up area. The question we asked was not where it is hottest, but when those points hold the most people, and who. For Ascoli the answer is: on weekdays between 10:00 and 13:00, with a steady share of people aged 65 or over of around 10 %.
+
+This article describes the tool that got us there: **City Rhythm**, a web platform that dynamically analyses, hour by hour and day by day, the intersection of estimated human presence, microclimatic conditions and UHI risk.
+
+## The gap between the heat map and the people
+
+A UHI risk map tells you where the physical hazard is: which blocks, because of their form and their materials, stay hotter. It says nothing about exposure — whether, at that point and at that hour, anyone is there, and who. Data on people's presence in the city do exist, but they live in separate archives, in a different format and on a different time scale. Traditional urban analysis works on static or fragmented data, and does not hold the two things together over time.
+
+City Rhythm starts from the Local Climate Zone (LCZ) system, the standard classification that groups the territory into classes with a recognisable thermal and aerodynamic profile, and uses it as a genuine analytical variable, not as a backdrop: modelled presence is overlaid on the LCZ map and on the UHI risk map, and the three are read together.
+
+## The three data sources
+
+The analysis rests on three streams, all acquired already pre-processed, aggregated and anonymised.
+
+The first is **footfall**, that is the passage of people, aggregated by point of interest (POI) and supplied by the mobile platform Blimp: total unique daily presences, hourly counts, distribution of repeat visits.
+
+The second is Google Maps relative crowding, obtained through a third-party service: hour-by-hour percentage crowding levels, for the full 168-hour week, at the individual POI level. Google provides these curves only for a subset of POIs; we extend them to all the POIs in a given area — identified with our SpotMapper tool[^1] — through a proprietary normalisation algorithm.
+
+The third is the demographic and interest profile, from Blimp's "Urban Analytics" product: a *sensor-less* methodology that, with a proprietary algorithm, derives from a statistical sample of anonymised mobile data the probable composition by gender, age band and nationality, plus predominant interests[^2]. These are probabilistic indicators of dominant trends in an area and at a time of day, not certain attributes of individual people.
+
+**Table 1** summarises the four data layers and what they produce.
+
+**Table 1.** Data layers processed by the City Rhythm platform.
+
+| Layer | Description | Output |
+|---|---|---|
+| LCZ and UHI risk maps | Geospatial maps of Local Climate Zones and associated urban heat island risk | LCZ categories; UHI risk index |
+| Relative crowding | Relative hourly crowding at POIs, used as a model input | Crowding index (0–100 %) |
+| Modelled presence | Dynamic, synthetic model of footfall distribution | Hourly presence counts; Presence Points |
+| Demographics | Inferred visitor demographics (age, gender) | Percentage distribution by group |
+
+## How we simulate presence
+
+The heart of the platform is two cascading models, shown in the diagram in **Figure 1**.
+
+![Flow diagram of the platform: the data sources feed the central processing engine, which in turn produces the integrated analysis view controlled by the dashboard](images/fig01-workflow.png "City Rhythm architecture. Human activity data and urban environment data (left) feed the central engine: the Crowdedness Inference Model estimates how busy each place is, the Presence Simulation Model generates a realistic distribution of people from it. The result is displayed on the Dynamic Map, overlaid on the heat risk map, and queried by area through the Analytics Panel; the interactive dashboard controls time, day and layers.")
+
+The first, the **Crowdedness Inference Model**, learns how busy each place is from the subset of POIs for which Google Maps provides a real curve, and propagates that knowledge to all the others. The second, the **Presence Simulation Model**, is a generative model that turns the estimated crowding into a plausible spatial distribution of individual points: the **Presence Points**. A *jittering* algorithm keeps the points from lining up on a rigid grid, and a simulated force of attraction pushes them towards the POIs that Google Maps flags as crowded, mimicking people's natural tendency to gather in the busiest places. Unlike a heatmap, which merges everything into uniform colour patches, the Presence Points preserve granularity: you can read how people cluster.
+
+The coupling between the pieces is the one in Figure 1. Human activity data feed the Crowdedness Inference Model, which drives the Presence Simulation Model; urban environment data — physical layout, climate zones, heat risk — define the physical boundaries of the simulation and form the base map; the Dynamic Map overlays the simulated presence on the heat risk map; the Analytics Panel returns charts and indicators for any selected area; the interactive dashboard controls time, day and layers.
+
+A note on rigour. This work does **not** contain an experimental validation of the presence model against real field counts. The Presence Points are an inferential reconstruction, calibrated on Google Maps crowding curves but not verified here against a measured figure: their status is that of probabilistic indicators of where and when people concentrate, not of a census. The check we can offer is structural: in Ascoli all five highest-risk points fall in LCZ 2, consistent with what the literature associates with that morphotype.
+
+## Privacy: aggregate phenomena, not individuals
+
+City Rhythm is designed to answer "what is the probable demographic composition of a crowd in a high-risk area?", not "where is a particular person?". The platform neither collects nor processes raw personal data: everything arrives from third-party providers already pre-processed, aggregated and anonymised, and re-identification of an individual is technically impossible. The analysis works on statistical inferences about groups, with the aim of protecting vulnerable populations — the opposite of surveillance.
+
+## Ascoli Piceno: where and when
+
+We applied the platform to Ascoli Piceno, a city of varied morphology — from the compact historic centre to modern residential districts — and a founding component of the VITALITY project in the Marche, Umbria and Abruzzo regions. The analysis identified the convergence of high UHI risk, dense human presence and vulnerable populations at the five points already mentioned, all in LCZ 2, with the peak of combined risk on weekdays between 10:00 and 13:00.
+
+The finding that matters most is the quantification of the demographic profile exposed in those windows: a steady presence of vulnerable groups, with about **10 % of individuals aged 65 or over**. It is the step that turns a generic environmental concern into a measurable public health risk: a significant probability that elderly citizens are exposed to thermal stress classified "Very High", in predictable places and at precise times. **Figure 2** shows the dashboard used to read this intersection.[^3]
+
+![Screenshot of the City Rhythm dashboard: a map of Ascoli Piceno with a cloud of presence points over a coloured UHI risk layer, a time slider and a side panel with counts and interests](images/fig02-dashboard.png "@wide The City Rhythm dashboard on Ascoli Piceno. The white dots are the Presence Points at a given instant (here Thursday at 14:00, slider at the bottom); the colour beneath is the per-cell UHI risk (the 'LCZ Vitality' layer). The panel on the right reports the average presence of the selected area and the cloud of predominant interests. The numeric values are interface examples.")
+
+## From map to decision
+
+The results enable a two-tiered response. Tactical: during a heatwave, instead of a generic city-wide alert, a health team is sent to hand out water in Piazza del Popolo on a weekday at 11:00. Strategic: the recurring, quantified risk in a place like Via del Trivio becomes the evidence base to justify shaded walkways, green infrastructure or high-albedo pavements that lower surface temperatures. In both cases priority is set by need, not by occasion — which is how climate adaptation resources are distributed more fairly.
+
+## What's left out
+
+The main limitation is the one already stated: no experimental validation of the presence model. On top of that, the demographic profiles are inferred, hence probabilistic, and access to the underlying data — Blimp, Google Maps crowding via third parties — requires commercial agreements: the framework is modular, open-source and transferable to other cities, the data that feed it are not. The case study is a single city and a single period. Real-time sensor data (air quality, pedestrian counts) and socio-economic indicators beyond age and gender are not yet included, and scenario planning — testing the effect of a design intervention before building it — remains future work.
+
+## The takeaway
+
+The value is not a new heat map. It is the junction: the same LCZ 2 fabric that overheats is where, on weekday mornings, the oldest residents concentrate. When you can say this with an hour and the name of a street, a water point or a row of trees stops being a generic measure and becomes an allocation decision.
+
+---
+
+**Bibliographic reference**
+G. E. Marchesani, R. Cocci Grifoni, D. Riera, M. Khodaparast, *City Rhythm: geo-temporal platform for integrated analysis of flows, microclimate and UHI risk*, IOP Conference Series: Earth and Environmental Science 1568 (2025) 012039. Presented at the Sustainable Built Environment Conference SBE25 WestMED, Seville. <https://doi.org/10.1088/1755-1315/1568/1/012039>
+
+**Data and code availability**
+The City Rhythm platform is public at <https://cityrhythm.it> (accessed 11 June 2025); archived release on Zenodo, <https://doi.org/10.5281/zenodo.15641271>. The SpotMapper tool is archived on Zenodo, <https://doi.org/10.5281/zenodo.14547472>. City Rhythm is developed with an explicit open-source commitment (transparent, modifiable code and methods). The footfall and profile data come from Blimp (<https://blimp.ai/en/>) and the relative crowding from Google Maps via a third-party service: both are commercial-access. Work funded by the PNRR MUR project ECS_00000041-VITALITY.
+
+**Short glossary**
+
+- *Urban heat island (UHI)*: the phenomenon whereby an urban area stays warmer than the surrounding territory, because of built form, materials and human activity. Here it is expressed as a risk index with categories up to "Very High".
+- *Local Climate Zone (LCZ)*: a standard classification (Stewart and Oke, 2012) that divides the territory into classes with homogeneous thermal and aerodynamic properties. *LCZ 2* is compact mid-rise built-up area, the morphotype most correlated with the highest UHI risk.
+- *Geo-temporal*: describing an analysis that treats the spatial and temporal dimensions together — not "where" something is, but "where it is at this hour of this day".
+- *POI (point of interest)*: a discrete place to which attendance data can be attached (a café, a square, a stop). It is the minimum geographic unit on which the platform aggregates footfall and crowding.
+- *Footfall*: the flow of people passing through or lingering in a place, measured as presence counts.
+- *Presence Points*: the output of City Rhythm's generative model — synthetic individual points that reconstruct a plausible distribution of people, keeping the granularity a heatmap loses.
+
+[^1]: SpotMapper is our open tool for enumerating the POIs of an area (DOI <https://doi.org/10.5281/zenodo.14547472>). The normalisation algorithm rescales the Google Maps crowding curves, available only for a subset of POIs, to the whole set.
+
+[^2]: Blimp's "Urban Analytics": profiles by gender, age band and nationality and interests, inferred by a proprietary algorithm from a statistical sample of anonymised mobile data. Used as probabilistic indicators of dominant trends, never as individual attributes.
+
+[^3]: The example values in the Figure 2 dashboard (average presence 5891.7; the hourly range shown) come from the interface screenshot and illustrate the tool; they are not a result of the Ascoli analysis.
+
+$$$
+
+# Una mappa del calore che sa dove sono le persone
+
+Ad Ascoli Piceno i cinque punti dove il rischio da urban heat island (UHI) è più alto non sorprendono chi conosce la città: la sede universitaria di Sant'Angelo Magno, Via del Trivio, Piazza del Popolo e due tratti in fondo a Corso Mazzini. Tutti e cinque cadono nella stessa classe di tessuto urbano, la LCZ 2 — l'edificato compatto di media altezza. La domanda che ci siamo posti non è dove faccia più caldo, ma quando in quei punti c'è più gente, e chi. Per Ascoli la risposta è: nei giorni feriali tra le 10 e le 13, con una quota costante di persone dai 65 anni in su intorno al 10 %.
+
+Questo articolo racconta lo strumento che ci ha permesso di arrivarci: **City Rhythm**, una piattaforma web che analizza in modo dinamico, ora per ora e giorno per giorno, l'incrocio tra presenza umana stimata, condizioni microclimatiche e rischio UHI.
+
+## Il buco tra la mappa del calore e le persone
+
+Una mappa di rischio UHI dice dov'è il pericolo fisico: quali isolati, per via della loro forma e dei loro materiali, restano più caldi. Non dice nulla sull'esposizione — se in quel punto, a quell'ora, ci sia qualcuno, e chi. I dati sulla presenza delle persone in città esistono, ma vivono in archivi separati, con un altro formato e un'altra scala temporale. L'analisi urbana tradizionale lavora su dati statici o frammentati, e non tiene insieme le due cose nel tempo.
+
+City Rhythm parte dal sistema delle Local Climate Zone (LCZ), la classificazione standard che raggruppa il territorio in classi con un profilo termico e aerodinamico riconoscibile, e la usa come variabile di analisi vera e propria, non come sfondo: le presenze modellate vengono sovrapposte alla mappa LCZ e a quella di rischio UHI, e le tre cose si leggono insieme.
+
+## Le tre fonti di dati
+
+L'analisi si regge su tre flussi, tutti acquisiti già pre-elaborati, aggregati e anonimizzati.
+
+Il primo è il **footfall**, cioè il passaggio di persone, aggregato per punto di interesse (POI) e fornito dalla piattaforma mobile Blimp: presenze uniche giornaliere, conteggi orari, distribuzione delle visite ripetute.
+
+Il secondo è l'affollamento relativo di Google Maps, ottenuto tramite un servizio terzo: livelli percentuali di affollamento ora per ora, per l'intera settimana di 168 ore, a livello di singolo POI. Google fornisce queste curve solo per una parte dei POI; noi le estendiamo a tutti quelli di una data area — individuati con il nostro strumento SpotMapper[^1] — attraverso un algoritmo di normalizzazione proprietario.
+
+Il terzo è il profilo demografico e di interesse, dal prodotto "Urban Analytics" di Blimp: una metodologia *sensor-less* che, con un algoritmo proprietario, ricava da un campione statistico di dati mobili anonimizzati la composizione probabile per genere, fasce d'età e nazionalità, più gli interessi prevalenti[^2]. Sono indicatori probabilistici di tendenze dominanti in un'area e in un orario, non attributi certi di singole persone.
+
+La **Tabella 1** riassume i quattro strati di dati e cosa producono.
+
+**Tabella 1.** Strati di dati elaborati dalla piattaforma City Rhythm.
+
+| Strato | Descrizione | Output |
+|---|---|---|
+| Mappe LCZ e rischio UHI | Mappe geospaziali delle Local Climate Zone e del rischio urban heat island associato | Classi LCZ; indice di rischio UHI |
+| Affollamento relativo | Affollamento orario relativo ai POI, usato come input del modello | Indice di affollamento (0–100 %) |
+| Presenza modellata | Modello dinamico e sintetico della distribuzione del footfall | Conteggi di presenza orari; Presence Points |
+| Demografia | Demografia dei visitatori inferita (età, genere) | Distribuzione percentuale per gruppo |
+
+## Come simuliamo le presenze
+
+Il cuore della piattaforma sono due modelli in cascata, visibili nel diagramma di **Figura 1**.
+
+![Diagramma di flusso della piattaforma: le fonti di dati alimentano il motore di elaborazione centrale, che a sua volta produce la vista di analisi integrata controllata dalla dashboard](images/fig01-workflow.png "Architettura di City Rhythm. I dati di attività umana e di ambiente urbano (a sinistra) alimentano il motore centrale: il Crowdedness Inference Model stima quanto è affollato ogni luogo, il Presence Simulation Model genera da lì una distribuzione realistica di persone. Il risultato è visualizzato sulla Dynamic Map, sovrapposto alla mappa di rischio termico, e interrogabile per area tramite l'Analytics Panel; la dashboard interattiva controlla tempo, giorno e layer.")
+
+Il primo, il **Crowdedness Inference Model**, impara quanto è affollato ogni luogo a partire dal sottoinsieme di POI per cui Google Maps fornisce una curva reale, e propaga quella conoscenza a tutti gli altri. Il secondo, il **Presence Simulation Model**, è un modello generativo che trasforma l'affollamento stimato in una distribuzione spaziale plausibile di punti individuali: i **Presence Points**. Un algoritmo di *jittering* impedisce ai punti di allinearsi a una griglia rigida, e una forza di attrazione simulata li spinge verso i POI che Google Maps segnala come affollati, imitando la tendenza naturale delle persone a radunarsi nei luoghi più frequentati. A differenza di una heatmap, che fonde tutto in macchie di colore uniformi, i Presence Points conservano la granularità: si legge come le persone si raggruppano.
+
+L'accoppiamento tra i pezzi è quello di Figura 1. I dati di attività umana alimentano il Crowdedness Inference Model, che guida il Presence Simulation Model; i dati di ambiente urbano — layout fisico, zone climatiche, rischio di calore — definiscono i confini fisici della simulazione e formano la mappa di base; la Dynamic Map sovrappone la presenza simulata alla mappa di rischio termico; l'Analytics Panel restituisce grafici e indicatori per qualsiasi area selezionata; la dashboard interattiva controlla tempo, giorno e layer.
+
+Una precisazione sul rigore. Questo lavoro **non** contiene una validazione sperimentale del modello di presenza contro conteggi reali sul campo. I Presence Points sono una ricostruzione inferenziale, calibrata sulle curve di affollamento di Google Maps ma non verificata qui rispetto a un dato misurato: il loro statuto è quello di indicatori probabilistici di dove e quando le persone si concentrano, non di un censimento. Il controllo che possiamo offrire è strutturale: ad Ascoli tutti e cinque i punti a rischio più alto cadono in LCZ 2, coerentemente con quanto la letteratura associa a quel morfotipo.
+
+## Privacy: fenomeni aggregati, non individui
+
+City Rhythm è pensata per rispondere a "qual è la composizione demografica probabile di una folla in un'area ad alto rischio?", non a "dov'è una certa persona?". La piattaforma non raccoglie né elabora dati personali grezzi: tutto arriva da fornitori terzi già pre-elaborato, aggregato e anonimizzato, e la re-identificazione di un individuo è tecnicamente impossibile. L'analisi lavora su inferenze statistiche riferite a gruppi, con lo scopo di proteggere le popolazioni vulnerabili — l'opposto della sorveglianza.
+
+## Ascoli Piceno: dove e quando
+
+Abbiamo applicato la piattaforma ad Ascoli Piceno, città dalla morfologia varia — dal centro storico compatto ai quartieri residenziali moderni — e componente fondativa del progetto VITALITY nelle regioni Marche, Umbria e Abruzzo. L'analisi ha individuato la convergenza di rischio UHI elevato, presenza umana densa e popolazioni vulnerabili nei cinque punti già citati, tutti in LCZ 2, con il picco di rischio combinato nei giorni feriali tra le 10 e le 13.
+
+Il risultato che conta di più è la quantificazione del profilo demografico esposto in quelle finestre: una presenza costante di gruppi vulnerabili, con circa il **10 % di individui dai 65 anni in su**. È il passaggio che trasforma una preoccupazione ambientale generica in un rischio di salute pubblica misurabile: una probabilità significativa che cittadini anziani siano esposti a stress termico classificato "Very High", in luoghi prevedibili e a orari precisi. La **Figura 2** mostra la dashboard con cui si legge questo incrocio.[^3]
+
+![Schermata della dashboard di City Rhythm: mappa di Ascoli Piceno con una nuvola di punti di presenza sopra un layer colorato di rischio UHI, cursore temporale e pannello laterale con conteggi e interessi](images/fig02-dashboard.png "@wide La dashboard di City Rhythm su Ascoli Piceno. I punti bianchi sono i Presence Points a un dato istante (qui giovedì alle 14:00, cursore in basso); il colore sotto è il rischio UHI per cella (layer 'LCZ Vitality'). Il pannello a destra riporta la presenza media dell'area selezionata e la nuvola degli interessi prevalenti. I valori numerici sono di esempio dell'interfaccia.")
+
+## Dalla mappa alla decisione
+
+I risultati abilitano una risposta su due livelli. Tattico: durante un'ondata di calore, invece di un'allerta cittadina generica, si manda una squadra sanitaria a distribuire acqua in Piazza del Popolo in un giorno feriale alle 11. Strategico: il rischio ricorrente e quantificato in un luogo come Via del Trivio diventa la base di evidenza per giustificare percorsi ombreggiati, infrastruttura verde o pavimentazioni ad alta albedo che abbassino le temperature superficiali. In entrambi i casi si dà priorità per bisogno, non per occasione — che è il modo in cui le risorse per l'adattamento climatico si distribuiscono in modo più equo.
+
+## Cosa resta fuori
+
+Il limite principale è quello già detto: nessuna validazione sperimentale del modello di presenza. A questo si aggiunge che i profili demografici sono inferiti, quindi probabilistici, e che l'accesso ai dati di base — Blimp, affollamento di Google Maps via terzi — richiede accordi commerciali: il framework è modulare, open-source e trasferibile ad altre città, i dati che lo alimentano no. Il caso di studio è una sola città e un solo periodo. Non entrano ancora dati da sensori in tempo reale (qualità dell'aria, conteggi pedonali) né indicatori socio-economici oltre a età e genere, e la pianificazione per scenari — testare l'effetto di un intervento di progetto prima di costruirlo — resta lavoro futuro.
+
+## Cosa se ne ricava
+
+Il valore non è una nuova mappa del calore. È la giunzione: lo stesso tessuto LCZ 2 che si surriscalda è quello dove, nelle mattine feriali, si concentrano i residenti più anziani. Quando questo si può dire con un'ora e il nome di una strada, un punto acqua o un filare di alberi smette di essere una misura generica e diventa una decisione di allocazione.
+
+---
+
+**Riferimento bibliografico**
+G. E. Marchesani, R. Cocci Grifoni, D. Riera, M. Khodaparast, *City Rhythm: geo-temporal platform for integrated analysis of flows, microclimate and UHI risk*, IOP Conference Series: Earth and Environmental Science 1568 (2025) 012039. Presentato alla Sustainable Built Environment Conference SBE25 WestMED, Siviglia. <https://doi.org/10.1088/1755-1315/1568/1/012039>
+
+**Disponibilità di dati e codice**
+La piattaforma City Rhythm è pubblica su <https://cityrhythm.it> (consultata l'11 giugno 2025); release archiviata su Zenodo, <https://doi.org/10.5281/zenodo.15641271>. Lo strumento SpotMapper è archiviato su Zenodo, <https://doi.org/10.5281/zenodo.14547472>. City Rhythm è sviluppata con un impegno esplicito all'open-source (codice e metodi trasparenti e modificabili). I dati di footfall e di profilo provengono da Blimp (<https://blimp.ai/en/>) e l'affollamento relativo da Google Maps tramite un servizio terzo: entrambi ad accesso commerciale. Lavoro finanziato dal progetto PNRR MUR ECS_00000041-VITALITY.
+
+**Piccolo glossario**
+
+- *Urban heat island (UHI)*: il fenomeno per cui un'area urbana resta più calda del territorio circostante, per effetto della forma costruita, dei materiali e delle attività umane. Qui è espresso come un indice di rischio con categorie fino a "Very High".
+- *Local Climate Zone (LCZ)*: classificazione standard (Stewart e Oke, 2012) che divide il territorio in classi con proprietà termiche e aerodinamiche omogenee. La *LCZ 2* è l'edificato compatto di media altezza, il morfotipo più correlato al rischio UHI più alto.
+- *Geo-temporal*: riferito a un'analisi che tratta insieme la dimensione spaziale e quella temporale — non "dov'è" una cosa, ma "dov'è a quest'ora di questo giorno".
+- *POI (point of interest)*: un luogo puntuale a cui si possono associare dati di frequentazione (un bar, una piazza, una fermata). È l'unità geografica minima su cui la piattaforma aggrega footfall e affollamento.
+- *Footfall*: il flusso di persone che passa o sosta in un luogo, misurato come conteggi di presenza.
+- *Presence Points*: l'output del modello generativo di City Rhythm — punti individuali sintetici che ricostruiscono una distribuzione plausibile delle persone, mantenendo la granularità che una heatmap perde.
+
+[^1]: SpotMapper è il nostro strumento aperto per enumerare i POI di un'area (DOI <https://doi.org/10.5281/zenodo.14547472>). L'algoritmo di normalizzazione riscala le curve di affollamento di Google Maps, disponibili solo per un sottoinsieme di POI, all'intero insieme.
+
+[^2]: "Urban Analytics" di Blimp: profili per genere, fasce d'età e nazionalità e interessi, inferiti da un algoritmo proprietario a partire da un campione statistico di dati mobili anonimizzati. Usati come indicatori probabilistici di tendenze dominanti, mai come attributi individuali.
+
+[^3]: I valori di esempio nella dashboard di Figura 2 (presenza media 5891,7; intervallo orario mostrato) provengono dallo screenshot dell'interfaccia e illustrano lo strumento, non sono un risultato dell'analisi su Ascoli.

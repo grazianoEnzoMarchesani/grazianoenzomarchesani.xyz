@@ -1,6 +1,6 @@
 {
   "_nota": "La bibliografia. È un DATASET e non una collezione .md perché decine di voci sono decine di righe di metadati senza prosa: file col corpo vuoto sarebbero solo attrito. Stesso ragionamento di competenze.json. src/data/pubblicazioni.json è generato da references.bib (scripts/genera-pubblicazioni.mjs, DEC-75/76): non modificarlo a mano, si perderebbe al prossimo giro. Per correggere una voce, usa pubblicazioni.regole.json — «campi» per forzare un valore, «escludi»/«tipo» per le decisioni che il .bib da solo non può prendere. Gli autori sono normalizzati a «Cognome N. N.»: il nome di Graziano viene evidenziato a schermo cercando la stringa in `io`.",
-  "aggiornato": "2026-08-20",
+  "aggiornato": "2026-08-24",
   "io": "Marchesani G. E.",
   "profili": {
     "orcid": "https://orcid.org/0000-0002-4723-5099",
@@ -394,6 +394,13 @@
       "anno": 2026,
       "titolo": "ENVI-met simulation dataset — Via Milano, Pescara: urban microclimate assessment, current scenario and 2050 climate projection",
       "autori": "Marchesani G. E., Cocci Grifoni R."
+    },
+    {
+      "id": "3d-facade-geometry-grasshopper-scripts-grasshopper-scripts",
+      "anno": 2025,
+      "titolo": "3d-facade-geometry-grasshopper-scripts: Grasshopper scripts coupling outdoor and indoor simulation for complex façade geometry",
+      "autori": "Naboni E., Marchesani G. E.",
+      "doi": "10.5281/zenodo.17637739"
     },
     {
       "id": "envimet-agreenet",

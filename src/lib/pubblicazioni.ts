@@ -1,5 +1,7 @@
+import { getCollection } from "astro:content";
 import dati from "../data/pubblicazioni.json";
-import manuale from "../content/publications/pubblicazioni.manuale.json";
+import { perLingua } from "./contenuti";
+import { linguaDefault, type Lingua } from "../i18n/testi";
 
 export type TipoPubblicazione = "monografia" | "articolo" | "capitolo" | "atti";
 
@@ -72,7 +74,16 @@ export const dataset = dati.dataset as VoceDataset[];
 export const software = dati.software as VoceSoftware[];
 export const attivita = dati.attivita as VoceAttivita[];
 
-export const revisioni = manuale.revisioni as VoceRevisione[];
+/**
+ * Le revisioni vengono dalla collection `peer-review` (`.md` in
+ * `src/content/publications/peer-review/`), non dal `.bib`: non sono referenze
+ * bibliografiche mie. La lingua non conta per i loro campi (nomi propri),
+ * ma il loader la richiede comunque — si prende `linguaDefault`.
+ */
+export async function revisioni(lingua: Lingua = linguaDefault): Promise<VoceRevisione[]> {
+  const voci = perLingua(await getCollection("peer-review"), lingua);
+  return voci.map((voce) => ({ id: voce.chiave, ...voce.data }));
+}
 
 export function collegamento(voce: Pubblicazione): string | undefined {
   return voce.doi ? `https://doi.org/${voce.doi}` : undefined;
@@ -114,8 +125,8 @@ export function perAnno(): { anno: number; voci: Pubblicazione[] }[] {
 }
 
 /** Le revisioni raggruppate per anno: per la timeline. */
-export function revisioniPerAnno(): { anno: number; voci: VoceRevisione[] }[] {
-  return raggruppaPerAnno(revisioni);
+export async function revisioniPerAnno(lingua?: Lingua): Promise<{ anno: number; voci: VoceRevisione[] }[]> {
+  return raggruppaPerAnno(await revisioni(lingua));
 }
 
 /** Il software raggruppato per anno: per la timeline. */

@@ -41,6 +41,8 @@ export interface AreaChartProps {
   enterTransition?: Transition;
   /** Signature of motion URL state — triggers reveal replay when it changes. */
   revealSignature?: string;
+  /** Overrides month/day formatting of the x value in axis ticks and tooltip title. */
+  xLabelFormat?: (d: Date) => string;
   /** Aspect ratio as "width / height". Default: "2 / 1" */
   aspectRatio?: string;
   /** Additional class name for the container */
@@ -120,6 +122,7 @@ interface ChartInnerProps {
   animationEasing?: string;
   enterTransition?: Transition;
   revealSignature?: string;
+  xLabelFormat?: (d: Date) => string;
   chartStatus: ChartStatus;
   loadingLabel?: string;
   yDomainTweenDuration: number;
@@ -149,6 +152,7 @@ function ChartInner({
   xDomain,
   xDomainSlotCount,
   tweenYDomainOnXDomainChange,
+  xLabelFormat,
   children,
   containerRef,
   onPhaseChange,
@@ -173,6 +177,7 @@ function ChartInner({
       tweenYDomainOnXDomainChange={tweenYDomainOnXDomainChange}
       width={width}
       xDataKey={xDataKey}
+      xLabelFormat={xLabelFormat}
       xDomain={xDomain}
       xDomainSlotCount={xDomainSlotCount}
       yDomainTween={yDomainTween}
@@ -200,6 +205,7 @@ export function AreaChart({
   xDomain,
   xDomainSlotCount,
   tweenYDomainOnXDomainChange = false,
+  xLabelFormat,
   style,
   onPhaseChange,
   children,
@@ -248,6 +254,7 @@ export function AreaChart({
             tweenYDomainOnXDomainChange={tweenYDomainOnXDomainChange}
             width={width}
             xDataKey={xDataKey}
+            xLabelFormat={xLabelFormat}
             xDomain={xDomain}
             xDomainSlotCount={xDomainSlotCount}
             yDomainTween={yDomainTween}

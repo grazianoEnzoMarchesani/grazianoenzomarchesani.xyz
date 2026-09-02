@@ -81,6 +81,9 @@ export interface BarChartProps {
   barWidth?: number;
   /** Bar chart orientation. Default: "vertical" */
   orientation?: BarOrientation;
+  /** Force the top of the value scale (e.g. to share one scale across sibling
+   * charts). When unset the scale auto-fits to the data. */
+  yScaleDomainMax?: number;
   /** Whether to stack bars instead of grouping them. Default: false */
   stacked?: boolean;
   /** Gap between stacked bar segments in pixels. Default: 0 */
@@ -156,6 +159,7 @@ interface ChartInnerProps {
   barGap: number;
   barWidthProp?: number;
   orientation: BarOrientation;
+  yScaleDomainMax?: number;
   stacked: boolean;
   stackGap: number;
   squareSnap?: { squareGap: number; groupGap?: number; fit?: boolean };
@@ -186,6 +190,7 @@ const ChartCore = memo(function ChartCore({
   barGap,
   barWidthProp,
   orientation,
+  yScaleDomainMax,
   stacked,
   stackGap,
   squareSnap,
@@ -285,10 +290,10 @@ const ChartCore = memo(function ChartCore({
     const range = isHorizontal ? [0, innerWidth] : [innerHeight, 0];
     return scaleLinear({
       range,
-      domain: [0, maxValue * 1.1],
-      nice: true,
+      domain: [0, yScaleDomainMax ?? maxValue * 1.1],
+      nice: yScaleDomainMax == null,
     });
-  }, [innerWidth, innerHeight, maxValue, isHorizontal]);
+  }, [innerWidth, innerHeight, maxValue, isHorizontal, yScaleDomainMax]);
 
   const yScales = useMemo(() => {
     if (isHorizontal) {
@@ -299,6 +304,9 @@ const ChartCore = memo(function ChartCore({
       data,
       innerHeight,
       resolveDomain: (dataKeys) => {
+        if (yScaleDomainMax != null) {
+          return [0, yScaleDomainMax];
+        }
         let max = 0;
         for (const d of data) {
           for (const key of dataKeys) {
@@ -311,7 +319,7 @@ const ChartCore = memo(function ChartCore({
         return [0, (max || 100) * 1.1];
       },
     });
-  }, [data, innerHeight, isHorizontal, lines, valueScale]);
+  }, [data, innerHeight, isHorizontal, lines, valueScale, yScaleDomainMax]);
 
   const primaryYScale = getPrimaryYScale(yScales, valueScale);
 
@@ -682,6 +690,7 @@ export function BarChart({
   barGap = 0.2,
   barWidth,
   orientation = "vertical",
+  yScaleDomainMax,
   stacked = false,
   stackGap = 0,
   squareSnap,
@@ -712,6 +721,7 @@ export function BarChart({
             margin={margin}
             onPhaseChange={onPhaseChange}
             orientation={orientation}
+            yScaleDomainMax={yScaleDomainMax}
             revealSignature={revealSignature}
             squareSnap={squareSnap}
             stacked={stacked}

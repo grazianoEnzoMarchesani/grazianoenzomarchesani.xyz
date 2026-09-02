@@ -16,6 +16,7 @@ import {
   spezzaAutori,
   type TipoPubblicazione,
 } from '../lib/pubblicazioni';
+import { progettiRicerca } from '../lib/progetti-ricerca';
 import { type Lingua, linguaDefault, t } from '../i18n/testi';
 
 interface Props {
@@ -26,10 +27,11 @@ const { lingua = (Astro.currentLocale as Lingua) || linguaDefault } = Astro.prop
 const isIt = lingua === 'it';
 
 const gruppi = perAnno();
-const gruppiRevisioni = revisioniPerAnno();
+const gruppiRevisioni = await revisioniPerAnno(lingua);
 const gruppiSoftware = softwarePerAnno();
 const gruppiDataset = datasetPerAnno();
 const gruppiAttivita = attivitaPerAnno();
+const progetti = await progettiRicerca(lingua);
 
 const tipi = [
   { id: 'articolo', etichetta: isIt ? 'Articoli' : 'Articles', quantita: quante.articoli },
@@ -425,6 +427,132 @@ const titolo = t('publications.titolo', lingua);
           </div>
         ))}
       </section>
+
+      {/* ------------------------------ Funded Research Projects
+           Sesta sezione, aggiunta il 2026-08-22. Non viene dalla
+           bibliografia .bib come le altre: legge la collection
+           `research-projects`, che ha uno schema suo e nessun DOI.
+           Nessun pulsante Cite, di proposito — un grant non e' un
+           output citabile; qui conta il RUOLO, dichiarato per esteso,
+           e i PARTNER, che sono la prova di collaborazione.
+
+           WATERMARK DOPPIO, UN BLOCCO PER PROGETTO. Le altre sezioni
+           raggruppano per anno perche' una pubblicazione cade in un anno
+           solo; un progetto invece DURA, quindi il suo watermark e' la
+           coppia inizio/fine — stessa misura per entrambi (piu' piccola
+           del watermark singolo delle altre sezioni, visto che qui i
+           numeri sono due), il secondo sotto e leggermente a sinistra,
+           sovrapposto al primo. Ne segue che il
+           watermark appartiene al progetto e non a un gruppo d'anno: due
+           progetti iniziati lo stesso anno ma finiti in anni diversi
+           restano blocchi separati.
+
+           Entrambi i numeri filtrano il proprio anno, ma il blocco si
+           accende per QUALSIASI anno compreso nell'intervallo: `data-da`
+           e `data-a` (9999 = ancora aperto) sono letti da `sopravvive()`
+           nello script in fondo. */}
+      <section class="border-t border-ink/15 pt-16 pb-12" aria-label={isIt ? "Progetti di ricerca finanziati" : "Funded research projects"}>
+        <div class="mb-8" data-sezione-testa>
+          <h2 class="font-display text-3xl uppercase tracking-normal sm:text-4xl">
+            {isIt ? "Progetti di Ricerca" : "Research Projects"}
+          </h2>
+          <p class="mt-2 max-w-xl text-sm leading-relaxed text-ink/70 sm:text-base">
+            {isIt
+              ? "Progetti di ricerca finanziati a cui ho partecipato come membro dell'unità di ricerca, non come titolare del finanziamento."
+              : "Funded research projects I took part in as a member of the research unit, not as grant holder."}
+          </p>
+        </div>
+
+        {progetti.map((progetto) => (
+          <div
+            class="anno-prog relative grid grid-cols-1 border-t border-ink/15 pt-10 pb-16 first:border-t-0 first:pt-0"
+            data-anno={progetto.da}
+            data-da={progetto.da}
+            data-a={progetto.a}
+          >
+            {/* Sticky come il watermark singolo delle altre sezioni: i due
+                numeri accompagnano il blocco mentre scorre. */}
+            <div class="anno__intervallo col-start-1 row-start-1 sticky top-16 z-0 flex flex-col items-end self-start select-none">
+              <span
+                class="anno__watermark font-display leading-none text-ink/[0.045] tracking-tight cursor-pointer text-[clamp(6.5rem,21vw,14.5rem)]"
+                data-anno={progetto.da}
+                role="button"
+                tabindex="0"
+                aria-label={`Filter all work from ${progetto.da}`}
+              >
+                {progetto.da}
+              </span>
+
+              {!progetto.aperto && (
+                <span
+                  class="anno__watermark font-display leading-none text-ink/[0.045] tracking-tight cursor-pointer text-[clamp(6.5rem,21vw,14.5rem)] -mt-[0.38em] mr-[0.3em]"
+                  data-anno={progetto.a}
+                  role="button"
+                  tabindex="0"
+                  aria-label={`Filter all work from ${progetto.a}`}
+                >
+                  {progetto.a}
+                </span>
+              )}
+            </div>
+
+            <div class="relative z-10 col-start-1 row-start-1">
+              <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <h3 class="text-base font-medium text-ink sm:text-lg">
+                  {progetto.data.acronimo}
+                </h3>
+                <p class="font-mono text-[10px] tracking-widest text-ink/55 uppercase">
+                  {progetto.data.anni}
+                </p>
+                {progetto.data.attivo && (
+                  <span class="flex shrink-0 items-center gap-1.5">
+                    <span class="size-1.5 rounded-full bg-ink" aria-hidden="true" />
+                    <span class="font-mono text-[10px] tracking-widest text-ink/55 uppercase">
+                      {isIt ? "In corso" : "Ongoing"}
+                    </span>
+                  </span>
+                )}
+              </div>
+
+              <p class="mt-1 max-w-[65ch] text-sm leading-snug text-ink/75 sm:text-base">
+                {progetto.data.titolo}
+              </p>
+
+              <dl class="mt-3 max-w-[65ch] space-y-1.5 text-sm text-ink/65">
+                <div class="flex flex-wrap gap-x-2">
+                  <dt class="font-mono text-[10px] tracking-widest text-ink/45 uppercase sm:pt-[3px]">
+                    {isIt ? "Programma" : "Programme"}
+                  </dt>
+                  <dd>{progetto.data.programma}</dd>
+                </div>
+                <div class="flex flex-wrap gap-x-2">
+                  <dt class="font-mono text-[10px] tracking-widest text-ink/45 uppercase sm:pt-[3px]">
+                    {isIt ? "Ruolo" : "Role"}
+                  </dt>
+                  <dd>{progetto.data.ruolo}</dd>
+                </div>
+                <div class="flex flex-wrap gap-x-2">
+                  <dt class="font-mono text-[10px] tracking-widest text-ink/45 uppercase sm:pt-[3px]">
+                    {isIt ? "Partner" : "Partners"}
+                  </dt>
+                  <dd>{progetto.data.partner}</dd>
+                </div>
+              </dl>
+
+              {progetto.data.url && (
+                <a
+                  href={progetto.data.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  class="mt-3 inline-block font-mono text-[10px] tracking-widest text-ink/60 uppercase underline underline-offset-4 transition-colors hover:text-ink"
+                >
+                  {isIt ? "Sito del progetto" : "Project site"} ↗
+                </a>
+              )}
+            </div>
+          </div>
+        ))}
+      </section>
     </main>
 
     <Footer lingua={lingua} />
@@ -472,7 +600,8 @@ const titolo = t('publications.titolo', lingua);
   }
 
   .anno > .col-start-1.z-10,
-  .anno-rev > .col-start-1.z-10 {
+  .anno-rev > .col-start-1.z-10,
+  .anno-prog > .col-start-1.z-10 {
     pointer-events: none;
   }
   .anno > .col-start-1.z-10 a,
@@ -482,7 +611,11 @@ const titolo = t('publications.titolo', lingua);
   .anno > .col-start-1.z-10 :global(a),
   .anno > .col-start-1.z-10 :global(button),
   .anno-rev > .col-start-1.z-10 :global(a),
-  .anno-rev > .col-start-1.z-10 :global(button) {
+  .anno-rev > .col-start-1.z-10 :global(button),
+  .anno-prog > .col-start-1.z-10 a,
+  .anno-prog > .col-start-1.z-10 button,
+  .anno-prog > .col-start-1.z-10 :global(a),
+  .anno-prog > .col-start-1.z-10 :global(button) {
     pointer-events: auto;
   }
 
@@ -704,7 +837,7 @@ const titolo = t('publications.titolo', lingua);
   const DURATA_RIENTRO = 400;
   const CURVA = 'cubic-bezier(0.22, 1, 0.36, 1)';
   const SPOSTAMENTO_MASSIMO = 1.5;
-  const SELETTORE_MOBILE = '.anno, .anno-rev, [data-sezione-testa], .voce';
+  const SELETTORE_MOBILE = '.anno, .anno-rev, .anno-prog, [data-sezione-testa], .voce';
 
   let animazioni: Animation[] = [];
   let transizioneCorrente = 0;
@@ -742,15 +875,38 @@ const titolo = t('publications.titolo', lingua);
     return false;
   }
 
+  /**
+   * Un blocco sopravvive al filtro se e' proprio quell'anno. I progetti di
+   * ricerca sono l'unico contenuto della pagina che dura un INTERVALLO
+   * invece di cadere in un anno solo, e portano `data-da`/`data-a`
+   * (`9999` = ancora aperto): un progetto 2018–2021 risponde ai filtri
+   * 2018, 2019, 2020 e 2021, non solo ai due anni scritti nel watermark.
+   *
+   * Puro di proposito — non guarda lo stato corrente del DOM — perche' lo
+   * usano in momenti opposti sia `inUscita()`, che deve PREVEDERE cosa
+   * sparira' per animarlo, sia `applicaFiltroAnno()`, che lo esegue.
+   */
+  function sopravvive(blocco: HTMLElement, anno: string): boolean {
+    if (blocco.dataset.anno === anno) return true;
+    if (!blocco.dataset.da) return false;
+    const n = Number(anno);
+    return n >= Number(blocco.dataset.da) && n <= Number(blocco.dataset.a);
+  }
+
   function inUscita(anno: string | null): HTMLElement[] {
     if (anno === null) return (vociFuoriTipo?.() ?? []).filter(inPagina);
 
     const fuori: HTMLElement[] = [];
     document.querySelectorAll<HTMLElement>('main > section').forEach((sezione) => {
-      const blocchi = Array.from(sezione.querySelectorAll<HTMLElement>('.anno, .anno-rev'));
-      const superstiti = blocchi.filter((b) => b.dataset.anno === anno);
-      if (!superstiti.length) fuori.push(sezione);
-      else fuori.push(...blocchi.filter((b) => !superstiti.includes(b)));
+      const blocchi = Array.from(
+        sezione.querySelectorAll<HTMLElement>('.anno, .anno-rev, .anno-prog'),
+      );
+      const superstiti = blocchi.filter((b) => sopravvive(b, anno));
+      if (!superstiti.length) {
+        fuori.push(sezione);
+        return;
+      }
+      fuori.push(...blocchi.filter((b) => !superstiti.includes(b)));
     });
     return fuori.filter(inPagina);
   }
@@ -758,7 +914,7 @@ const titolo = t('publications.titolo', lingua);
   function ancoraScorrimento(chiave: string | null, prima: Map<HTMLElement, DOMRect>) {
     if (!chiave) return;
     const blocco = document.querySelector<HTMLElement>(
-      `.anno[data-anno="${chiave}"], .anno-rev[data-anno="${chiave}"]`,
+      `.anno[data-anno="${chiave}"], .anno-rev[data-anno="${chiave}"], .anno-prog[data-anno="${chiave}"]`,
     );
     const topPrima = blocco ? prima.get(blocco)?.top : undefined;
     if (!blocco || topPrima === undefined) return;
@@ -832,8 +988,8 @@ const titolo = t('publications.titolo', lingua);
       riapplicaFiltroTipo?.();
     }
 
-    document.querySelectorAll<HTMLElement>('.anno, .anno-rev').forEach((blocco) => {
-      blocco.classList.toggle('anno--filtro-nascosto', anno !== null && blocco.dataset.anno !== anno);
+    document.querySelectorAll<HTMLElement>('.anno, .anno-rev, .anno-prog').forEach((blocco) => {
+      blocco.classList.toggle('anno--filtro-nascosto', anno !== null && !sopravvive(blocco, anno));
     });
 
     document.querySelectorAll<HTMLElement>('.anno__watermark').forEach((marca) => {
@@ -841,7 +997,11 @@ const titolo = t('publications.titolo', lingua);
     });
 
     document.querySelectorAll<HTMLElement>('main > section').forEach((sezione) => {
-      sezione.hidden = anno !== null && !sezione.querySelector('.anno:not(.anno--filtro-nascosto), .anno-rev:not(.anno--filtro-nascosto)');
+      sezione.hidden =
+        anno !== null &&
+        !sezione.querySelector(
+          '.anno:not(.anno--filtro-nascosto), .anno-rev:not(.anno--filtro-nascosto), .anno-prog:not(.anno--filtro-nascosto)',
+        );
     });
   }
 

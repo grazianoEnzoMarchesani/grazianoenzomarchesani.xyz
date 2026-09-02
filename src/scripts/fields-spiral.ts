@@ -331,10 +331,16 @@ export function initFieldsSpiral(options: {
    *  titolo, così chi disegna i satelliti dei tag può girargli attorno
    *  senza mai sovrapporsi. */
   onFocusMarker?: (fuoco: FieldFocus | null) => void;
+  /** Posizione continua del punto focale lungo la timeline, in "giri"
+   *  (parte intera = indice dell'anno in `timeline`, parte decimale =
+   *  avanzamento dentro quell'anno). `null` durante intro/transizioni.
+   *  Serve al watermark d'anno per far scorrere l'anno nuovo dal basso
+   *  scalzando il vecchio, legato allo scroll, come nelle Pubblicazioni. */
+  onYear?: (turnoFocale: number | null) => void;
   /** Click/tap su un marker o sul suo titolo: avvia la transizione di apertura. */
   onOpenMarker: (marker: FieldMarker, playZoom: () => Promise<void>) => void;
 }): FieldsSpiralHandle {
-  const { canvas, pinSection, labelsContainer, timeline, onHoverMarker, onFocusMarker, onOpenMarker } =
+  const { canvas, pinSection, labelsContainer, timeline, onHoverMarker, onFocusMarker, onYear, onOpenMarker } =
     options;
   nearFadeUniformsList.length = 0;
   symbolOpacityUniform.value = 1.0;
@@ -1383,10 +1389,27 @@ export function initFieldsSpiral(options: {
 
   let frame = 0;
   let currentUnfoldFactor = -1;
+  let emittedTurn: number | null = null;
+  function emitYear(u: number) {
+    if (!onYear || turns === 0) return;
+    // Durante l'intro l'anno è già visibile e compare in dissolvenza
+    // insieme all'animazione d'ingresso: si emette il giro d'atterraggio
+    // (`initialProgress`, 0 quando parte l'intro) invece di `null`, così
+    // il watermark non spunta di colpo al primo scroll.
+    const tf =
+      isOpening || isTransitioning
+        ? null
+        : THREE.MathUtils.clamp(focusTurn(isIntroPlaying ? initialProgress : u), 0, turns - 0.0001);
+    if (tf === emittedTurn) return;
+    if (tf != null && emittedTurn != null && Math.abs(tf - emittedTurn) < 0.002) return;
+    emittedTurn = tf;
+    onYear(tf);
+  }
   const groupQuatInverse = new THREE.Quaternion();
   function animate() {
     const currentProgress = scrollState.u;
     const currentTurnFocus = focusTurn(currentProgress);
+    emitYear(currentProgress);
     const isRope = shapeMode === 'rope';
     const nearStart = isRope ? 1.0 : NEAR_FADE_START;
     const nearClose = isRope ? 0.3 : NEAR_FADE_CLOSE;

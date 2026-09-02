@@ -39,6 +39,11 @@ const categoryLabels: Record<string, string> = {
 		<main data-lingua={lingua}>
 			<section id="fields-pin" class="relative h-dvh w-full overflow-hidden" aria-hidden="true">
 				<canvas id="fields-canvas" class="absolute inset-0 h-full w-full"></canvas>
+				<div
+					id="fields-anno-watermark"
+					class="pointer-events-none absolute left-2 top-20 z-0 block h-[1em] w-[3.5em] select-none overflow-hidden font-display leading-none tracking-tight text-ink/[0.06] text-[clamp(6rem,18vw,16rem)] opacity-0 sm:left-6"
+					aria-hidden="true"
+				></div>
 				<div id="fields-labels" class="pointer-events-none absolute inset-0 h-full w-full overflow-hidden" aria-hidden="true"></div>
 			</section>
 
@@ -150,6 +155,7 @@ const categoryLabels: Record<string, string> = {
 		const barra = document.getElementById('fields-tag-bar');
 		const pulsante = document.getElementById('fields-tag-toggle');
 		const conteggio = document.getElementById('fields-tag-conteggio');
+		const annoWatermark = document.getElementById('fields-anno-watermark');
 		const testi = document.getElementById('fields-tag-testi');
 
 		const hrefVoce = (id: string) => (lingua === 'it' ? `/it/fields/${id}` : `/fields/${id}`);
@@ -176,6 +182,55 @@ const categoryLabels: Record<string, string> = {
 				labelsContainer: labelsContainer ?? undefined,
 				timeline,
 				onFocusMarker: (fuoco) => filtro?.aggiornaFuoco(fuoco),
+				onYear: (tf) => {
+					if (!annoWatermark) return;
+					if (tf == null) {
+						delete annoWatermark.dataset.visibile;
+						gsap.to(annoWatermark, { opacity: 0, duration: 0.4, ease: 'power2.out' });
+						return;
+					}
+
+					const i = Math.min(timeline.length - 1, Math.floor(tf));
+					const frac = tf - i;
+					// L'anno resta fermo per quasi tutto il giro; solo nell'ultimo
+					// tratto il giro seguente lo scalza, 1:1 con lo scroll — come
+					// il watermark sticky delle Pubblicazioni.
+					const SOGLIA = 0.8;
+					const spinta = frac <= SOGLIA ? 0 : (frac - SOGLIA) / (1 - SOGLIA);
+
+					let corrente = annoWatermark.children[0] as HTMLElement | undefined;
+					let successivo = annoWatermark.children[1] as HTMLElement | undefined;
+					if (!corrente) {
+						corrente = document.createElement('span');
+						corrente.className = 'absolute inset-x-0 top-0 block whitespace-nowrap will-change-transform';
+						annoWatermark.appendChild(corrente);
+					}
+					if (!successivo) {
+						successivo = document.createElement('span');
+						successivo.className = 'absolute inset-x-0 top-0 block whitespace-nowrap will-change-transform';
+						annoWatermark.appendChild(successivo);
+					}
+
+					corrente.textContent = String(timeline[i].year);
+					corrente.style.transform = `translateY(${(-spinta * 100).toFixed(2)}%)`;
+
+					const annoVecchio = timeline[i + 1]?.year;
+					if (annoVecchio != null) {
+						successivo.textContent = String(annoVecchio);
+						successivo.style.transform = `translateY(${(100 - spinta * 100).toFixed(2)}%)`;
+						successivo.style.display = '';
+					} else {
+						successivo.style.display = 'none';
+					}
+
+					// Prima comparsa: dissolvenza lenta, in coppia con l'intro
+					// (spirale che si avvita / flythrough della corda). Gli
+					// aggiornamenti successivi non ritoccano l'opacità.
+					if (!annoWatermark.dataset.visibile) {
+						annoWatermark.dataset.visibile = '1';
+						gsap.to(annoWatermark, { opacity: 1, duration: 1.2, ease: 'power2.out' });
+					}
+				},
 				onOpenMarker: async (marker, playZoom) => {
 					sessionStorage.setItem('fields-target-marker', marker.id);
 					const overlay = document.getElementById('field-transition-overlay');

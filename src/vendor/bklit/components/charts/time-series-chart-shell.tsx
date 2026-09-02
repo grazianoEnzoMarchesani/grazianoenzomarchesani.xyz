@@ -68,6 +68,7 @@ import {
   DEFAULT_Y_AXIS_ID,
   getPrimaryYScale,
   groupLinesByYAxisId,
+  normalizeYAxisId,
 } from "./y-axis-scales";
 import { computeYDomainsByAxis } from "./y-domain-utils";
 
@@ -102,13 +103,23 @@ function collectNumericExtents(
 function resolveTimeSeriesYDomain(
   data: Record<string, unknown>[],
   dataKeys: string[],
-  yScaleDomainMax: number | undefined
+  yScaleDomainMax: number | undefined,
+  yScaleDomainMin?: number | undefined
 ): [number, number] {
-  if (yScaleDomainMax != null && yScaleDomainMax > 0) {
-    return [0, yScaleDomainMax * 1.1];
+  const { minValue, maxValue } = collectNumericExtents(data, dataKeys);
+
+  // Estremi espliciti: chi li passa vuole controllare la linea di base (es. dati
+  // di temperatura che non hanno senso da 0). Il lato non specificato resta il
+  // default sensato.
+  if (yScaleDomainMin != null || (yScaleDomainMax != null && yScaleDomainMax > 0)) {
+    const lo = yScaleDomainMin ?? Math.min(0, minValue);
+    const hi =
+      yScaleDomainMax != null && yScaleDomainMax > 0
+        ? yScaleDomainMax * 1.1
+        : maxValue * 1.05;
+    return [lo, hi];
   }
 
-  const { minValue, maxValue } = collectNumericExtents(data, dataKeys);
 
   if (minValue >= 0) {
     const top = maxValue <= 0 ? 100 : maxValue * 1.1;
@@ -153,6 +164,12 @@ export interface TimeSeriesChartInnerProps {
   composedStackGap?: number;
   /** When set, drives the y-axis max instead of scanning `lines` (e.g. stacked bar totals). */
   yScaleDomainMax?: number;
+  /** When set, pins the y-axis min instead of forcing a zero baseline. */
+  yScaleDomainMin?: number;
+  /** Pins the max of the secondary (right) y-axis when a `yAxisId="right"` group exists. */
+  yScaleDomainMaxRight?: number;
+  /** Pins the min of the secondary (right) y-axis. */
+  yScaleDomainMinRight?: number;
   /** Loading vs ready — drives chart phase until transition orchestration lands. */
   chartStatus?: ChartStatus;
   loadingLabel?: string;
@@ -165,6 +182,8 @@ export interface TimeSeriesChartInnerProps {
   xDomainSlotCount?: number;
   /** Tween y-domain when the visible x-range changes during the ready phase. */
   tweenYDomainOnXDomainChange?: boolean;
+  /** Overrides month/day formatting of the x value in axis ticks and tooltip title. */
+  xLabelFormat?: (d: Date) => string;
   onPhaseChange?: (phase: ChartPhase) => void;
 }
 
@@ -198,6 +217,9 @@ const TimeSeriesChartCore = memo(function TimeSeriesChartCore({
   composedStackOffsets,
   composedStackGap,
   yScaleDomainMax,
+  yScaleDomainMin,
+  yScaleDomainMaxRight,
+  yScaleDomainMinRight,
   chartStatus = DEFAULT_CHART_STATUS,
   loadingLabel,
   yDomainTween = true,
@@ -205,6 +227,7 @@ const TimeSeriesChartCore = memo(function TimeSeriesChartCore({
   xDomain,
   xDomainSlotCount,
   tweenYDomainOnXDomainChange = false,
+  xLabelFormat,
   onPhaseChange,
 }: TimeSeriesChartInnerProps) {
   const staticPreview = useStaticChartPreview();
@@ -214,15 +237,42 @@ const TimeSeriesChartCore = memo(function TimeSeriesChartCore({
   const resolveYDomain = useCallback(
     (sourceData: Record<string, unknown>[], dataKeys: string[]) => {
       const axisGroups = groupLinesByYAxisId(lines);
-      const usesDefaultOnly =
-        axisGroups.size === 1 && axisGroups.has(DEFAULT_Y_AXIS_ID);
-      const domainMax =
-        usesDefaultOnly && yScaleDomainMax != null
+      const hasSecondaryAxis = axisGroups.size > 1;
+      // Quale asse stiamo risolvendo? Lo deduciamo dai dataKeys del gruppo.
+      const isDefaultAxis = dataKeys.some(
+        (key) =>
+          normalizeYAxisId(
+            lines.find((line) => line.dataKey === key)?.yAxisId
+          ) === DEFAULT_Y_AXIS_ID
+      );
+      const pinMax = hasSecondaryAxis
+        ? isDefaultAxis
+          ? yScaleDomainMax
+          : yScaleDomainMaxRight
+        : axisGroups.size === 1 && axisGroups.has(DEFAULT_Y_AXIS_ID)
           ? yScaleDomainMax
           : undefined;
-      return resolveTimeSeriesYDomain(sourceData, dataKeys, domainMax);
+      const pinMin = hasSecondaryAxis
+        ? isDefaultAxis
+          ? yScaleDomainMin
+          : yScaleDomainMinRight
+        : axisGroups.size === 1 && axisGroups.has(DEFAULT_Y_AXIS_ID)
+          ? yScaleDomainMin
+          : undefined;
+      return resolveTimeSeriesYDomain(
+        sourceData,
+        dataKeys,
+        pinMax ?? undefined,
+        pinMin ?? undefined
+      );
     },
-    [lines, yScaleDomainMax]
+    [
+      lines,
+      yScaleDomainMax,
+      yScaleDomainMin,
+      yScaleDomainMaxRight,
+      yScaleDomainMinRight,
+    ]
   );
 
   const skeletonData = useMemo(() => {
@@ -399,8 +449,13 @@ const TimeSeriesChartCore = memo(function TimeSeriesChartCore({
   );
 
   const dateLabels = useMemo(
-    () => visiblePlotData.map((d) => shortDateFmt.format(xAccessor(d))),
-    [visiblePlotData, xAccessor]
+    () =>
+      visiblePlotData.map((d) =>
+        xLabelFormat
+          ? xLabelFormat(xAccessor(d))
+          : shortDateFmt.format(xAccessor(d))
+      ),
+    [visiblePlotData, xAccessor, xLabelFormat]
   );
 
   const canInteract = isLoaded && isChartInteractionPhase(chartPhase);
@@ -538,6 +593,7 @@ const TimeSeriesChartCore = memo(function TimeSeriesChartCore({
       notifyLoadingPulseComplete,
       xAccessor,
       dateLabels,
+      xLabelFormat,
       xDomain,
       xDomainSlotCount,
       selection,
@@ -581,6 +637,7 @@ const TimeSeriesChartCore = memo(function TimeSeriesChartCore({
       notifyLoadingPulseComplete,
       xAccessor,
       dateLabels,
+      xLabelFormat,
       xDomain,
       xDomainSlotCount,
       selection,
