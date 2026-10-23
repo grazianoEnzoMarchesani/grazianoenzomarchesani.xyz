@@ -1,18 +1,170 @@
 ---
 nome: "EnviReader"
-sommario: "Opens ENVI-met EDX/EDT output in a browser and turns it into charts you can actually read."
+sommario: "Reads, explores and compares ENVI-met results in the browser: maps, sections, 3D model, time series, A/B difference." $$$ "Legge, esplora e confronta i risultati di ENVI-met nel browser: mappe, sezioni, modello 3D, serie temporali, differenza A/B."
 data: 2024-01-01
 linguaggio: "JavaScript"
-ambiente: ["Web", "ENVI-met", "ECharts"]
+ambiente: ["Web", "ENVI-met", "React", "Three.js", "MapLibre"]
 repo: "https://github.com/grazianoEnzoMarchesani/EnviReader"
-doi: "https://doi.org/10.5281/zenodo.14500979"
-sito: "https://envireader.altervista.org"
+doi: "https://doi.org/10.5281/zenodo.23327539"
+sito: "https://grazianoenzomarchesani.github.io/EnviReader/"
+licenza: "GPL-3.0-or-later"
 ---
 
-ENVI-met writes its results in a binary pair — EDX for the header, EDT
-for the grid — that only its own post-processor reads comfortably. After
-a few hundred simulations that becomes the bottleneck of the whole
-workflow.
+An ENVI-met simulation leaves a folder of binary files, one per output
+time, and looking at them takes software that not everyone who needs the
+results has installed. EnviReader opens that folder in a web page. The
+person who ran the simulation, a colleague reviewing it, a student or a
+designer comparing two scenarios all look at the same data.
 
-EnviReader parses both in the browser, with no install and no upload, and
-produces sections, time series and comparisons between scenarios.
+Nothing is installed and nothing is uploaded: the files are read inside
+the page. It reads the EDX/EDT pairs, the INX model, the SIMX settings and
+the FOX forcing file. It does not compute anything: UTCI and the other
+quantities are the ones ENVI-met wrote.
+
+[EnviReader 2.0.1, trailer](https://youtu.be/b97523Jp3b0 "EnviReader 2.0.1: the trailer, 64 seconds.")
+
+![The 3D view with the mean radiant temperature drawn as plan and sections inside the Piazza del Popolo model](./envireader-3d-overlay.jpg "@wide The 3D view: mean radiant temperature as plan and sections inside the model.")
+
+## What version 2 does
+
+Version 2 is a rewrite, and the current release is 2.0.1. It has four
+views: 2D Data Analysis, 3D Data Analysis (beta), WebGIS (alpha) and
+Boundary conditions. The first three share one sidebar and one state:
+time, level, sections, dataset, palette and wind settings stay as they are
+when you switch view.
+
+![The 2D view: UTCI plan at 14:00, the two sections as thumbnails, the time series below](./envireader-2d-utci.jpg "The 2D view: UTCI plan, the two sections as thumbnails, and the time series at the crosshair.")
+
+- **Maps and sections.** Plan and the two vertical sections, with a
+  crosshair shared between them and a tooltip on every cell. The sections
+  can be rotated to any angle.
+- **Follow terrain.** The plan level counts from the ground instead of
+  from a fixed height, with two leveling modes, *Standard* and *Cascade*.
+- **Biomet section fix.** In biomet outputs (PMV, PET, SET, UTCI) ENVI-met
+  stores each column against the bottom of the domain. EnviReader puts the
+  values back above buildings and terrain, in 2D, in 3D and in the time
+  series.
+- **Time.** A player with 1×, 5× and 10× speed, and a time series at the
+  crosshair. Saved cursors add one curve each, so several points of the
+  same model can be compared over time.
+- **A vs B.** A second simulation next to the first, with a cell-by-cell
+  difference map on a scale symmetric around zero.
+- **3D view.** The dataset as plan and sections inside the model, sun and
+  shadows for the date and time of each step, wind on the slices or as a 3D
+  volume, receptor charts, and A vs B with linked cameras.
+- **WebGIS.** The model placed on a map at its real position, with a
+  calibration for offset and rotation. The basemap loads only after your
+  consent.
+- **Boundary conditions.** The SIMX settings in plain text, and the Simple
+  or Full Forcing series as charts, one for each quantity in the FOX file.
+- **Colours and presets.** Scientific palettes, the 62 palettes of version
+  1, your own palettes and presets, shareable as a file or a text code.
+- **Export.** PNG, hybrid SVG that opens in Illustrator or Inkscape,
+  animated GIF, CSV and Excel. Export always starts from the 2D view: the
+  3D and WebGIS views are not exported.
+
+![Two Pescara scenarios side by side with their difference map](./envireader-ab-diff.jpg "A vs B vs Diff: two scenarios and their cell-by-cell difference, on a scale symmetric around zero.")
+
+![Wind arrows drawn on the 3D slices of the model](./envireader-wind-3d.jpg "Wind on the slices of the 3D model.")
+
+![The sun diagram around the model at 18:00](./envireader-sun.jpg "Sun simulation: the diagram follows the date and time of each step.")
+
+![Boundary conditions view with the simulation settings and the forcing charts](./envireader-boundary.jpg "Boundary conditions: SIMX settings and the Full Forcing series from the FOX file.")
+
+The interface is available in English, Italian, Spanish, French and
+German, with a light and a dark theme.
+
+## Try it
+
+The live app runs in Chrome, Edge, Firefox and Safari. Click *+ Open
+fileset A* and choose the output folder of a simulation. Open a second
+one as fileset B to compare the two. The source code, the releases and a
+short clip for each feature are [on GitHub](https://github.com/grazianoEnzoMarchesani/EnviReader).
+
+EnviReader is open source and is developed at the School of Architecture
+and Design Eduardo Vittoria, University of Camerino, by Graziano Enzo
+Marchesani, Roberta Cocci Grifoni and Mohammadjavad Khodaparast. If you
+use it in your work, please cite the DOI above.
+
+$$$
+
+Una simulazione ENVI-met lascia una cartella di file binari, uno per ogni
+istante di output, e per guardarli serve un software che non tutti, in un
+progetto, hanno installato. EnviReader apre quella cartella in una pagina
+web. Chi ha lanciato la simulazione, il collega che la rivede, lo
+studente o il progettista che confronta due scenari vedono gli stessi
+dati.
+
+Non si installa niente e non si carica niente: i file vengono letti dentro
+la pagina. Legge le coppie EDX/EDT, il modello INX, le impostazioni SIMX e
+il file di forzante FOX. Non calcola nulla: UTCI e le altre grandezze sono
+quelle scritte da ENVI-met.
+
+[EnviReader 2.0.1, trailer](https://youtu.be/b97523Jp3b0 "EnviReader 2.0.1: il trailer, 64 secondi.")
+
+![La vista 3D con la temperatura radiante come pianta e sezioni dentro il modello di Piazza del Popolo](./envireader-3d-overlay.jpg "@wide La vista 3D: temperatura radiante come pianta e sezioni dentro il modello.")
+
+## Cosa fa la versione 2
+
+La versione 2 è riscritta da zero, e quella attuale è la 2.0.1. Ha quattro
+viste: 2D Data Analysis, 3D Data Analysis (beta), WebGIS (alpha) e
+Boundary conditions. Le prime tre condividono la stessa sidebar e lo
+stesso stato: istante, livello, sezioni, dataset, palette e impostazioni
+del vento restano uguali quando si cambia vista.
+
+![La vista 2D: pianta dell'UTCI alle 14:00, le due sezioni in miniatura, la serie temporale sotto](./envireader-2d-utci.jpg "La vista 2D: pianta dell'UTCI, le due sezioni in miniatura e la serie temporale nel punto del mirino.")
+
+- **Mappe e sezioni.** Pianta e due sezioni verticali, con un mirino
+  condiviso e un tooltip su ogni cella. Le sezioni si possono ruotare a
+  qualsiasi angolo.
+- **Segui il terreno.** Il livello della pianta si conta dal suolo e non
+  da una quota fissa, con due modalità di livellamento, *Standard* e
+  *Cascade*.
+- **Correzione delle sezioni biomet.** Nei risultati biomet (PMV, PET,
+  SET, UTCI) ENVI-met salva ogni colonna rispetto al fondo del dominio.
+  EnviReader rimette i valori sopra edifici e terreno, in 2D, in 3D e
+  nella serie temporale.
+- **Il tempo.** Un lettore con velocità 1×, 5× e 10×, e la serie
+  temporale nel punto del mirino. Ogni cursore salvato aggiunge una curva,
+  così si confrontano nel tempo più punti dello stesso modello.
+- **A vs B.** Una seconda simulazione accanto alla prima, con la mappa
+  della differenza cella per cella su una scala simmetrica attorno allo
+  zero.
+- **Vista 3D.** Il dataset come pianta e sezioni dentro il modello, sole e
+  ombre per data e ora di ogni istante, vento sulle fette o come volume
+  3D, grafici dei ricettori e A vs B con camere collegate.
+- **WebGIS.** Il modello posizionato su una mappa nella sua posizione
+  reale, con una calibrazione di spostamento e rotazione. La mappa di
+  sfondo si carica solo dopo il tuo consenso.
+- **Condizioni al contorno.** Le impostazioni del SIMX in chiaro, e le
+  serie di Simple o Full Forcing come grafici, uno per ogni grandezza del
+  file FOX.
+- **Colori e preset.** Palette scientifiche, le 62 palette della versione
+  1, palette e preset personali, condivisibili come file o come codice di
+  testo.
+- **Esportazione.** PNG, SVG ibrido che si apre in Illustrator o Inkscape,
+  GIF animata, CSV ed Excel. L'esportazione parte sempre dalla vista 2D:
+  3D e WebGIS non si esportano.
+
+![Due scenari di Pescara affiancati con la mappa della differenza](./envireader-ab-diff.jpg "A vs B vs Diff: due scenari e la loro differenza cella per cella, su una scala simmetrica attorno allo zero.")
+
+![Frecce del vento sulle fette del modello 3D](./envireader-wind-3d.jpg "Il vento sulle fette del modello 3D.")
+
+![Il diagramma solare attorno al modello alle 18:00](./envireader-sun.jpg "Simulazione solare: il diagramma segue data e ora di ogni istante.")
+
+![Vista Boundary conditions con le impostazioni della simulazione e i grafici del forcing](./envireader-boundary.jpg "Boundary conditions: impostazioni del SIMX e serie del Full Forcing dal file FOX.")
+
+L'interfaccia è in inglese, italiano, spagnolo, francese e tedesco, con
+tema chiaro e scuro.
+
+## Provarlo
+
+L'app online funziona in Chrome, Edge, Firefox e Safari. Si clicca *+ Open
+fileset A* e si sceglie la cartella dei risultati di una simulazione. Se ne
+apre una seconda come fileset B per confrontarle. Il codice, le release e
+una breve clip per ogni funzione sono [su GitHub](https://github.com/grazianoEnzoMarchesani/EnviReader).
+
+EnviReader è open source ed è sviluppato presso la Scuola di Architettura
+e Design Eduardo Vittoria, Università di Camerino, da Graziano Enzo
+Marchesani, Roberta Cocci Grifoni e Mohammadjavad Khodaparast. Se lo usi
+nel tuo lavoro, cita il DOI qui sopra.
