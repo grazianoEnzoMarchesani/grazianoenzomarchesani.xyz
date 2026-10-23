@@ -1,0 +1,65 @@
+---
+nome: "Meriggio"
+sommario: "A navigator that routes along the shadiest path, computing shade from real terrain, buildings and trees." $$$ "Un navigatore che instrada lungo il percorso più in ombra, calcolando le ombre da terreno, edifici e alberi reali."
+data: 2026-01-01
+linguaggio: "TypeScript"
+ambiente: ["Web", "Python", "Thermal comfort", "Routing"]
+repo: "https://github.com/grazianoEnzoMarchesani/meriggio"
+doi: "https://doi.org/10.5281/zenodo.23325436"
+sito: "https://grazianoenzomarchesani.github.io/meriggio/"
+licenza: "GPL-3.0"
+---
+
+Anyone walking in an Italian city in summer does not take the shortest
+street: they take the shaded side. Meriggio does the same, at the scale of
+the city and a few minutes ahead. It looks for the coolest route, not the
+fastest, and the shade is not estimated: it is computed from the geometry of
+the terrain, the buildings and the trees.
+
+The problem is not a classic shortest path. A lane in shade at nine is an
+oven at three, and during a half-hour walk the sun moves by about ten
+degrees. The route is therefore searched on a graph whose cost changes over
+time, with the clock advancing as the search goes.
+
+It is a static page and the computation happens in the browser, so there is
+no server to keep running. The data come from public sources: terrain from
+TINITALY, buildings with height from the TUM Global Building Atlas, canopy
+height from ETH, tree cover density from Copernicus and the street network
+from OpenStreetMap. The browser engine is a function-by-function port of the
+Python one, and the tests compare the two on the same cases. A route is
+always compared with the fastest one.
+
+Slope and surface weigh mostly as a cost, and the result does not replace a
+check on site.
+
+Meriggio is open source. Version 1 covers Ascoli Piceno and other areas can
+be prepared with the Python tools in the repository. If you use it in your
+work, please cite the DOI above.
+
+$$$
+
+Chi cammina d'estate in una città italiana non sceglie la via più corta:
+sceglie il lato della strada con l'ombra. Meriggio fa lo stesso, su scala
+urbana e con qualche minuto di anticipo. Cerca il percorso più fresco, non
+il più veloce, e le ombre non sono stimate: sono calcolate dalla geometria
+del terreno, degli edifici e degli alberi.
+
+Il problema non è un cammino minimo classico. Un vicolo in ombra alle nove è
+una fornace alle quindici, e in mezz'ora di cammino il sole si sposta di una
+decina di gradi. Il percorso va quindi cercato su un grafo il cui costo
+cambia nel tempo, con l'orologio che avanza man mano che si esplora.
+
+È una pagina statica e il calcolo avviene nel browser, quindi non c'è nessun
+server da tenere acceso. I dati vengono da fonti pubbliche: terreno da
+TINITALY, edifici con altezza dal TUM Global Building Atlas, altezza delle
+chiome da ETH, densità di copertura arborea da Copernicus e rete stradale da
+OpenStreetMap. Il motore del browser è il porting, funzione per funzione, di
+quello Python, e i test confrontano i due sugli stessi casi. Un percorso è
+sempre confrontato con quello più rapido.
+
+Pendenza e pavimentazione pesano soprattutto come costo, e il risultato non
+sostituisce una verifica sul posto.
+
+Meriggio è open source. La versione 1 copre Ascoli Piceno e altre aree si
+preparano con gli strumenti Python del repository. Se lo usi nel tuo lavoro,
+cita il DOI qui sopra.

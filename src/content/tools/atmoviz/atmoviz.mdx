@@ -1,0 +1,64 @@
+---
+nome: "AtmoViz"
+sommario: "Replays geolocated environmental measurements on a map and judges every reading against thresholds for who is breathing the air." $$$ "Riproduce su mappa misure ambientali geolocalizzate e valuta ogni lettura in base a chi respira quell'aria."
+data: 2026-01-01
+linguaggio: "TypeScript"
+ambiente: ["Web", "React", "MapLibre", "FLIR", "Air quality"]
+repo: "https://github.com/grazianoEnzoMarchesani/AtmoViz"
+doi: "https://doi.org/10.5281/zenodo.23326027"
+sito: "https://grazianoenzomarchesani.github.io/AtmoViz/"
+licenza: "GPL-3.0"
+---
+
+A sensor carried on a walk records temperature, humidity, pressure, VOC and
+particulate matter every few seconds. What comes back is a spreadsheet, and
+a spreadsheet does not say where the air was bad or for whom. AtmoViz loads
+the route, draws it on a map and lets you replay it.
+
+- **Route playback.** The measurements appear as a path, as points or as a
+  heatmap, coloured by the metric you choose. A timeline lets you scrub the
+  route or play it back from 1× to 50×.
+- **Risk profiles.** Each reading is classified for a standard adult, an
+  asthmatic person, a child or an athlete. Colours and labels follow the
+  profile, and a guide lists the ranges with practical advice.
+- **Thermal photos.** Geotagged photos, FLIR thermal images included, are
+  placed on the map as a layer you can switch off.
+- **PDF report.** Map snapshot, one trend chart per metric and a
+  min / mean / max table.
+
+Everything runs in the browser: the files and the photos are not uploaded.
+The base map loads only after you accept it, and declining leaves a blank
+background with everything else working.
+
+AtmoViz is open source and is developed at the University of Camerino by
+Graziano Enzo Marchesani, Roberta Cocci Grifoni and Dajla Riera. If you use
+it in your work, please cite the DOI above.
+
+$$$
+
+Un sensore portato a spasso registra temperatura, umidità, pressione, VOC e
+particolato a intervalli di pochi secondi. Quello che ne esce è un foglio di
+calcolo, e un foglio di calcolo non dice dove l'aria era cattiva né per chi.
+AtmoViz carica il percorso, lo disegna su una mappa e permette di
+riprodurlo.
+
+- **Riproduzione del percorso.** Le misure compaiono come traccia, come
+  punti o come mappa di calore, colorate secondo la grandezza scelta. La
+  linea del tempo permette di scorrere il percorso o di riprodurlo da 1× a
+  50×.
+- **Profili di rischio.** Ogni lettura viene classificata per un adulto
+  standard, una persona asmatica, un bambino o un atleta. Colori ed
+  etichette seguono il profilo, e una guida riporta gli intervalli con
+  consigli pratici.
+- **Foto termiche.** Le foto geolocalizzate, comprese quelle termiche FLIR,
+  si posizionano sulla mappa come livello che si può spegnere.
+- **Report PDF.** Istantanea della mappa, un grafico di andamento per ogni
+  grandezza e una tabella con minimo, media e massimo.
+
+Tutto gira nel browser: i file e le foto non vengono caricati da nessuna
+parte. La mappa di sfondo si carica solo dopo il consenso, e se lo si nega
+lo sfondo resta vuoto e il resto funziona.
+
+AtmoViz è open source ed è sviluppato all'Università di Camerino da Graziano
+Enzo Marchesani, Roberta Cocci Grifoni e Dajla Riera. Se lo usi nel tuo
+lavoro, cita il DOI qui sopra.

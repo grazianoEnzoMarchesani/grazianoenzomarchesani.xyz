@@ -439,11 +439,24 @@ const sezioni = getSezioni(lingua);
 		ScrollTrigger.refresh();
 	}
 
-	// Esecuzione immediata (import del modulo durante la navigazione client)
+	// Esecuzione immediata (import del modulo durante la navigazione client).
+	// Al primo caricamento della pagina, il ClientRouter di Astro spara
+	// comunque un astro:page-load subito dopo: senza questo guard setupHome()
+	// partirebbe due volte, con due chiamate concorrenti a
+	// sectionPatternsReady() che si sovrascrivono a vicenda gli SVG di
+	// sfondo e rompono l'accoppiamento delle forme in section-morph.
+	let skipNextPageLoad = false;
 	if (document.getElementById('scroll-container')) {
 		setupHome();
+		skipNextPageLoad = true;
 	}
 
-	document.addEventListener('astro:page-load', setupHome);
+	document.addEventListener('astro:page-load', () => {
+		if (skipNextPageLoad) {
+			skipNextPageLoad = false;
+			return;
+		}
+		setupHome();
+	});
 	document.addEventListener('astro:before-swap', cleanupHome);
 </script>

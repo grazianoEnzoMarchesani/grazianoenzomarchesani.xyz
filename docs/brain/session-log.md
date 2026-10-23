@@ -506,3 +506,16 @@ Log cronologico, append-only: una voce breve per sessione. Per lo stato attuale 
 
 - Watermark dell'anno sullo sfondo della spirale di Fields (in alto a sinistra, gigante e tenue, con l'animazione "scalza via" delle Pubblicazioni). Il meccanismo (`onYear` in `fields-spiral.ts` + markup e animazione in `PaginaFields.astro`) era già scritto ma **non visibile**: contenitore `#fields-anno-watermark` a larghezza 0 → `overflow-hidden` ritagliava il testo. Fix: `w-[3.5em]` + `whitespace-nowrap`. Verificato con Puppeteer (2024/2023 visibili scrollando). Vedi [fields-spiral.md](fields-spiral.md), nuova sezione "Watermark dell'anno sullo sfondo".
   - Seconda iterazione: l'anno più recente ora compare **in dissolvenza insieme all'intro** (spirale desktop e corda mobile) invece di spuntare di colpo al primo scroll. `emitYear()` emette il giro d'atterraggio anche durante `isIntroPlaying`; `emittedTurn` passato da `NaN` a `number | null` (il vecchio `Math.abs(0 - NaN→0)` sopprimeva l'emissione dell'anno 0). Fade-in 1.2s in `PaginaFields.astro`. Verificato con Puppeteer desktop+mobile. Nessun commit.
+
+## 2026-09-16
+
+- **Sito andato online** su `grazianoenzomarchesani.xyz` via GitHub Pages: creato `.github/workflows/deploy.yml` (build + `actions/deploy-pages` a ogni push su `main`), `public/CNAME`, source Pages impostato su GitHub Actions, dominio custom collegato via API, HTTPS forzato con certificato approvato. Vedi [stack.md](stack.md) e [constraints.md](constraints.md).
+- DNS riconfigurato su Kaliweb: sostituiti i 2 vecchi A record del sito precedente con i 4 A record fissi di GitHub Pages; CNAME `www` lasciato invariato (puntava già all'apice).
+- Risolto un fallimento di `npm ci` in CI (falliva solo su Linux, non in locale su macOS): `@emnapi/core`/`@emnapi/runtime`, dipendenze transitive di varianti opzionali "universali" di `sharp`/`tailwindcss oxide` (wasm32, nessun `cpu`/`os` dichiarato), fissate come devDependency dirette per dare loro una voce univoca nel lockfile. Vedi [stack.md](stack.md).
+- Verificato a fine sessione con `curl`/`dig`/API GitHub Pages: DNS propagato ovunque, sito servito da `GitHub.com`, certificato TLS valido fino al 2026-12-15.
+
+## 2026-10-23
+
+- Aggiornamento software da un nuovo export IRIS (`references(1).bib`, 73 record contro 69 nel repo; il primo export scaricato era troncato a 20). Nuovi: **AtmoViz**, **Meriggio**, **Warmish Web** (software, DOI Zenodo 2026) e il dataset GIS di Nuova Pescara. Aggiunti a `references.bib` con autori corretti e `doi` del dataset; classificati in `pubblicazioni.regole.json`. Vedi [content-plan.md](content-plan.md).
+- Create tre schede bilingui in `/tools` (`atmoviz`, `meriggio`, `warmish-web`) dai README dei repo; Warmish Web con scheda separata dal Warmish originale (scelta dell'utente). Build ok, 182 pagine, record presenti nelle sezioni Software e Datasets di `/publications`. Nessun commit.
+- EnviReader nel `.bib` ha ancora il vecchio DOI (`14500979`), la scheda ha quello della v2 (`23327539`): lasciato così.

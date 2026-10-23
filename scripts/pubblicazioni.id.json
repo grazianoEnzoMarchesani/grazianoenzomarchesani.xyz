@@ -271,5 +271,21 @@
   "11581_504184": {
     "sezione": "dataset",
     "id": "3d-facade-geometry-grasshopper-scripts-grasshopper-scripts"
+  },
+  "11581_505465": {
+    "sezione": "software",
+    "id": "atmoviz"
+  },
+  "11581_505464": {
+    "sezione": "software",
+    "id": "meriggio"
+  },
+  "11581_505466": {
+    "sezione": "software",
+    "id": "warmish-web"
+  },
+  "11581_504264": {
+    "sezione": "dataset",
+    "id": "gis-dataset-for-climate-adaptation-territorial-profiles-and"
   }
 }

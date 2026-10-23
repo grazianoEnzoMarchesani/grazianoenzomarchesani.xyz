@@ -1,0 +1,65 @@
+---
+nome: "Warmish Web"
+sommario: "FLIR thermal image processing in the browser: temperature behind every pixel, no upload, no ExifTool." $$$ "Elaborazione di immagini termiche FLIR nel browser: la temperatura dietro ogni pixel, senza upload e senza ExifTool."
+data: 2026-01-01
+linguaggio: "TypeScript"
+ambiente: ["Web", "Svelte", "FLIR", "Thermography"]
+repo: "https://github.com/grazianoEnzoMarchesani/Warmish-Web"
+doi: "https://doi.org/10.5281/zenodo.23326029"
+sito: "https://grazianoenzomarchesani.github.io/Warmish-Web/"
+licenza: "GPL-3.0"
+---
+
+Warmish Web is a rewrite of [Warmish](/fields/tools/warmish) that runs in any
+modern browser on any operating system. The desktop version needs ExifTool
+and Perl, which is what breaks it on other people's computers. Here the FLIR
+metadata are read by a parser written for the purpose, nothing is uploaded and
+no server is involved.
+
+- **Temperatures.** The raw sensor values are converted with the Planck
+  inversion, with emissivity, reflected and atmospheric temperature, distance
+  and humidity set by you.
+- **Areas of interest.** Rectangles, spots and polygons, with minimum,
+  maximum, mean, median and standard deviation for each.
+- **Batch.** Several images or a whole folder, processed in a worker and
+  exported as a zip.
+- **Visible image.** Overlay with blend modes and manual alignment.
+- **Map view.** Images with GPS on a map, with a guided tour you can record.
+
+The core is checked against the desktop engine: the raw arrays are identical
+and the temperatures agree within 1e-6 °C on the sample images. The interface
+is in Italian and English. The optional map is the only part that contacts a
+third party, and only after you consent.
+
+Warmish Web is open source and is developed at the University of Camerino by
+Graziano Enzo Marchesani, Roberta Cocci Grifoni and Dajla Riera. If you use it
+in your work, please cite the DOI above.
+
+$$$
+
+Warmish Web è una riscrittura di [Warmish](/it/fields/tools/warmish) che gira
+in qualsiasi browser moderno su qualsiasi sistema operativo. La versione
+desktop richiede ExifTool e Perl, ed è questo che la fa smettere di
+funzionare sui computer degli altri. Qui i metadati FLIR sono letti da un
+parser scritto apposta, non viene caricato nulla e non c'è nessun server.
+
+- **Temperature.** I valori grezzi del sensore sono convertiti con
+  l'inversione di Planck, con emissività, temperatura riflessa e atmosferica,
+  distanza e umidità impostate da te.
+- **Aree di interesse.** Rettangoli, punti e poligoni, con minimo, massimo,
+  media, mediana e deviazione standard per ciascuna.
+- **Batch.** Più immagini o un'intera cartella, elaborate in un worker ed
+  esportate in uno zip.
+- **Immagine visibile.** Sovrapposizione con modalità di fusione e
+  allineamento manuale.
+- **Vista mappa.** Le immagini con GPS su una mappa, con un tour guidato
+  registrabile.
+
+Il nucleo è verificato contro il motore desktop: gli array grezzi sono
+identici e le temperature coincidono entro 1e-6 °C sulle immagini di prova.
+L'interfaccia è in italiano e in inglese. La mappa, facoltativa, è l'unica
+parte che contatta terzi, e solo dopo il consenso.
+
+Warmish Web è open source ed è sviluppato all'Università di Camerino da
+Graziano Enzo Marchesani, Roberta Cocci Grifoni e Dajla Riera. Se lo usi nel
+tuo lavoro, cita il DOI qui sopra.

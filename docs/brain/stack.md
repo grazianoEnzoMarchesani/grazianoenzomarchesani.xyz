@@ -95,7 +95,9 @@ Vedi [constraints.md](constraints.md) per i vincoli che hanno guidato queste sce
 
 ## Deploy
 
-- **GitHub Pages**, quando il sito sarà pronto. L'utente ha un dominio personale proprio, attualmente puntato al vecchio sito, da ricollegare in futuro. Per ora: solo sviluppo locale.
+- **GitHub Pages, live dal 2026-09-16** su dominio custom `grazianoenzomarchesani.xyz` (comprato su Kaliweb/Keliweb, prima puntava al vecchio sito). Pipeline: `.github/workflows/deploy.yml` builda con `npm ci && npm run build` e pubblica `dist/` via `actions/deploy-pages`, triggerata da ogni push su `main`. `public/CNAME` contiene il dominio. Su GitHub, Settings → Pages ha Source impostato su **GitHub Actions** (non "Deploy from a branch"), e HTTPS è forzato (certificato Let's Encrypt gestito da GitHub, rinnovo automatico).
+- **DNS su Kaliweb**: 4 record A sull'apice (`185.199.108.153`, `.109.153`, `.110.153`, `.111.153`, gli IP fissi di GitHub Pages) + CNAME `www` → `grazianoenzomarchesani.xyz`.
+- **`npm ci` in CI richiede `@emnapi/core` e `@emnapi/runtime` come devDependency dirette** (2026-09-16): sono dipendenze transitive di varianti opzionali "universali" (nessun campo `cpu`/`os`) di `@img/sharp-wasm32` e `@tailwindcss/oxide-wasm32-wasi` — pacchetti mai realmente installati su nessuna piattaforma reale (arm64/x64), ma che npm su Linux valida nel lock file in modo più severo che su macOS, facendo fallire `npm ci` con "Missing from lock file" pur avendo appena rigenerato il lockfile con `npm install`. Fissarle come dipendenza diretta dà loro una voce canonica univoca nel lock, risolvendo l'ambiguità su qualunque piattaforma. Se il problema si ripresenta con altre coppie pacchetto-nativo/wasm, stesso rimedio.
 
 ## Stato dello scaffolding
 

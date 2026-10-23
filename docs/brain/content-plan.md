@@ -119,6 +119,15 @@ raw a contenuto reale nelle pagine:
   scarto del contenuto dell'altra. Resta escluso solo ciò che non è un output pubblicabile
   (es. la tesi di dottorato). Classificazione via `pubblicazioni.regole.json` → `tipo`
   (non più `escludi`) per i 10 record `@misc` di tipo software.
+  **Come si aggiunge un software nuovo** (flusso fissato il 2026-10-23): due passi
+  distinti. (1) Record `@misc` in `references.bib` (di solito da un nuovo export IRIS:
+  confrontare per ID `11581_*` col `.bib` del repo, che resta la fonte; correggere a mano
+  gli autori storpiati dell'export e aggiungere `doi` se c'è solo `url`) + riga `"software"`
+  in `pubblicazioni.regole.json` → `tipo`. (2) Scheda `src/content/tools/<slug>/<slug>.mdx`
+  bilingue (`$$$`, sommario e corpo) con `repo`, `doi`, `sito`, `licenza`, ricavata dal
+  README del repo. Una versione web di uno strumento già presente (Warmish Web) ha la
+  **scheda propria**, non assorbe quella del desktop. Il DOI di una nuova versione di un
+  tool esistente va aggiornato nella scheda; nel `.bib` resta quello esportato da IRIS.
 - **About**: completata. Creato `src/lib/identita.ts` (accesso tipizzato bilingue a `src/content/about/percorso.json`, 5 paragrafi bio in EN e IT, collegamenti di ricerca ORCID/IRIS/GitHub e social LinkedIn/Instagram, stato CV) e `src/components/PaginaAbout.astro` con layout editoriale a 2 colonne (ritratto via `astro:assets`, bio, tasto CV; record strutturati per Posizioni con indicatore `Current`/`In corso`, Formazione con tesi ed esito, Riconoscimenti e concorsi).
 - **Skills**: completata. Creato `src/lib/competenze.ts` (accesso tipizzato a `src/content/skills/competenze.json`, 32 competenze arricchite con le relazioni di collegamento, raggruppamento per 3 famiglie e 11 categorie per il glossario, statistiche `quante` e sintesi nodo 0), `src/components/MazzoCompetenze.astro` (mazzo 3D animato GSAP in stile monocromatico paper/ink con modalità stack scroll-driven senza scroll-trapping e modalità ventaglio a raggiera ellittica con campionamento d'arco uniforme) e `src/components/PaginaSkills.astro` (struttura a 2 sezioni: hero + palco interattivo in alto, glossario editoriale strutturato in basso) montato su `src/pages/skills.astro` e `src/pages/it/skills.astro`.
 
