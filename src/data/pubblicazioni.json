@@ -1,6 +1,6 @@
 {
   "_nota": "La bibliografia. È un DATASET e non una collezione .md perché decine di voci sono decine di righe di metadati senza prosa: file col corpo vuoto sarebbero solo attrito. Stesso ragionamento di competenze.json. src/data/pubblicazioni.json è generato da references.bib (scripts/genera-pubblicazioni.mjs, DEC-75/76): non modificarlo a mano, si perderebbe al prossimo giro. Per correggere una voce, usa pubblicazioni.regole.json — «campi» per forzare un valore, «escludi»/«tipo» per le decisioni che il .bib da solo non può prendere. Gli autori sono normalizzati a «Cognome N. N.»: il nome di Graziano viene evidenziato a schermo cercando la stringa in `io`.",
-  "aggiornato": "2026-10-23",
+  "aggiornato": "2026-11-07",
   "io": "Marchesani G. E.",
   "profili": {
     "orcid": "https://orcid.org/0000-0002-4723-5099",
@@ -401,6 +401,27 @@
       "titolo": "GIS dataset for climate adaptation territorial profiles and territorial planning units in Nuova Pescara [Dataset]",
       "autori": "Bernabei M. S., Bocca A., Marchesani G. E., Cocci Grifoni R., Sorbi R.",
       "doi": "10.5281/zenodo.21107810"
+    },
+    {
+      "id": "rapid-tests-envi-met-parametric-simulations-on-idealised",
+      "anno": 2026,
+      "titolo": "Rapid tests: ENVI-met parametric simulations on idealised and real urban fragments (index)",
+      "autori": "Marchesani G. E., Cocci Grifoni R., Bernabei M. S., Riera D.",
+      "doi": "10.5281/zenodo.23923249"
+    },
+    {
+      "id": "ascoli-piceno-microclimate-study-field-data-envi-met",
+      "anno": 2026,
+      "titolo": "Ascoli Piceno microclimate study: field data, ENVI-met validation and code",
+      "autori": "Marchesani G. E., Cocci Grifoni R., Bernabei M. S., Riera D.",
+      "doi": "10.5281/zenodo.23923253"
+    },
+    {
+      "id": "real-domains-envi-met-simulations-of-four-scenarios-in",
+      "anno": 2026,
+      "titolo": "Real domains: ENVI-met simulations of four scenarios in Ascoli Piceno (index)",
+      "autori": "Marchesani G. E., Cocci Grifoni R., Bernabei M. S., Riera D.",
+      "doi": "10.5281/zenodo.23923251"
     },
     {
       "id": "3d-facade-geometry-grasshopper-scripts-grasshopper-scripts",
