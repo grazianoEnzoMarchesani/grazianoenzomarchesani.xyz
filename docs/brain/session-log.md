@@ -519,3 +519,13 @@ Log cronologico, append-only: una voce breve per sessione. Per lo stato attuale 
 - Aggiornamento software da un nuovo export IRIS (`references(1).bib`, 73 record contro 69 nel repo; il primo export scaricato era troncato a 20). Nuovi: **AtmoViz**, **Meriggio**, **Warmish Web** (software, DOI Zenodo 2026) e il dataset GIS di Nuova Pescara. Aggiunti a `references.bib` con autori corretti e `doi` del dataset; classificati in `pubblicazioni.regole.json`. Vedi [content-plan.md](content-plan.md).
 - Create tre schede bilingui in `/tools` (`atmoviz`, `meriggio`, `warmish-web`) dai README dei repo; Warmish Web con scheda separata dal Warmish originale (scelta dell'utente). Build ok, 182 pagine, record presenti nelle sezioni Software e Datasets di `/publications`. Nessun commit.
 - EnviReader nel `.bib` ha ancora il vecchio DOI (`14500979`), la scheda ha quello della v2 (`23327539`): lasciato così.
+
+## 2026-11-08
+
+- Aggiunti 3 nuovi dataset ENVI-met (anno 2026) a `src/content/publications/references.bib`:
+  - `11581_506185`: *Rapid tests: ENVI-met parametric simulations on idealised and real urban fragments (index)* (`10.5281/zenodo.23923249`)
+  - `11581_506184`: *Ascoli Piceno microclimate study: field data, ENVI-met validation and code* (`10.5281/zenodo.23923253`)
+  - `11581_506186`: *Real domains: ENVI-met simulations of four scenarios in Ascoli Piceno (index)* (`10.5281/zenodo.23923251`)
+- Mappati come `"dataset"` in `src/content/publications/pubblicazioni.regole.json`.
+- Ricostruito l'archivio con `scripts/genera-pubblicazioni.mjs` (totale 13 dataset) e aggiornato `public/search-index.json`.
+- Eseguiti commit e push su branch `main` su richiesta esplicita dell'utente: triggerata GitHub Action per il deploy in produzione su GitHub Pages.
