@@ -529,3 +529,8 @@ Log cronologico, append-only: una voce breve per sessione. Per lo stato attuale 
 - Mappati come `"dataset"` in `src/content/publications/pubblicazioni.regole.json`.
 - Ricostruito l'archivio con `scripts/genera-pubblicazioni.mjs` (totale 13 dataset) e aggiornato `public/search-index.json`.
 - Eseguiti commit e push su branch `main` su richiesta esplicita dell'utente: triggerata GitHub Action per il deploy in produzione su GitHub Pages.
+- Aggiornati i progetti di ricerca (`src/content/publications/research-projects/`) allineandoli con il profilo ORCID:
+  - Aggiornati con URL e Grant number ufficiali: Travertino Living Lab, VITALITY (ECS00000041), CliCCHE (KA220-HED), A_GreeNET (LIFE20 CCA/IT/001752), CCUHRE.
+  - Aggiunti 5 nuovi record bilingui (`EN $$$ IT`): Microclimate Simulations Riyadh (2025), Thermal comfort and quality of life in urban open spaces (2021–2022), Qualitabitare PINQUA Ascoli Piceno (2020–2021), Stenungsund Climate Change Projections (2020–2021), Shell Research (2016–2017).
+  - Escluso Via Milano (Pescara) come da indicazione dell'utente (già presente in `src/content/projects/02-via-milano-pescara/`).
+  - Verificato con `npm run build` (182 pagine generate con successo).

@@ -5,6 +5,7 @@ programma: "FAR — Università di Camerino, PI Rosalba D'Onofrio" $$$ "FAR — 
 anni: "2018 – 2021"
 ruolo: "Responsible for outdoor environmental comfort analysis" $$$ "Responsabile delle analisi di comfort ambientale degli spazi aperti"
 partner: "Ascoli Piceno case study" $$$ "Caso studio Ascoli Piceno"
+url: "https://sites.google.com/unicam.it/cchure/home"
 ---
 
 Where the thread starts. Combining remote sensing and CFD simulation to

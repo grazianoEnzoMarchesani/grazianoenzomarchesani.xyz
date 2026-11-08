@@ -5,6 +5,7 @@ programma: "LIFE20 CCA/IT/001752 + annual research fellowship, SSD ICAR/12" $$$ 
 anni: "2022 – 2023"
 ruolo: "Research fellow · CFD modelling and climate scenarios" $$$ "Assegnista · modellazione CFD e scenari climatici"
 partner: "Tutor Roberta Cocci Grifoni · PI Rosalba D'Onofrio" $$$ "Tutor Roberta Cocci Grifoni · responsabile Rosalba D'Onofrio"
+url: "https://webgate.ec.europa.eu/life/publicWebsite/project/details/5527"
 ---
 
 Meteoclimatic characterisation of the mid-Adriatic urban areas, the

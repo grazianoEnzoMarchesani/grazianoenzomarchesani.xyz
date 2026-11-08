@@ -1,7 +1,7 @@
 ---
 acronimo: "VITALITY"
 titolo: "Innovation, digitalisation and sustainability for the diffused economy in Central Italy" $$$ "Innovazione, digitalizzazione e sostenibilità per l'economia diffusa del Centro Italia"
-programma: "PNRR — Innovation Ecosystem, Spoke 6" $$$ "PNRR — Ecosistema dell'Innovazione, Spoke 6"
+programma: "PNRR — Innovation Ecosystem, Spoke 6 · ECS00000041" $$$ "PNRR — Ecosistema dell'Innovazione, Spoke 6 · ECS00000041"
 anni: "2023 – 2025"
 ruolo: "Research unit · meteoclimatic characterisation of minimum urban units" $$$ "Unità di ricerca · caratterizzazione meteoclimatica delle unità urbane minime"
 partner: "Marche–Umbria–Abruzzo ecosystem" $$$ "Ecosistema Marche–Umbria–Abruzzo"

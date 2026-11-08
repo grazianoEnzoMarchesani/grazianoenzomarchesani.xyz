@@ -1,10 +1,11 @@
 ---
 acronimo: "CliCCHE"
 titolo: "Climate change, cities, communities and equity in health" $$$ "Cambiamento climatico, città, comunità ed equità nella salute"
-programma: "Erasmus+ — cooperation partnership" $$$ "Erasmus+ — partenariato di cooperazione"
+programma: "Erasmus+ — cooperation partnership KA220-HED" $$$ "Erasmus+ — partenariato di cooperazione KA220-HED"
 anni: "2022 – 2024"
 ruolo: "Research unit · environmental analysis and local workshops" $$$ "Unità di ricerca · analisi ambientali e workshop locali"
 partner: "Coordinated by UNICAM, with Cyprus, Serbia, Portugal and Italy" $$$ "Coordinato da UNICAM, con Cipro, Serbia, Portogallo e Italia"
+url: "https://clicche.org/"
 ---
 
 Climate, communities and health equity, approached through teaching:
